@@ -31,12 +31,14 @@ class BedController extends Controller
     {
         $request->validate([
             'bed_number' => 'required|unique:beds,bed_number',
-            'status' => 'required|in:available,occupied,maintenance',
+            'room_number' => 'required',
+            'status' => 'required|in:متاح,محجوز,صيانة',
+            'department' => 'required|string|max:255',
         ]);
 
         Bed::create($request->all());
 
-        return redirect()->route('beds.index')->with('success', 'Bed created successfully.');
+        return redirect()->route('beds.index')->with('success', 'تم إضافة السرير بنجاح.');
     }
 
     /**
@@ -54,12 +56,14 @@ class BedController extends Controller
     {
         $request->validate([
             'bed_number' => 'required|unique:beds,bed_number,' . $bed->id,
-            'status' => 'required|in:available,occupied,maintenance',
+            'room_number' => 'required',
+            'status' => 'required|in:متاح,محجوز,صيانة',
+            'department' => 'required|string|max:255',
         ]);
 
         $bed->update($request->all());
 
-        return redirect()->route('beds.index')->with('success', 'Bed updated successfully.');
+        return redirect()->route('beds.index')->with('success', 'تم تحديث بيانات السرير.');
     }
 
     /**

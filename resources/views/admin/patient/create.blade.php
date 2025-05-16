@@ -142,6 +142,21 @@
                                 </div>
                                 @error('governorate') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="bed_id" class="ms-0">اختر السرير</label>
+                                    <select class="form-control @error('bed_id') is-invalid @enderror" id="bed_id" name="bed_id">
+                                        <option value="">اختر السرير</option>
+                                        @foreach(\App\Models\Bed::where('status', 'متاح')->get() as $bed)
+                                            <option value="{{ $bed->id }}" {{ old('bed_id') == $bed->id ? 'selected' : '' }}>
+                                                {{ $bed->bed_number }} - {{ $bed->department }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('bed_id') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-dark">حفظ</button>
                         <a href="{{ route('patients.index') }}" class="btn btn-outline-secondary">إلغاء</a>

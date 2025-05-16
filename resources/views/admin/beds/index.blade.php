@@ -19,6 +19,7 @@
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">رقم الغرفة</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">الحالة</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">اسم المريض</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">القسم</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">تاريخ الإنشاء</th>
                                 </tr>
                             </thead>
@@ -30,12 +31,13 @@
                                     <td>{{ $bed->room_number }}</td>
                                     <td>{{ $bed->status }}</td>
                                     <td>{{ $bed->patient_name ?? '-' }}</td>
+                                    <td>{{ $bed->department }}</td>
                                     <td>{{ $bed->created_at ? $bed->created_at->format('Y-m-d') : '-' }}</td>
                                 </tr>
                                 @endforeach
                                 @if($beds->isEmpty())
                                 <tr>
-                                    <td colspan="6" class="text-center">لا يوجد أسرة</td>
+                                    <td colspan="7" class="text-center">لا يوجد أسرة</td>
                                 </tr>
                                 @endif
                             </tbody>

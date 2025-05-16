@@ -28,6 +28,12 @@
         </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link {{ request()->routeIs('beds.index') ? 'active bg-gradient-dark text-white' : 'text-dark' }}" href="{{ route('beds.index') }}">
+            <i class="material-symbols-rounded opacity-10">bed</i>
+            <span class="nav-link-text me-1">الأسرة</span>
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link {{ request()->routeIs('beds.create') ? 'active bg-gradient-dark text-white' : 'text-dark' }}" href="{{ route('beds.create') }}">
             <i class="material-symbols-rounded opacity-10">add</i>
             <span class="nav-link-text me-1">إضافة سرير</span>
@@ -35,11 +41,5 @@
         </li>
 
       </ul>
-    </div>
-    <div class="sidenav-footer position-absolute w-100 bottom-0 ">
-      <div class="mx-3">
-        <a class="btn btn-outline-dark mt-4 w-100" href="https://www.creative-tim.com/learning-lab/bootstrap/overview/material-dashboard?ref=sidebarfree" type="button">Documentation</a>
-        <a class="btn bg-gradient-dark w-100" href="https://www.creative-tim.com/product/material-dashboard-pro?ref=sidebarfree" type="button">Upgrade to pro</a>
-      </div>
     </div>
   </aside>

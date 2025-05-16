@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('beds', function (Blueprint $table) {
             $table->id();
             $table->string('bed_number')->unique();
-            $table->string('room_number'); 
+            $table->string('room_number');
             $table->enum('status', ['متاح', 'محجوز', 'صيانة'])->default('متاح');
+            $table->string('department'); // القسم
             $table->string('patient_name')->nullable();
             $table->timestamps();
         });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use App\Models\Bed;
 
 class PatientController extends Controller
 {
@@ -40,9 +41,12 @@ class PatientController extends Controller
             'national_id'   => 'nullable|string|max:50',
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|string|max:10',
+            'bed_id'        => 'required|exists:beds,id',
         ]);
 
         $patient = Patient::create($validated);
+
+       Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
 
         return response()->json([
             'message' => 'Patient created successfully!',
