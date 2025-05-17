@@ -26,7 +26,12 @@
                                 @foreach($patients as $patient)
                                 <tr>
                                     <td>{{ $patient->id }}</td>
-                                    <td>{{ $patient->name }}</td>
+                                    <td>
+                                        {{ $patient->first_name }}
+                                        {{ $patient->second_name }}
+                                        {{ $patient->third_name }}
+                                        {{ $patient->fourth_name }}
+                                    </td>
                                     <td>{{ $patient->email }}</td>
                                     <td>{{ $patient->phone }}</td>
                                     <td>{{ $patient->national_id }}</td>
