@@ -23,7 +23,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
 <link rel="manifest" href="/assets/img/site.webmanifest">
   <title>
-    نظام ادارة المستشفى | {{ __(Route::currentRouteName()) }}
+    نظام ادارة المستشفى | {{ __('routes.' . Route::currentRouteName()) }}
   </title>
   <!--     Fonts and icons     -->
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
