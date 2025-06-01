@@ -17,12 +17,6 @@
             </div>
           </div>
           <ul class="navbar-nav me-auto ms-0 justify-content-end">
-            <li class="nav-item d-flex align-items-center">
-              <a class="btn btn-outline-primary btn-sm mb-0 ms-3" target="_blank" href="https://www.creative-tim.com/builder?ref=navbar-material-dashboard">منشئ مضمنة</a>
-            </li>
-            <li class="mt-2">
-              <a class="github-button" href="https://github.com/creativetimofficial/material-dashboard" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star creativetimofficial/material-dashboard on GitHub">Star</a>
-            </li>
             <li class="nav-item d-xl-none pe-3 d-flex align-items-center">
               <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
                 <div class="sidenav-toggler-inner">
@@ -110,12 +104,12 @@
                 </li>
               </ul>
             </li>
-            <li class="nav-item d-flex align-items-center">
+            {{-- <li class="nav-item d-flex align-items-center">
               <a href="../pages/sign-in.html" class="nav-link text-body font-weight-bold px-0">
                 <i class="fa fa-user me-sm-1"></i>
                 <span class="d-sm-inline d-none">يسجل دخول</span>
               </a>
-            </li>
+            </li> --}}
           </ul>
         </div>
       </div>

@@ -121,4 +121,21 @@ class PatientController extends Controller
     {
         //
     }
+
+    /**
+     * Discharge the specified patient.
+     */
+    public function discharge(Patient $patient)
+    {
+        // Check if the patient has a bed assigned
+        if ($patient->bed_id) {
+            // Update the bed status to "متاح"
+            Bed::where('id', $patient->bed_id)->update(['status' => 'متاح']);
+        }
+
+        // Update the patient's bed_id to null (discharge)
+        $patient->update(['bed_id' => null]);
+
+        return redirect()->route('patients.index')->with('success', 'تم تسجيل خروج المريض بنجاح.');
+    }
 }

@@ -28,5 +28,6 @@ Route::get('/proxy/national-id', [ProxyController::class, 'fetchNationalIdInfo']
 // Route::name('patients.')->group(function () {
     // Route::resource('patient.visits', PatientVisitController::class);
 // });
+Route::patch('/patients/{patient}/discharge', [PatientController::class, 'discharge'])->name('patients.discharge');
 
 require __DIR__.'/auth.php';
