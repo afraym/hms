@@ -33,10 +33,9 @@
                         </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                        <div class="input-group input-group-static mb-3">
-                            <label for="status" class="form-label">الحالة</label>
+                        <div class="input-group input-group-static mb-4">
+                            <label for="status" class="ms-0">الحالة</label>
                             <select class="form-control @error('status') is-invalid @enderror" id="status" name="status">
-                                <option value="">اختر الحالة</option>
                                 <option value="متاح" {{ old('status') == 'متاح' ? 'selected' : '' }}>متاح</option>
                                 <option value="محجوز" {{ old('status') == 'محجوز' ? 'selected' : '' }}>محجوز</option>
                                 <option value="صيانة" {{ old('status') == 'صيانة' ? 'selected' : '' }}>صيانة</option>

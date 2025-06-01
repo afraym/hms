@@ -16,4 +16,9 @@ class Bed extends Model
         'department',
         'patient_name',
     ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }

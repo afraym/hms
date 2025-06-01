@@ -35,18 +35,32 @@ class PatientController extends Controller
             'second_name'   => 'nullable|string|max:255',
             'third_name'    => 'nullable|string|max:255',
             'fourth_name'   => 'nullable|string|max:255',
-            'email'         => 'nullable|email|unique:patients,email',
+            'email'         => 'nullable|email|max:255',
             'phone'         => 'nullable|string|max:20',
             'phone2'        => 'nullable|string|max:20',
-            'national_id'   => 'nullable|string|max:50',
+            'national_id'   => 'nullable|string|unique:patients|max:50',
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|string|max:10',
             'bed_id'        => 'required|exists:beds,id',
         ]);
 
+        // Check if a patient with the same email or national ID already exists
+        $existingPatient = Patient::where('email', $validated['email'])
+            ->orWhere('national_id', $validated['national_id'])
+            ->first();
+
+        if ($existingPatient) {
+            return response()->json([
+                'message' => 'Patient already exists!',
+                'patient' => $existingPatient
+            ], 409); // HTTP status code 409 for conflict
+        }
+
+        // Create the new patient
         $patient = Patient::create($validated);
 
-       Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+        // Update the bed status
+        Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
 
         return response()->json([
             'message' => 'Patient created successfully!',

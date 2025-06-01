@@ -3,6 +3,7 @@
 
   .navbar-brand {
     color: $dark;
+    @include font-size($font-size-sm);
   }
   .nav-link {
     color: $dark;

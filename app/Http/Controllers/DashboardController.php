@@ -13,34 +13,71 @@ class DashboardController extends Controller
     {
         $beds_count = Bed::count();
         $empty_beds = Bed::where('status', 'متاح')->count();
-        $patients_count = Patient::count();
+        $occupied_beds = Bed::where('status', 'مشغول')->count();
+        $patients_in_month = PatientVisit::whereMonth('visit_at', now()->month)->count();
+        $patients_out_month = PatientVisit::whereMonth('visit_at', now()->month)->where('type', 'out')->count();
+        $new_patients = Patient::where('created_at', '>=', now()->subWeek())->count();
+        $daily_visits = PatientVisit::whereDate('visit_at', now())->count();
 
-        // دخول المرضى هذا الشهر
-        $patients_in_month = PatientVisit::where('type', 'in')
-            ->whereMonth('visit_at', now()->month)
-            ->whereYear('visit_at', now()->year)
-            ->count();
+        // Generate chart data dynamically
+        $chartBarsData = [
+            'labels' => ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'],
+            'data' => $this->getWeeklyPatientData()
+        ];
 
-        // خروج المرضى هذا الشهر
-        $patients_out_month = PatientVisit::where('type', 'out')
-            ->whereMonth('visit_at', now()->month)
-            ->whereYear('visit_at', now()->year)
-            ->count();
+        $chartLineData = [
+            'labels' => ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'],
+            'data' => $this->getMonthlyBedOccupancyData()
+        ];
 
-        // دخول المرضى هذا الأسبوع
-        $patients_in_week = PatientVisit::where('type', 'in')
+        $chartLineTasksData = [
+            'labels' => ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'],
+            'data' => $this->getMonthlyVisitData()
+        ];
+
+        return view('admin.dashboard', compact('beds_count', 'empty_beds', 'occupied_beds', 'patients_in_month', 'patients_out_month', 'new_patients', 'daily_visits', 'chartBarsData', 'chartLineData', 'chartLineTasksData'));
+    }
+
+    private function getWeeklyPatientData()
+    {
+        // Get patient data for the last 7 days
+        $weeklyData = PatientVisit::selectRaw('DAYNAME(visit_at) as day, COUNT(*) as count')
             ->whereBetween('visit_at', [now()->startOfWeek(), now()->endOfWeek()])
-            ->count();
+            ->groupBy('day')
+            ->orderByRaw("FIELD(day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
+            ->pluck('count', 'day');
 
-        // خروج المرضى هذا الأسبوع
-        $patients_out_week = PatientVisit::where('type', 'out')
-            ->whereBetween('visit_at', [now()->startOfWeek(), now()->endOfWeek()])
-            ->count();
+        // Ensure all days are included
+        $days = ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
+        return array_map(fn($day) => $weeklyData[$day] ?? 0, $days);
+    }
 
-        return view('admin.dashboard', compact(
-            'beds_count', 'empty_beds', 'patients_count',
-            'patients_in_month', 'patients_out_month',
-            'patients_in_week', 'patients_out_week'
-        ));
+    private function getMonthlyBedOccupancyData()
+    {
+        // Get bed occupancy data for the last 9 months
+        $monthlyData = Bed::selectRaw('MONTHNAME(updated_at) as month, COUNT(*) as count')
+            ->where('status', 'مشغول')
+            ->whereBetween('updated_at', [now()->subMonths(9), now()])
+            ->groupBy('month')
+            ->orderByRaw("FIELD(month, 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September')")
+            ->pluck('count', 'month');
+
+        // Ensure all months are included
+        $months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'];
+        return array_map(fn($month) => $monthlyData[$month] ?? 0, $months);
+    }
+
+    private function getMonthlyVisitData()
+    {
+        // Get visit data for the last 9 months
+        $monthlyData = PatientVisit::selectRaw('MONTHNAME(visit_at) as month, COUNT(*) as count')
+            ->whereBetween('visit_at', [now()->subMonths(9), now()])
+            ->groupBy('month')
+            ->orderByRaw("FIELD(month, 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September')")
+            ->pluck('count', 'month');
+
+        // Ensure all months are included
+        $months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'];
+        return array_map(fn($month) => $monthlyData[$month] ?? 0, $months);
     }
 }

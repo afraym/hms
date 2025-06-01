@@ -3,8 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BedController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\PatientVisitController;    
 use App\Http\Controllers\ProxyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepartmentController;
 
 Route::view('/', 'welcome');
 
@@ -19,9 +21,12 @@ Route::view('profile', 'profile')
     ->name('admin.dashboard');
         Route::resource('beds', BedController::class);
         Route::resource('patients', PatientController::class);
+        Route::resource('departments', DepartmentController::class);
     });
 
 Route::get('/proxy/national-id', [ProxyController::class, 'fetchNationalIdInfo']);
-Route::resource('patient_visits', \App\Http\Controllers\PatientVisitController::class);
+// Route::name('patients.')->group(function () {
+    // Route::resource('patient.visits', PatientVisitController::class);
+// });
 
 require __DIR__.'/auth.php';

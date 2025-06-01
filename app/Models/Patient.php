@@ -47,4 +47,9 @@ class Patient extends Model
     // {
     //     return $value ? Crypt::decryptString($value) : null;
     // }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }
