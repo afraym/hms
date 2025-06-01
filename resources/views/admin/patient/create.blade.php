@@ -10,7 +10,7 @@
                     <h6>إضافة مريض جديد</h6>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('patients.store') }}" method="POST" autocomplete="off">
+                    <form id="patientForm" action="{{ route('patients.store') }}" method="POST" autocomplete="on">
                         @csrf
                         <div class="row mb-3">
                             <div class="col-md-6 mb-3">
@@ -285,5 +285,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('patientForm');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw response.json();
+                }
+                return response.json();
+            })
+            .then(data => {
+                $.toast({
+                    heading: 'نجاح',
+                    text: 'تم حفظ المريض بنجاح!',
+                    showHideTransition: 'slide',
+                    icon: 'success',
+                    position: 'top-center', // Position the toast in the center
+                    bgColor: '#28a745', // Background color
+                    textColor: '#fff',  // Text color
+                    loaderBg: '#fff',   // Loader background color
+                });
+                form.reset(); // Reset the form
+            })
+            .catch(async error => {
+                const errors = await error;
+                let errorMessage = "حدث خطأ أثناء حفظ البيانات.";
+                if (errors && errors.errors) {
+                    errorMessage = Object.values(errors.errors).join("<br>");
+                }
+                $.toast({
+                    heading: 'خطأ',
+                    text: errorMessage,
+                    showHideTransition: 'fade',
+                    icon: 'error',
+                    position: 'top-center', // Position the toast in the center
+                });
+            });
+        });
+    });
 </script>
 @endsection

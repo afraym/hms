@@ -9,7 +9,7 @@
                     <h6>إضافة سرير جديد</h6>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('beds.store') }}" method="POST" autocomplete="off">
+                    <form id="bedForm" action="{{ route('beds.store') }}" method="POST" autocomplete="off">
                         @csrf
                         <div class="col-md-6 mb-3">
                             <div class="input-group input-group-outline my-3">
@@ -58,4 +58,38 @@
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+        $('#bedForm').on('submit', function (e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const form = $(this);
+            const formData = form.serialize();
+
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: formData,
+                success: function (response) {
+                    $.notify("تم حفظ السرير بنجاح!", {
+                        className: "success",
+                        position: "top center" // Position the toast in the center
+                    });
+                    form[0].reset(); // Reset the form inputs
+                },
+                error: function (xhr) {
+                    let errorMessage = "حدث خطأ أثناء حفظ البيانات.";
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join("<br>");
+                    }
+                    $.notify(errorMessage, {
+                        className: "error",
+                        position: "top center" // Position the toast in the center
+                    });
+                }
+            });
+        });
+    });
+</script>
 @endsection

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
 class Patient extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'first_name', 'second_name', 'third_name', 'fourth_name',
         'email', 'phone', 'phone2', 'national_id', 'date_of_birth', 'gender'

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('bed_number')->unique();
             $table->string('room_number');
             $table->enum('status', ['متاح', 'محجوز', 'صيانة'])->default('متاح');
-            $table->string('department'); // القسم
+            $table->string('department')->nullable(); // القسم
             $table->string('patient_name')->nullable();
             $table->timestamps();
         });
