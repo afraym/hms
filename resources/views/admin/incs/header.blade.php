@@ -23,7 +23,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
 <link rel="manifest" href="/assets/img/site.webmanifest">
   <title>
-    نظام ادارة المستشفى | {{ __('routes.' . Route::currentRouteName()) }}
+     {{ __('routes.' . Route::currentRouteName()) }} | مستشفى الباطنة التخصصي 
   </title>
   <!--     Fonts and icons     -->
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
@@ -34,6 +34,8 @@
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <!-- Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet" />
   <!-- CSS Files -->
   <link id="pagestyle" href="/assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
 </head>

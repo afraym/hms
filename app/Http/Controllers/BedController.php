@@ -21,7 +21,8 @@ class BedController extends Controller
      */
     public function create()
     {
-        return view('admin.beds.create');
+        $departments = \App\Models\Department::all(); // Fetch all departments
+        return view('admin.beds.create', compact('departments'));
     }
 
     /**
@@ -29,14 +30,14 @@ class BedController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'bed_number' => 'required|unique:beds,bed_number',
-            'room_number' => 'required',
+        $validated = $request->validate([
+            'bed_number' => 'required|string|max:255',
+            'room_number' => 'required|string|max:255',
+            'department_id' => 'required|exists:departments,id',
             'status' => 'required|in:متاح,محجوز,صيانة',
-            'department' => 'required|string|max:255',
         ]);
 
-        Bed::create($request->all());
+        Bed::create($validated);
 
         return redirect()->route('beds.index')->with('success', 'تم إضافة السرير بنجاح.');
     }
