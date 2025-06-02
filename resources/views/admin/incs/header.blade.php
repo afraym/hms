@@ -46,3 +46,20 @@
 </head>
 
 <body class="g-sidenav-show rtl bg-gray-200">
+  <style>
+    .sidenav .navbar-brand {
+      padding:0;
+    }
+    .navbar-vertical .navbar-brand>img, .navbar-vertical .navbar-brand-img {
+    max-height: 4.8rem;
+    }
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url('/assets/img/background.jpg') no-repeat center center fixed;
+        background-size: contain;
+        opacity: 0.2; /* Adjust transparency */
+        z-index: -1;
+    }
+  </style>
