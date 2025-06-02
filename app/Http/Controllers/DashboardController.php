@@ -41,6 +41,7 @@ class DashboardController extends Controller
     private function getWeeklyPatientData()
     {
         // Get patient data for the last 7 days
+        /*
         $weeklyData = PatientVisit::selectRaw('DAYNAME(visit_at) as day, COUNT(*) as count')
             ->whereBetween('visit_at', [now()->startOfWeek(), now()->endOfWeek()])
             ->groupBy('day')
@@ -50,11 +51,16 @@ class DashboardController extends Controller
         // Ensure all days are included
         $days = ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
         return array_map(fn($day) => $weeklyData[$day] ?? 0, $days);
+        */
+
+        // Return dummy data for testing
+        return [12, 8, 15, 10, 7, 14, 9];
     }
 
     private function getMonthlyBedOccupancyData()
     {
         // Get bed occupancy data for the last 9 months
+        /*
         $monthlyData = Bed::selectRaw('MONTHNAME(updated_at) as month, COUNT(*) as count')
             ->where('status', 'مشغول')
             ->whereBetween('updated_at', [now()->subMonths(9), now()])
@@ -65,11 +71,16 @@ class DashboardController extends Controller
         // Ensure all months are included
         $months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'];
         return array_map(fn($month) => $monthlyData[$month] ?? 0, $months);
+        */
+
+        // Return dummy data for testing
+        return [20, 18, 22, 19, 25, 21, 23, 17, 20];
     }
 
     private function getMonthlyVisitData()
     {
         // Get visit data for the last 9 months
+        /*
         $monthlyData = PatientVisit::selectRaw('MONTHNAME(visit_at) as month, COUNT(*) as count')
             ->whereBetween('visit_at', [now()->subMonths(9), now()])
             ->groupBy('month')
@@ -79,5 +90,9 @@ class DashboardController extends Controller
         // Ensure all months are included
         $months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'];
         return array_map(fn($month) => $monthlyData[$month] ?? 0, $months);
+        */
+
+        // Return dummy data for testing
+        return [30, 28, 35, 32, 40, 38, 36, 29, 31];
     }
 }

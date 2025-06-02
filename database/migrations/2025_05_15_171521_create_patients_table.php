@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('second_name')->nullable();
             $table->string('third_name')->nullable();
             $table->string('fourth_name')->nullable();
-            $table->string('email')->unique()->nullable();
+            $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->string('phone2')->nullable();
             $table->string('national_id')->index()->unique();
