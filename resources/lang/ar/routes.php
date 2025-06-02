@@ -10,5 +10,9 @@ return [
     'patients.edit'   => 'تعديل مريض',
     'patient_visits.index'  => 'زيارات المرضى',
     'patient_visits.create' => 'إضافة زيارة',
-    // أضف المزيد حسب الحاجة
+    'departments.index'      => 'قائمة الأقسام',
+    'departments.create'     => 'إضافة قسم',
+    'departments.edit'       => 'تعديل قسم',
+    'patients.discharge'     => 'خروج المريض',
+    'profile'                => 'الملف الشخصي',
 ];
