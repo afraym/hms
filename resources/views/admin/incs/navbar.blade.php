@@ -5,10 +5,9 @@
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 ">
             <li class="breadcrumb-item text-sm ps-2"><a class="opacity-5 text-dark" href="javascript:;">لوحات القيادة</a></li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">RTL</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">{{ __('routes.' . Route::currentRouteName()) }}</li>
           </ol>
-          <h6 class="font-weight-bolder mb-0">RTL</h6>
-        </nav>
+          <h6 class="font-weight-bolder mb-0">{{ __('routes.' . Route::currentRouteName()) }}</h6>  </nav>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 px-0" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
             <div class="input-group input-group-outline">
