@@ -31,11 +31,11 @@
                                     <td>{{ $bed->department->name ?? 'غير محدد' }}</td>
                                     <td>{{ $bed->status }}</td>
                                     <td>
-                                        <a href="{{ route('beds.edit', $bed->id) }}" class="btn btn-sm btn-warning">تعديل</a>
+                                        <a href="{{ route('beds.edit', $bed->id) }}" class="btn btn-sm bg-gradient-warning">تعديل</a>
                                         <form action="{{ route('beds.destroy', $bed->id) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-danger">حذف</button>
                                         </form>
                                     </td>
                                 </tr>

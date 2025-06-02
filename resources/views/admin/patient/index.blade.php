@@ -31,12 +31,12 @@
                                     <td>{{ $patient->national_id }}</td>
                                     <td>{{ $patient->gender }}</td>
                                     <td>
-                                        <a href="{{ route('patients.show', $patient->id) }}" class="btn btn-info">عرض</a>
-                                        <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-warning">تعديل</a>
-                                        <form action="{{ route('patients.destroy', $patient->id) }}" method="POST" style="display:inline;">
+                                        <a href="{{ route('patients.show', $patient->id) }}" class="btn bg-gradient-info">عرض</a>
+                                        <a href="{{ route('patients.edit', $patient->id) }}" class="btn bg-gradient-warning">تعديل</a>
+                                        <form action="{{ route('patients.destroy', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-danger">حذف</button>
+                                            <button type="submit" class="btn bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
                                         </form>
                                     </td>
                                 </tr>

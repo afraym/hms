@@ -95,7 +95,7 @@ class PatientController extends Controller
      */
     public function show(Patient $patient)
     {
-        //
+        return view('admin.patient.show', compact('patient'));
     }
 
     /**
@@ -103,7 +103,7 @@ class PatientController extends Controller
      */
     public function edit(Patient $patient)
     {
-        //
+        return view('admin.patient.edit', compact('patient'));
     }
 
     /**
@@ -111,7 +111,18 @@ class PatientController extends Controller
      */
     public function update(Request $request, Patient $patient)
     {
-        //
+        $validated = $request->validate([
+            'first_name'    => 'required|string|max:255',
+            'email'         => 'nullable|email|max:255',
+            'phone'         => 'nullable|string|max:20',
+            'national_id'   => 'nullable|string|max:50|unique:patients,national_id,' . $patient->id,
+            'date_of_birth' => 'nullable|date',
+            'gender'        => 'nullable|string|max:10',
+        ]);
+
+        $patient->update($validated);
+
+        return redirect()->route('patients.show', $patient->id)->with('success', 'تم تحديث بيانات المريض بنجاح.');
     }
 
     /**
@@ -119,7 +130,8 @@ class PatientController extends Controller
      */
     public function destroy(Patient $patient)
     {
-        //
+        $patient->delete();
+        return redirect()->route('patients.index')->with('success', 'تم حذف المريض بنجاح.');
     }
 
     /**
