@@ -55,4 +55,10 @@ class Patient extends Model
     {
         return $this->belongsTo(Department::class);
     }
+
+    // Define the visits relationship
+    public function visits()
+    {
+        return $this->hasMany(PatientVisit::class);
+    }
 }

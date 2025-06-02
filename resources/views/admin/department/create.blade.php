@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-  <div class="row">
+  <div class="row justify-content-center">
     <div class="col-lg-8">
       <div class="card">
         <div class="card-header pb-0">
@@ -12,18 +12,18 @@
         <div class="card-body">
           <form action="{{ route('departments.store') }}" method="POST">
             @csrf
-            <div class="form-group">
-              <label for="name">اسم القسم</label>
+            <div class="input-group input-group-outline my-3">
+              <label for="name" class="form-label">اسم القسم</label>
               <input type="text" name="name" id="name" class="form-control" required>
             </div>
-            <div class="form-group">
-              <label for="status">الحالة</label>
+            <div class="input-group input-group-static mb-4">
+              <label for="status" class="ms-0">الحالة</label>
               <select name="status" id="status" class="form-control" required>
                 <option value="نشط">نشط</option>
                 <option value="غير نشط">غير نشط</option>
               </select>
             </div>
-            <button type="submit" class="btn btn-primary mt-3">إضافة</button>
+            <button type="submit" class="btn bg-gradient-info mt-3">إضافة</button>
           </form>
         </div>
       </div>

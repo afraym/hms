@@ -62,4 +62,9 @@
         opacity: 0.2; /* Adjust transparency */
         z-index: -1;
     }
+    /* Style the first <td> in each row */
+    table tbody tr td:first-child {
+      padding: 0.5rem 1.5rem;
+
+    }
   </style>

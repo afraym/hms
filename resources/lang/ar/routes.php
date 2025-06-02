@@ -8,6 +8,7 @@ return [
     'patients.index'  => 'قائمة المرضى',
     'patients.create' => 'إضافة مريض',
     'patients.edit'   => 'تعديل مريض',
+    'patients.show' => 'تفاصيل المريض',
     'patient_visits.index'  => 'زيارات المرضى',
     'patient_visits.create' => 'إضافة زيارة',
     'departments.index'      => 'قائمة الأقسام',

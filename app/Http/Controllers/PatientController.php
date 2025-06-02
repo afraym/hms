@@ -95,6 +95,7 @@ class PatientController extends Controller
      */
     public function show(Patient $patient)
     {
+        $patient->load('visits.bed'); // Load visits and related bed data
         return view('admin.patient.show', compact('patient'));
     }
 
