@@ -1,3 +1,33 @@
+@font-face {
+    font-family: 'Amiri';
+    src: url('/assets/fonts/amiri-regular.woff2') format('woff2'),
+         url('/assets/fonts/amiri-regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Amiri';
+    src: url('/assets/fonts/amiri-bold.woff2') format('woff2'),
+         url('/assets/fonts/amiri-bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+
 .ps-3 {
     padding-right: 1%;
+}
+
+.sidenav.text-black {
+    color: black;
+}
+
+.sidenav.text-black a,
+.sidenav.text-black .nav-link {
+    color: black !important;
+}
+
+.sidenav.text-black a:hover,
+.sidenav.text-black .nav-link:hover {
+    color: #555 !important;
 }
