@@ -12,7 +12,7 @@
         <div class="card-body">
           <form action="{{ route('departments.store') }}" method="POST">
             @csrf
-            <div class="input-group input-group-outline my-3">
+            <div class="input-group input-group-dynamic mb-4">
               <label for="name" class="form-label">اسم القسم</label>
               <input type="text" name="name" id="name" class="form-control" required>
             </div>

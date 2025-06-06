@@ -13,7 +13,7 @@ class PatientController extends Controller
      */
     public function index()
     {
-        $patients = Patient::paginate(50); // Paginate with 10 patients per page
+        $patients = Patient::orderBy('created_at', 'desc')->paginate(50);
         return view('admin.patient.index', compact('patients'));
     }
 
@@ -31,30 +31,30 @@ class PatientController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'first_name'    => 'required|string|max:255',
-            'second_name'   => 'nullable|string|max:255',
-            'third_name'    => 'nullable|string|max:255',
-            'fourth_name'   => 'nullable|string|max:255',
-            'email'         => 'nullable|email|max:255',
-            'phone'         => 'nullable|string|max:20',
-            'phone2'        => 'nullable|string|max:20',
-            'national_id'   => 'nullable|string|unique:patients|max:50',
+            'first_name'    => 'max:255',
+            'second_name'   => 'nullable|max:255',
+            'third_name'    => 'nullable|max:255',
+            'fourth_name'   => 'nullable|max:255',
+            'email'         => 'nullable|max:255',
+            'phone'         => 'nullable|max:20',
+            'phone2'        => 'nullable|max:20',
+            'national_id'   => 'nullable|unique:patients|max:50',
             'date_of_birth' => 'nullable|date',
-            'gender'        => 'nullable|string|max:10',
-            'bed_id'        => 'required|exists:beds,id',
+            'gender'        => 'nullable|max:10',
+            'bed_id'        => 'exists:beds,id',
         ]);
 
         // Check if a patient with the same email or national ID already exists
-        $existingPatient = Patient::where('email', $validated['email'])
-            ->orWhere('national_id', $validated['national_id'])
-            ->first();
+        // $existingPatient = Patient::where('email', $validated['email'])
+        //     ->orWhere('national_id', $validated['national_id'])
+        //     ->first();
 
-        if ($existingPatient) {
-            return response()->json([
-                'message' => 'Patient already exists!',
-                'patient' => $existingPatient
-            ], 409); // HTTP status code 409 for conflict
-        }
+        // if ($existingPatient) {
+        //     return response()->json([
+        //         'message' => 'Patient already exists!',
+        //         'patient' => $existingPatient
+        //     ], 409); // HTTP status code 409 for conflict
+        // }
 
         // Create the new patient
         $patient = Patient::create($validated);
@@ -63,7 +63,7 @@ class PatientController extends Controller
         Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
 
         return response()->json([
-            'message' => 'Patient created successfully!',
+            'message' => 'تم اضافة المريض بنجاح!',
             'patient' => $patient
         ]);
     }
@@ -113,12 +113,12 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient)
     {
         $validated = $request->validate([
-            'first_name'    => 'required|string|max:255',
+            'first_name'    => '|max:255',
             'email'         => 'nullable|email|max:255',
-            'phone'         => 'nullable|string|max:20',
-            'national_id'   => 'nullable|string|max:50|unique:patients,national_id,' . $patient->id,
+            'phone'         => 'nullable|max:20',
+            'national_id'   => 'nullable|max:50|unique:patients,national_id,' . $patient->id,
             'date_of_birth' => 'nullable|date',
-            'gender'        => 'nullable|string|max:10',
+            'gender'        => 'nullable|max:10',
         ]);
 
         $patient->update($validated);
@@ -146,9 +146,99 @@ class PatientController extends Controller
             Bed::where('id', $patient->bed_id)->update(['status' => 'متاح']);
         }
 
+        // Store a discharge visit
+        $patient->visits()->create([
+            'type'     => 'out',
+            'visit_at' => now(),
+            'notes'    => 'Discharged by system',
+        ]);
+
         // Update the patient's bed_id to null (discharge)
         $patient->update(['bed_id' => null]);
 
         return redirect()->route('patients.index')->with('success', 'تم تسجيل خروج المريض بنجاح.');
+    }
+
+    /**
+     * Store a new visit for the patient.
+     */
+    public function storeVisit(Request $request, Patient $patient)
+    {
+        $validated = $request->validate([
+            'type'      => '|in:in,out',
+            'visit_at'  => '|date',
+            'notes'     => 'nullable',
+        ]);
+
+        $visit = $patient->visits()->create($validated);
+
+        return redirect()->route('patients.show', $patient->id)->with('success', 'تم تسجيل الزيارة بنجاح.');
+    }
+
+    /**
+     * Check if a national ID exists and return patient details if it does.
+     */
+    public function checkNationalId(Request $request)
+    {
+        $request->validate([
+            'national_id' => 'required|string|max:14',
+        ]);
+
+        $patient = Patient::where('national_id', $request->national_id)->first();
+
+        if ($patient) {
+            return response()->json([
+                'exists' => true,
+                'patient' => [
+                    'first_name' => $patient->first_name,
+                    'second_name' => $patient->second_name,
+                    'third_name' => $patient->third_name,
+                    'fourth_name' => $patient->fourth_name,
+                    'email' => $patient->email,
+                    'phone' => $patient->phone,
+                    'phone2' => $patient->phone2,
+                    'date_of_birth' => $patient->date_of_birth,
+                    'gender' => $patient->gender,
+                    'address' => $patient->address,
+                    'governorate' => $patient->governorate,
+                ],
+            ]);
+        }
+
+        return response()->json(['exists' => false]);
+    }
+
+    /**
+     * Search for patients by query.
+     */
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+
+        // Search patients by first name, second name, phone, or national ID
+        $patients = Patient::where('first_name', 'LIKE', "%{$query}%")
+            ->orWhere('second_name', 'LIKE', "%{$query}%")
+            ->orWhere('phone', 'LIKE', "%{$query}%")
+            ->orWhere('national_id', 'LIKE', "%{$query}%")
+            ->get();
+
+        return view('admin.patient.index', compact('patients'))->with('query', $query);
+    }
+
+    /**
+     * Ajax search for patients.
+     */
+    public function ajaxSearch(Request $request)
+    {
+        $query = $request->input('query');
+
+        // Search patients by first name, second name, phone, or national ID
+        $patients = Patient::where('first_name', 'LIKE', "%{$query}%")
+            ->orWhere('second_name', 'LIKE', "%{$query}%")
+            ->orWhere('phone', 'LIKE', "%{$query}%")
+            ->orWhere('national_id', 'LIKE', "%{$query}%")
+            ->get();
+
+        return response()->json($patients);
     }
 }

@@ -47,6 +47,11 @@
             @endif
 
             <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-warning">تعديل</a>
+            <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="btn btn-secondary">تسجيل خروج</button>
+            </form>
             <a href="{{ route('patients.index') }}" class="btn btn-secondary">رجوع</a>
         </div>
     </div>

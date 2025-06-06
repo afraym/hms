@@ -11,7 +11,7 @@ class PatientVisit extends Model
 
     protected $fillable = [
         'patient_id',
-        'type',
+        'type', // 'in' or 'out'
         'visit_at',
         'notes',
     ];
@@ -21,7 +21,6 @@ class PatientVisit extends Model
         return $this->belongsTo(Patient::class);
     }
 
-    // Define the bed relationship
     public function bed()
     {
         return $this->belongsTo(Bed::class);

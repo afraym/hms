@@ -12,14 +12,14 @@
                     <form id="bedForm" action="{{ route('beds.store') }}" method="POST" autocomplete="off">
                         @csrf
                         <div class="col-md-6 mb-3">
-                            <div class="input-group input-group-outline my-3">
+                            <div class="input-group input-group-dynamic mb-4">
                                 <label for="bed_number" class="form-label">رقم السرير</label>
                                 <input type="text" class="form-control @error('bed_number') is-invalid @enderror" id="bed_number" name="bed_number" value="{{ old('bed_number') }}">
                                 @error('bed_number') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <div class="input-group input-group-outline my-3">
+                            <div class="input-group input-group-dynamic mb-4">
                                 <label for="room_number" class="form-label">رقم الغرفة</label>
                                 <input type="text" class="form-control @error('room_number') is-invalid @enderror" id="room_number" name="room_number" value="{{ old('room_number') }}">
                                 @error('room_number') <span class="text-danger">{{ $message }}</span> @enderror

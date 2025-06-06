@@ -9,12 +9,7 @@
           </ol>
           <h6 class="font-weight-bolder mb-0">{{ __('routes.' . Route::currentRouteName()) }}</h6>  </nav>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 px-0" id="navbar">
-          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-            <div class="input-group input-group-outline">
-              <label class="form-label">أكتب هنا...</label>
-              <input type="text" class="form-control">
-            </div>
-          </div>
+
           <ul class="navbar-nav me-auto ms-0 justify-content-end">
             <li class="nav-item d-xl-none pe-3 d-flex align-items-center">
               <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">

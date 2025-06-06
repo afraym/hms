@@ -25,9 +25,12 @@ Route::view('profile', 'profile')
     });
 
 Route::get('/proxy/national-id', [ProxyController::class, 'fetchNationalIdInfo']);
+Route::get('/api/check-national-id', [PatientController::class, 'checkNationalId'])->name('patients.checkNationalId');
 // Route::name('patients.')->group(function () {
     // Route::resource('patient.visits', PatientVisitController::class);
 // });
 Route::patch('/patients/{patient}/discharge', [PatientController::class, 'discharge'])->name('patients.discharge');
+Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
+Route::get('/patients/ajax-search', [PatientController::class, 'ajaxSearch'])->name('patients.ajaxSearch');
 
 require __DIR__.'/auth.php';

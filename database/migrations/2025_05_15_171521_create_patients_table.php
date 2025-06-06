@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name');
+            $table->string('first_name')->nullable()->index();
             $table->string('second_name')->nullable();
             $table->string('third_name')->nullable();
             $table->string('fourth_name')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->string('phone2')->nullable();
-            $table->string('national_id')->index()->unique();
+            $table->string('national_id')->nullable()->unique(); // Make national_id nullable and unique
             $table->date('date_of_birth')->nullable();
             $table->string('gender')->nullable();
             $table->timestamps();
