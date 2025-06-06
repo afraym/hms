@@ -112,14 +112,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <td>${patient.national_id}</td>
                                     <td>${gender}</td>
                                     <td>
-                                        <a href="/patients/${patient.id}" class="btn bg-gradient-info">عرض</a>
-                                        <a href="/patients/${patient.id}/edit" class="btn bg-gradient-warning">تعديل</a>
-                                        <form action="/patients/${patient.id}/discharge" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
+                                        <a href="/admin/patients/${patient.id}" class="btn bg-gradient-info">عرض</a>
+                                        <a href="/admin/patients/${patient.id}/edit" class="btn bg-gradient-warning">تعديل</a>
+                                        <form action="/admin/patients/${patient.id}/discharge" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="PATCH">
                                             <button type="submit" class="btn bg-gradient-secondary" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
                                         </form>
-                                        <form action="/patients/${patient.id}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
+                                        <form action="/admin/patients/${patient.id}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="DELETE">
                                             <button type="submit" class="btn bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
@@ -137,7 +137,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         `;
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    patientsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-danger">حدث خطأ أثناء البحث.</td>
+                        </tr>
+                    `;
+                });
         });
     }
 });
