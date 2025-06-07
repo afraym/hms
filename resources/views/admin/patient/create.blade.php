@@ -399,10 +399,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             });
                         } else {
                             $.toast({
-                                heading: 'تنبيه',
-                                text: 'هذا الرقم القومي غير موجود في قاعدة البيانات.',
+                                heading: 'معلومة',
+                                text: 'هذا المريض أول مرة يتم تسجيله في النظام.',
                                 showHideTransition: 'fade',
-                                icon: 'warning',
+                                icon: 'info',
                                 position: 'top-center',
                             });
                         }
