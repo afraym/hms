@@ -33,4 +33,8 @@ Route::patch('/patients/{patient}/discharge', [PatientController::class, 'discha
 Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
 Route::get('/patients/ajax-search', [PatientController::class, 'ajaxSearch'])->name('patients.ajaxSearch');
 
-require __DIR__.'/auth.php';
+// require __DIR__.'/auth.php';
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
