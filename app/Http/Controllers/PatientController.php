@@ -37,35 +37,44 @@ class PatientController extends Controller
             'fourth_name'   => 'nullable|max:255',
             'email'         => 'nullable|max:255',
             'phone'         => 'nullable|max:20',
-            'phone2'        => 'nullable|max:20',
-            'national_id'   => 'nullable|unique:patients|max:50',
+            'national_id'   => 'nullable|max:14',
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|max:10',
-            'bed_id'        => 'exists:beds,id',
+            'bed_id'        => 'nullable|exists:beds,id',
         ]);
 
-        // Check if a patient with the same email or national ID already exists
-        // $existingPatient = Patient::where('email', $validated['email'])
-        //     ->orWhere('national_id', $validated['national_id'])
-        //     ->first();
+        // Check if a patient with the same national ID exists
+        $existingPatient = Patient::where('national_id', $validated['national_id'])->first();
 
-        // if ($existingPatient) {
-        //     return response()->json([
-        //         'message' => 'Patient already exists!',
-        //         'patient' => $existingPatient
-        //     ], 409); // HTTP status code 409 for conflict
-        // }
+        if ($existingPatient) {
+            // Store a new visit for the existing patient
+            $existingPatient->visits()->create([
+                'type'     => 'in', // Assuming it's an "in" visit
+                'visit_at' => now(),
+                'notes'    => 'Visit recorded for existing patient',
+            ]);
 
-        // Create the new patient
+            return redirect()->route('patients.show', $existingPatient->id)
+                ->with('success', 'تم تسجيل دخول للمريض الموجود بالفعل.');
+        }
+
+        // Create a new patient if they don't exist
         $patient = Patient::create($validated);
 
-        // Update the bed status
-        Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
-
-        return response()->json([
-            'message' => 'تم اضافة المريض بنجاح!',
-            'patient' => $patient
+        // Store the initial visit for the new patient
+        $patient->visits()->create([
+            'type'     => 'in', // Assuming it's an "in" visit
+            'visit_at' => now(),
+            'notes'    => 'Initial visit recorded for new patient',
         ]);
+
+        // Update the bed status if a bed is assigned
+        if (!empty($validated['bed_id'])) {
+            Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+        }
+
+        return redirect()->route('patients.show', $patient->id)
+            ->with('success', 'تم إضافة المريض وتسجيل دخوله بنجاح.');
     }
 
     /**

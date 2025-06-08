@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const nationalId = this.value;
 
             if (nationalId.length === 14) {
-                fetch(`/api/check-national-id?national_id=${nationalId}`)
+                fetch("{{ route('patients.checkNationalId') }}?national_id=" + nationalId)
                     .then(response => response.json())
                     .then(data => {
                         if (data.exists) {

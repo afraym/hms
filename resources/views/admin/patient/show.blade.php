@@ -20,13 +20,13 @@
             <p><strong>الجنس:</strong> {{ $patient->gender }}</p>
             
             <hr>
-            <h5>تفاصيل الزيارات</h5>
+            <h5>تفاصيل الدخول والخروج</h5>
             @if($patient->visits->isNotEmpty())
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>نوع الزيارة</th>
-                            <th>تاريخ الزيارة</th>
+                            <th>نوع التردد</th>
+                            <th>تاريخ التردد</th>
                             <th>ملاحظات</th>
                             <th>السرير</th>
                         </tr>
@@ -43,7 +43,7 @@
                     </tbody>
                 </table>
             @else
-                <p>لا توجد زيارات لهذا المريض.</p>
+                <p>لا توجد تفاصيل دخول أو خروج لهذا المريض.</p>
             @endif
 
             <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-warning">تعديل</a>
