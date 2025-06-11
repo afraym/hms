@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('national_id')->nullable()->unique(); // Make national_id nullable and unique
             $table->date('date_of_birth')->nullable();
             $table->string('gender')->nullable();
+            $table->string('status')->default('waiting'); 
             $table->timestamps();
         });
     }

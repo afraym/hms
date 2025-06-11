@@ -17,7 +17,9 @@ return new class extends Migration
             $table->string('room_number');
             $table->enum('status', ['متاح', 'محجوز', 'صيانة'])->default('متاح');
             $table->string('department')->nullable(); // القسم
-            $table->string('patient_name')->nullable();
+            if (Schema::hasTable('patients')) {
+                $table->foreignId('patient_id')->nullable()->constrained('patients')->nullOnDelete();
+            }
             $table->timestamps();
         });
     }

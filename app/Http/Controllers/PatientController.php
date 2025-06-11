@@ -61,6 +61,10 @@ class PatientController extends Controller
         // Create a new patient if they don't exist
         $patient = Patient::create($validated);
 
+        // Update the status based on bed assignment
+        $status = !empty($validated['bed_id']) ? 'admitted' : 'waiting';
+        $patient->update(['status' => $status]);
+
         // Store the initial visit for the new patient
         $patient->visits()->create([
             'type'     => 'in', // Assuming it's an "in" visit
@@ -122,15 +126,27 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient)
     {
         $validated = $request->validate([
-            'first_name'    => '|max:255',
+            'first_name'    => 'max:255',
             'email'         => 'nullable|email|max:255',
             'phone'         => 'nullable|max:20',
             'national_id'   => 'nullable|max:50|unique:patients,national_id,' . $patient->id,
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|max:10',
+            'bed_id'        => 'nullable|exists:beds,id', // Ensure bed_id is valid
         ]);
 
+        // Update the patient's data
         $patient->update($validated);
+
+        // Update the status based on bed assignment
+        if (!empty($validated['bed_id'])) {
+            $patient->update(['status' => 'admitted']);
+
+            // Update the bed status to "محجوز"
+            Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+        } else {
+            $patient->update(['status' => 'waiting']);
+        }
 
         return redirect()->route('patients.show', $patient->id)->with('success', 'تم تحديث بيانات المريض بنجاح.');
     }
@@ -162,8 +178,11 @@ class PatientController extends Controller
             'notes'    => 'Discharged by system',
         ]);
 
-        // Update the patient's bed_id to null (discharge)
-        $patient->update(['bed_id' => null]);
+        // Update the patient's bed_id to null and status to "discharged"
+        // If using Eloquent relationships, detach the bed properly
+        $patient->bed_id = null;
+        $patient->status = 'discharged';
+        $patient->save();
 
         return redirect()->route('patients.index')->with('success', 'تم تسجيل خروج المريض بنجاح.');
     }

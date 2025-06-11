@@ -26,6 +26,7 @@
                                     <th>رقم الهاتف</th>
                                     <th>الرقم القومي</th>
                                     <th>الجنس</th>
+                                    <th>الحالة</th> <!-- عمود جديد للحالة -->
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>
@@ -44,24 +45,35 @@
                                     <td>{{ $patient->national_id }}</td>
                                     <td>{{ $patient->gender == 'male' ? 'ذكر' : ($patient->gender == 'female' ? 'أنثى' : 'غير محدد') }}</td>
                                     <td>
-                                        <a href="{{ route('patients.show', $patient->id) }}" class="btn bg-gradient-info">عرض</a>
-                                        <a href="{{ route('patients.edit', $patient->id) }}" class="btn bg-gradient-warning">تعديل</a>
+                                        @if($patient->status == 'admitted')
+                                            <span class="badge bg-success">محجوز في سرير</span>
+                                        @elseif($patient->status == 'waiting')
+                                            <span class="badge bg-warning">في انتظار سرير</span>
+                                        @elseif($patient->status == 'discharged')
+                                            <span class="badge bg-secondary">خرج</span>
+                                        @else
+                                            <span class="badge bg-light text-dark">غير محدد</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('patients.show', $patient->id) }}" class="btn btn-sm bg-gradient-info">عرض</a>
+                                        <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-sm bg-gradient-warning">تعديل</a>
                                         <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="btn bg-gradient-secondary" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-secondary" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
                                         </form>
                                         <form action="{{ route('patients.destroy', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
                                         </form>
                                     </td>
                                 </tr>
                                 @endforeach
                                 @if($patients->isEmpty())
                                 <tr>
-                                    <td colspan="7" class="text-center">لا يوجد مرضى</td>
+                                    <td colspan="8" class="text-center">لا يوجد مرضى</td>
                                 </tr>
                                 @endif
                             </tbody>
@@ -112,17 +124,28 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <td>${patient.national_id}</td>
                                     <td>${gender}</td>
                                     <td>
-                                        <a href="/admin/patients/${patient.id}" class="btn bg-gradient-info">عرض</a>
-                                        <a href="/admin/patients/${patient.id}/edit" class="btn bg-gradient-warning">تعديل</a>
+                                        @if($patient->status == 'admitted')
+                                            <span class="badge bg-success">محجوز في سرير</span>
+                                        @elseif($patient->status == 'waiting')
+                                            <span class="badge bg-warning">في انتظار سرير</span>
+                                        @elseif($patient->status == 'discharged')
+                                            <span class="badge bg-secondary">خرج</span>
+                                        @else
+                                            <span class="badge bg-light text-dark">غير محدد</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="/admin/patients/${patient.id}" class="btn btn-sm bg-gradient-info">عرض</a>
+                                        <a href="/admin/patients/${patient.id}/edit" class="btn btn-sm bg-gradient-warning">تعديل</a>
                                         <form action="/admin/patients/${patient.id}/discharge" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="PATCH">
-                                            <button type="submit" class="btn bg-gradient-secondary" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-secondary" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
                                         </form>
                                         <form action="/admin/patients/${patient.id}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="DELETE">
-                                            <button type="submit" class="btn bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
                                         </form>
                                     </td>
                                 </tr>
