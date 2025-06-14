@@ -25,7 +25,13 @@
   <!-- CSS Files -->
   <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
   <link id="pagestyle" href="{{ asset('assets/css/material-dashboard.css?v=3.2.0') }}" rel="stylesheet" />
-
+{{-- <script src="{{ asset('assets/themes/fa5/theme.js')}}" type="text/javascript"></script> --}}
+    {{-- <script src="{{ asset('assets/themes/explorer-fa5/theme.js')}}" type="text/javascript"></script> --}}
+<!-- the fileinput plugin styling CSS file -->
+<link href="{{ asset('assets/css/fileinput.min.css')}}" media="all" rel="stylesheet" type="text/css" />
+ 
+<!-- if using RTL (Right-To-Left) orientation, load the RTL CSS file after fileinput.css by uncommenting below -->
+<link rel="stylesheet" href="{{ asset('assets/css/fileinput-rtl.min.css')}}"> 
   <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 

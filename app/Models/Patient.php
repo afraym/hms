@@ -12,7 +12,8 @@ class Patient extends Model
 
     protected $fillable = [
         'first_name', 'second_name', 'third_name', 'fourth_name',
-        'email', 'phone', 'phone2', 'national_id', 'date_of_birth', 'gender'
+        'email', 'phone', 'phone2', 'national_id', 'date_of_birth', 'gender',
+        'status', 'medical_id' // الرقم الطبي
     ];
 
     // Encrypt phone before saving

@@ -86,6 +86,9 @@
 <script src="{{ asset('assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/chartjs.min.js') }}"></script>
 <script src="{{ asset('assets/js/jquery-3.6.0.min.js') }}"></script>
+
+<script src="{{ asset('assets/js/fileinput.min.js') }}"></script>
+<script src="{{ asset('assets/js/locales/ar.js') }}"></script>
 <!-- jQuery Toast Plugin -->
 <link rel="stylesheet" href="{{ asset('assets/css/jquery.toast.min.css') }}">
 <script src="{{ asset('assets/js/jquery.toast.min.js') }}"></script>
@@ -97,6 +100,22 @@
         }
         Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
     }
+
+$(document).ready(function () {
+ 
+// initialize plugin with defaults
+ $("#attachments").fileinput({
+        rtl: true, // تمكين الاتجاه من اليمين إلى اليسار
+        language: "ar", // تعيين اللغة إلى العربية
+        dropZoneEnabled: true,
+        allowedFileExtensions: ["jpg", "png", "jpeg", "pdf", "doc", "docx"],
+        showUpload: false, // إخفاء زر الرفع
+        previewFileType: 'any',
+    });
+ 
+// with plugin options
+$("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
+    });
 </script>
 <!-- Control Center for Material Dashboard -->
 <script src="{{ asset('assets/js/material-dashboard.min.js?v=3.2.0') }}"></script>

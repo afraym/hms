@@ -156,6 +156,21 @@
                                 </div>
                                 @error('bed_id') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
+                            <div class="col-md-6">
+                                 <div class="input-group input-group-static mb-4">
+                                <label for="medicalId">الرقم الطبي:</label>
+                                <input type="text" id="medicalId" name="medical_id"  value="{{ $medicalId }}">
+                            </div>
+                            </div>
+                            <div class="col-md-12">
+                                <input id="attachments" type="file" class="file" data-preview-file-type="text" name="files[]" multiple>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <div class="input-group input-group-dynamic mb-4">
+                                    <label for="notes" class="form-label">ملاحظات</label>
+                                    <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes">{{ old('notes') }}</textarea>
+                                </div>
+                                @error('notes') <span class="text-danger">{{ $message }}</span> @enderror
                         </div>
                         <button type="submit" class="btn btn-dark">حفظ</button>
                         <a href="{{ route('patients.index') }}" class="btn btn-outline-secondary">إلغاء</a>
@@ -417,5 +432,34 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+     function generateMedicalId() {
+            const currentDate = new Date();
+            const year = String(currentDate.getFullYear()).slice(-2); // آخر رقمين من السنة
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // الشهر بصيغة رقمية
+            const day = String(currentDate.getDate()).padStart(2, '0'); // اليوم بصيغة رقمية
+
+            // مفتاح اليوم الحالي لتخزين الرقم في localStorage
+            const todayKey = `${year}${month}${day}`;
+            let currentId = localStorage.getItem(todayKey);
+
+            if (!currentId) {
+                // إذا لم يكن هناك رقم مخزن لليوم الحالي، ابدأ من 001
+                currentId = 1;
+            } else {
+                // إذا كان هناك رقم مخزن، قم بزيادته بمقدار 1
+                currentId = parseInt(currentId) + 1;
+            }
+
+            // تخزين الرقم الحالي في localStorage
+            localStorage.setItem(todayKey, currentId);
+
+            // تنسيق الرقم ليكون ثلاثي الأرقام
+            const uniqueId = String(currentId).padStart(3, '0');
+
+            // توليد الرقم الطبي النهائي
+            const medicalId = `11803${year}${month}${day}${uniqueId}`;
+            document.getElementById('medicalId').value = medicalId;
+        }
 </script>
 @endsection

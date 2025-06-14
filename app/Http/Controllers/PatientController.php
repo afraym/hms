@@ -17,12 +17,32 @@ class PatientController extends Controller
         return view('admin.patient.index', compact('patients'));
     }
 
+    private function generateMedicalId()
+    {
+        $today = now()->format('Y-m-d'); // تاريخ اليوم
+        $year = now()->format('y'); // آخر رقمين من السنة
+        $month = now()->format('m'); // الشهر
+        $day = now()->format('d'); // اليوم
+
+        // البحث عن آخر رقم طبي تم إنشاؤه اليوم
+        $lastPatient = Patient::whereDate('created_at', $today)->orderBy('medical_id', 'desc')->first();
+
+        // تحديد الرقم الجديد
+        $lastId = $lastPatient ? intval(substr($lastPatient->medical_id, -3)) : 0;
+        $newId = str_pad($lastId + 1, 3, '0', STR_PAD_LEFT);
+
+        // توليد الرقم الطبي النهائي
+        return "11803{$year}{$month}{$day}{$newId}";
+    }
+
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        return view('admin.patient.create');
+         // توليد الرقم الطبي
+        $medicalId = $this->generateMedicalId();
+        return view('admin.patient.create', compact('medicalId'));
     }
 
     /**
