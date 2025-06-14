@@ -50,6 +50,7 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
+        dd($request);
         $validated = $request->validate([
             'first_name'    => 'max:255',
             'second_name'   => 'nullable|max:255',
@@ -60,7 +61,8 @@ class PatientController extends Controller
             'national_id'   => 'nullable|max:14',
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|max:10',
-            'bed_id'        => 'nullable|exists:beds,id',
+            'medical_id'    => 'nullable',
+            'bed_id'        => 'nullable',
         ]);
 
         // Check if a patient with the same national ID exists

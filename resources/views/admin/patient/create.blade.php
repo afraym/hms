@@ -162,16 +162,16 @@
                                 <input type="text" id="medicalId" name="medical_id"  value="{{ $medicalId }}">
                             </div>
                             </div>
-                            <div class="col-md-12">
+                            {{-- <div class="col-md-12">
                                 <input id="attachments" type="file" class="file" data-preview-file-type="text" name="files[]" multiple>
-                            </div>
-                            <div class="col-md-12 mb-3">
+                            </div> --}}
+                            {{-- <div class="col-md-12 mb-3">
                                 <div class="input-group input-group-dynamic mb-4">
                                     <label for="notes" class="form-label">ملاحظات</label>
                                     <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes">{{ old('notes') }}</textarea>
                                 </div>
                                 @error('notes') <span class="text-danger">{{ $message }}</span> @enderror
-                        </div>
+                        </div> --}}
                         <button type="submit" class="btn btn-dark">حفظ</button>
                         <a href="{{ route('patients.index') }}" class="btn btn-outline-secondary">إلغاء</a>
                     </form>
