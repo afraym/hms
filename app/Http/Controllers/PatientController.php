@@ -50,9 +50,9 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request);
+        // dd($request);
         $validated = $request->validate([
-            'first_name'    => 'max:255',
+            'first_name'    => 'nullable|max:255',
             'second_name'   => 'nullable|max:255',
             'third_name'    => 'nullable|max:255',
             'fourth_name'   => 'nullable|max:255',
@@ -65,19 +65,29 @@ class PatientController extends Controller
             'bed_id'        => 'nullable',
         ]);
 
-        // Check if a patient with the same national ID exists
-        $existingPatient = Patient::where('national_id', $validated['national_id'])->first();
+        // Check if a patient with the same national ID or medical ID exists
+        $existingPatient = Patient::where(function($query) use ($validated) {
+            if (!empty($validated['national_id'])) {
+            $query->where('national_id', $validated['national_id']);
+            }
+            if (!empty($validated['medical_id'])) {
+            $query->orWhere('medical_id', $validated['medical_id']);
+            }
+        })->first();
 
         if ($existingPatient) {
             // Store a new visit for the existing patient
             $existingPatient->visits()->create([
-                'type'     => 'in', // Assuming it's an "in" visit
-                'visit_at' => now(),
-                'notes'    => 'Visit recorded for existing patient',
+            'type'     => 'in', // Assuming it's an "in" visit
+            'visit_at' => now(),
+            'notes'    => 'تم تسجيل دخول للمريض الموجود بالفعل.',
             ]);
 
-            return redirect()->route('patients.show', $existingPatient->id)
-                ->with('success', 'تم تسجيل دخول للمريض الموجود بالفعل.');
+            return response()->json([
+            'success' => true,
+            'message' => 'تم تسجيل دخول للمريض الموجود بالفعل.',
+            'patient_id' => $existingPatient->id,
+            ]);
         }
 
         // Create a new patient if they don't exist

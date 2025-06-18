@@ -13,32 +13,32 @@ class Patient extends Model
     protected $fillable = [
         'first_name', 'second_name', 'third_name', 'fourth_name',
         'email', 'phone', 'phone2', 'national_id', 'date_of_birth', 'gender',
-        'status','bed_id', 'medical_id' // الرقم الطبي
+        'status', 'bed_id', 'medical_id', 'address', 'governorate'
     ];
 
-    // Encrypt phone before saving
-    public function setPhoneAttribute($value)
-    {
-        $this->attributes['phone'] = Crypt::encryptString($value);
-    }
+    // // Encrypt phone before saving
+    // public function setPhoneAttribute($value)
+    // {
+    //     $this->attributes['phone'] = Crypt::encryptString($value);
+    // }
 
-    // Decrypt phone when retrieving
-    public function getPhoneAttribute($value)
-    {
-        return $value ? Crypt::decryptString($value) : null;
-    }
+    // // Decrypt phone when retrieving
+    // public function getPhoneAttribute($value)
+    // {
+    //     return $value ? Crypt::decryptString($value) : null;
+    // }
 
-      // Encrypt phone2 before saving
-    public function setPhone2Attribute($value)
-    {
-        $this->attributes['phone2'] = Crypt::encryptString($value);
-    }
+    //   // Encrypt phone2 before saving
+    // public function setPhone2Attribute($value)
+    // {
+    //     $this->attributes['phone2'] = Crypt::encryptString($value);
+    // }
 
-    // Decrypt phone2 when retrieving
-    public function getPhone2Attribute($value)
-    {
-        return $value ? Crypt::decryptString($value) : null;
-    }
+    // // Decrypt phone2 when retrieving
+    // public function getPhone2Attribute($value)
+    // {
+    //     return $value ? Crypt::decryptString($value) : null;
+    // }
     // Encrypt national_id before saving
     // public function setNationalIdAttribute($value)
     // {
