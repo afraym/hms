@@ -40,9 +40,13 @@ class PatientController extends Controller
      */
     public function create()
     {
-         // توليد الرقم الطبي
+        // توليد الرقم الطبي
         $medicalId = $this->generateMedicalId();
-        return view('admin.patient.create', compact('medicalId'));
+
+        // جلب الأقسام من جدول الأقسام (Department)
+        $departments = \App\Models\Department::all();
+
+        return view('admin.patient.create', compact('medicalId', 'departments'));
     }
 
     /**
@@ -59,34 +63,39 @@ class PatientController extends Controller
             'email'         => 'nullable|max:255',
             'phone'         => 'nullable|max:20',
             'national_id'   => 'nullable|max:14',
+            'uhi_number'    => 'nullable|max:50',
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|max:10',
             'medical_id'    => 'nullable',
             'bed_id'        => 'nullable',
+            'department'    => 'nullable|max:255',
         ]);
 
-        // Check if a patient with the same national ID or medical ID exists
+        // Check if a patient with the same national ID, medical ID, or UHI number exists
         $existingPatient = Patient::where(function($query) use ($validated) {
             if (!empty($validated['national_id'])) {
-            $query->where('national_id', $validated['national_id']);
+                $query->where('national_id', $validated['national_id']);
             }
             if (!empty($validated['medical_id'])) {
-            $query->orWhere('medical_id', $validated['medical_id']);
+                $query->orWhere('medical_id', $validated['medical_id']);
+            }
+            if (!empty($validated['uhi_number'])) {
+                $query->orWhere('uhi_number', $validated['uhi_number']);
             }
         })->first();
 
         if ($existingPatient) {
             // Store a new visit for the existing patient
             $existingPatient->visits()->create([
-            'type'     => 'in', // Assuming it's an "in" visit
-            'visit_at' => now(),
-            'notes'    => 'تم تسجيل دخول للمريض الموجود بالفعل.',
+                'type'     => 'in', // Assuming it's an "in" visit
+                'visit_at' => now(),
+                'notes'    => 'تم تسجيل دخول للمريض الموجود بالفعل.',
             ]);
 
             return response()->json([
-            'success' => true,
-            'message' => 'تم تسجيل دخول للمريض الموجود بالفعل.',
-            'patient_id' => $existingPatient->id,
+                'success' => true,
+                'message' => 'تم تسجيل دخول للمريض الموجود بالفعل.',
+                'patient_id' => $existingPatient->id,
             ]);
         }
 
@@ -101,7 +110,7 @@ class PatientController extends Controller
         $patient->visits()->create([
             'type'     => 'in', // Assuming it's an "in" visit
             'visit_at' => now(),
-            'notes'    => 'Initial visit recorded for new patient',
+            'notes'    => 'اول زيارة للمريض عند تسجيل الدخول.',
         ]);
 
         // Update the bed status if a bed is assigned
@@ -109,8 +118,11 @@ class PatientController extends Controller
             Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
         }
 
-        return redirect()->route('patients.show', $patient->id)
-            ->with('success', 'تم إضافة المريض وتسجيل دخوله بنجاح.');
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إضافة المريض وتسجيل دخوله بنجاح.',
+            'patient_id' => $patient->id,
+        ]);
     }
 
     /**
@@ -300,5 +312,15 @@ class PatientController extends Controller
             ->get();
 
         return response()->json($patients);
+    }
+
+    /**
+     * Print labels for patients.
+     */
+    public function printLabels(Patient $patient)
+    {
+        $patients = collect([$patient]); // ضع المريض في Collection ليتعامل معه الـBlade كقائمة
+        $repeat = 8; // أو العدد الذي تريده
+        return view('admin.patient.labels', compact('patients', 'repeat'));
     }
 }

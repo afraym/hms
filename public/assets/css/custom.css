@@ -31,3 +31,25 @@
 .sidenav.text-black .nav-link:hover {
     color: #555 !important;
 }
+
+.g-sidenav-show .sidenav .nav-link-text {
+    font-weight: bold;
+}
+@media print {
+        .no-print { display: none; }
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+        html, body, .a4-sheet {
+            width: 210mm;
+            height: 297mm;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            background: #fff !important;
+        }
+        .a4-sheet {
+            page-break-after: always;
+        }
+    }

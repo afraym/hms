@@ -25,7 +25,10 @@ return new class extends Migration
             $table->string('gender')->nullable();
             $table->string('status')->default('waiting');
             $table->string('medical_id')->unique()->nullable(); // الرقم الطبي 
-             $table->unsignedBigInteger('bed_id')->nullable();
+            $table->unsignedBigInteger('bed_id')->nullable();
+            $table->string('uhi_number')->nullable()->unique(); // رقم التأمين الصحي الشامل
+            $table->string('address')->nullable();
+            $table->string('governorate')->nullable();
             $table->timestamps();
         });
     }
@@ -35,9 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-         Schema::table('patients', function (Blueprint $table) {
-        $table->dropColumn('bed_id');
-    });
         Schema::dropIfExists('patients');
     }
 };

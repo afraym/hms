@@ -16,4 +16,5 @@ return [
     'departments.edit'       => 'تعديل قسم',
     'patients.discharge'     => 'خروج المريض',
     'profile'                => 'الملف الشخصي',
+    'patients.print.label'   => 'طباعة ملصق مريض',
 ];

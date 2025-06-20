@@ -19,9 +19,15 @@ Route::view('profile', 'profile')
         Route::get('dashboard', [DashboardController::class, 'index'])
     // ->middleware(['auth', 'verified'])
     ->name('admin.dashboard');
-        Route::resource('beds', BedController::class);
-        Route::resource('patients', PatientController::class);
-        Route::resource('departments', DepartmentController::class);
+    Route::resource('beds', BedController::class);
+    Route::resource('patients', PatientController::class);
+    Route::resource('departments', DepartmentController::class);
+
+    // Route to print a single patient label
+    Route::get('patients/{patient}/label', [PatientController::class, 'printLabels'])->name('patients.print.label');
+
+    // Route to print multiple patient labels
+    Route::get('patients/print/labels', [PatientController::class, 'printLabels'])->name('patients.print.labels');
     });
 
 Route::get('/proxy/national-id', [ProxyController::class, 'fetchNationalIdInfo']);

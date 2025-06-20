@@ -68,6 +68,9 @@
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
                                         </form>
+                                        <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm btn-primary" target="_blank">
+                                            طباعة الملصقات
+                                        </a>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -147,6 +150,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                             <input type="hidden" name="_method" value="DELETE">
                                             <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
                                         </form>
+                                        <a href="/admin/patients/${patient.id}/print/labels" class="btn btn-primary no-print" target="_blank">
+                                            طباعة الملصقات
+                                        </a>
                                     </td>
                                 </tr>
                             `;

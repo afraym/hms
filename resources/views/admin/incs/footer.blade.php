@@ -3,14 +3,15 @@
         <div class="row align-items-center justify-content-lg-between">
             <div class="col-lg-6 mb-lg-0 mb-4">
                 <div class="copyright text-center text-sm text-lg-end">
-                   © <script>
-                            document.write(new Date().getFullYear())
-                        </script>,
-                        تم التطوير بواسطة
-                        <a href="https://afraym.com" class="font-weight-bold " target="_blank">شركة أمان
-                            <img src="{{ asset('assets/img/amanlogo.png') }}" alt="Logo" class="hover-image">
-                        </a>
-                        لخدمة أهل أسوان الكرام.
+                  © <script>
+                        document.write(new Date().getFullYear())
+                      </script>,
+                      تم التطوير بواسطة
+                      <a href="https://afraym.com" class="font-weight-bold company-link" target="_blank" style="display: inline-flex; align-items: center;">
+                        شركة&nbsp;أمان
+                        <img src="{{ asset('assets/img/amanlogo.png') }}" alt="Logo" style="height:60px; vertical-align:middle; margin-right:5px; margin-left:5px;">
+                      </a>
+                      إهداءً لمستشفيات اسوان الجامعية.
                 </div>
             </div>
         </div>
@@ -18,7 +19,7 @@
 </footer>
 </div>
 </main>
-<div class="fixed-plugin">
+<div class="fixed-plugin no-print">
   <a class="fixed-plugin-button text-dark position-fixed px-3 py-2">
     <i class="material-symbols-rounded py-2">settings</i>
   </a>

@@ -156,12 +156,37 @@
                                 </div>
                                 @error('bed_id') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-3">
                                  <div class="input-group input-group-static mb-4">
                                 <label for="medicalId">الرقم الطبي:</label>
-                                <input type="text" id="medicalId" name="medical_id"  value="{{ $medicalId }}">
+                                <input type="text" id="medicalId" name="medical_id"  value="{{ $medicalId }}" class="form-control">
                             </div>
                             </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="uhi_number">
+                                        رقم التأمين الصحي الشامل
+                                        <img src="{{ asset('assets/img/uhi.png') }}" alt="UHI Icon" style="width: 20px; height: 20px; vertical-align: middle;">
+                                    </label>
+                                    <input type="text" name="uhi_number" id="uhi_number" class="form-control" value="{{ old('uhi_number', $patient->uhi_number ?? '') }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-static mb-4">
+                                    <label for="department_id">القسم</label>
+                                    <select name="department_id" id="department_id" class="form-control" required>
+                                        <option value="">اختر القسم</option>
+                                        @foreach($departments as $department)
+                                            <option value="{{ $department->id }}" {{ (old('department_id', $patient->department_id ?? '') == $department->id) ? 'selected' : '' }}>
+                                                {{ $department->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
                             {{-- <div class="col-md-12">
                                 <input id="attachments" type="file" class="file" data-preview-file-type="text" name="files[]" multiple>
                             </div> --}}
