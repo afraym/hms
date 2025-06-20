@@ -35,6 +35,11 @@
 .g-sidenav-show .sidenav .nav-link-text {
     font-weight: bold;
 }
+
+label, .form-label {
+    font-size: 0.87rem !important;
+    font-weight: 600 !important;
+}
 @media print {
         .no-print { display: none; }
         @page {

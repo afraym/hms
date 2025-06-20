@@ -31,7 +31,7 @@
                                 </tr>
                             </thead>
                             <tbody id="patientsTableBody">
-                                @foreach($patients as $patient)
+                                @forelse($patients as $patient)
                                 <tr>
                                     <td>
                                         <img src="{{ asset($patient->gender == 'male' ? 'assets/img/male.png' : ($patient->gender == 'female' ? 'assets/img/female.png' : 'assets/img/default.png')) }}" 
@@ -45,15 +45,19 @@
                                     <td>{{ $patient->national_id }}</td>
                                     <td>{{ $patient->gender == 'male' ? 'ذكر' : ($patient->gender == 'female' ? 'أنثى' : 'غير محدد') }}</td>
                                     <td>
-                                        @if($patient->status == 'admitted')
-                                            <span class="badge bg-success">محجوز في سرير</span>
-                                        @elseif($patient->status == 'waiting')
-                                            <span class="badge bg-warning">في انتظار سرير</span>
-                                        @elseif($patient->status == 'discharged')
-                                            <span class="badge bg-secondary">خرج</span>
-                                        @else
-                                            <span class="badge bg-light text-dark">غير محدد</span>
-                                        @endif
+                                        @switch($patient->status)
+                                            @case('admitted')
+                                                <span class="badge bg-success">محجوز في سرير</span>
+                                                @break
+                                            @case('waiting')
+                                                <span class="badge bg-warning">في انتظار سرير</span>
+                                                @break
+                                            @case('discharged')
+                                                <span class="badge bg-secondary">خرج</span>
+                                                @break
+                                            @default
+                                                <span class="badge bg-light text-dark">غير محدد</span>
+                                        @endswitch
                                     </td>
                                     <td>
                                         <a href="{{ route('patients.show', $patient->id) }}" class="btn btn-sm bg-gradient-info">عرض</a>
@@ -68,17 +72,16 @@
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
                                         </form>
-                                        <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm btn-primary" target="_blank">
+                                        <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm btn-primary">
                                             طباعة الملصقات
                                         </a>
                                     </td>
                                 </tr>
-                                @endforeach
-                                @if($patients->isEmpty())
+                                @empty
                                 <tr>
                                     <td colspan="8" class="text-center">لا يوجد مرضى</td>
                                 </tr>
-                                @endif
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -127,15 +130,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <td>${patient.national_id}</td>
                                     <td>${gender}</td>
                                     <td>
-                                        @if($patient->status == 'admitted')
-                                            <span class="badge bg-success">محجوز في سرير</span>
-                                        @elseif($patient->status == 'waiting')
-                                            <span class="badge bg-warning">في انتظار سرير</span>
-                                        @elseif($patient->status == 'discharged')
-                                            <span class="badge bg-secondary">خرج</span>
-                                        @else
-                                            <span class="badge bg-light text-dark">غير محدد</span>
-                                        @endif
+                                        ${
+                                            patient.status === 'admitted'
+                                                ? '<span class="badge bg-success">محجوز في سرير</span>'
+                                                : patient.status === 'waiting'
+                                                    ? '<span class="badge bg-warning">في انتظار سرير</span>'
+                                                    : patient.status === 'discharged'
+                                                        ? '<span class="badge bg-secondary">خرج</span>'
+                                                        : '<span class="badge bg-light text-dark">غير محدد</span>'
+                                        }
                                     </td>
                                     <td>
                                         <a href="/admin/patients/${patient.id}" class="btn btn-sm bg-gradient-info">عرض</a>

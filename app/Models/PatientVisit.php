@@ -25,4 +25,9 @@ class PatientVisit extends Model
     {
         return $this->belongsTo(Bed::class);
     }
+    
+    public function attachments()
+    {
+        return $this->hasMany(\App\Models\Attachment::class);
+    }
 }

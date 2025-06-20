@@ -13,7 +13,7 @@
                         @csrf
                         <div class="row mb-3">
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="national_id" class="form-label">الرقم القومي</label>
                                     <input type="text" class="form-control @error('national_id') is-invalid @enderror"
                                      id="national_id" name="national_id" value="{{ old('national_id') }}" maxlength="14">
@@ -21,24 +21,40 @@
                                 </div>
                                 @error('national_id') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
-
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-static mb-3 is-filled">
+                                    <label for="medicalId" class="form-label">الرقم الطبي:</label>
+                                    <input type="text" id="medicalId" name="medical_id" value="{{ $medicalId }}" class="form-control" autofocus>
+                                </div>
+                            </div>
 
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
+                                    <label for="uhi_number" class="form-label">
+                                        رقم التأمين الصحي الشامل
+                                        <img src="{{ asset('assets/img/uhi.png') }}" alt="UHI Icon" style="width: 20px; height: 25px; vertical-align: middle;">
+                                        :
+                                    </label>
+                                    <input type="text" name="uhi_number" id="uhi_number" class="form-control" value="{{ old('uhi_number', $patient->uhi_number ?? '') }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="first_name" class="form-label">الاسم الأول</label>
                                     <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name"  value="{{ old('first_name') }}">
                                 </div>
                                 @error('first_name') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="second_name" class="form-label">اسم الأب</label>
                                     <input type="text" class="form-control @error('second_name') is-invalid @enderror" id="second_name" name="second_name" value="{{ old('second_name') }}">
                                 </div>
                                 @error('second_name') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="third_name" class="form-label">اسم الجد</label>
                                     <input type="text" class="form-control @error('third_name') is-invalid @enderror"
                                      id="third_name" name="third_name" value="{{ old('third_name') }}">
@@ -46,7 +62,7 @@
                                 @error('third_name') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="fourth_name" class="form-label">اسم العائلة</label>
                                     <input type="text" class="form-control @error('fourth_name') is-invalid @enderror"
                                      id="fourth_name" name="fourth_name" value="{{ old('fourth_name') }}">
@@ -55,7 +71,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="email" class="form-label">البريد الإلكتروني</label>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror"
                                      id="email" name="email" value="{{ old('email') }}">
@@ -64,7 +80,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="phone" class="form-label">رقم الهاتف</label>
                                     <input type="text" class="form-control @error('phone') is-invalid @enderror"
                                      id="phone" name="phone" value="{{ old('phone') }}">
@@ -73,7 +89,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="phone2" class="form-label">رقم الهاتف الثاني</label>
                                     <input type="text" class="form-control @error('phone2') is-invalid @enderror"
                                      id="phone2" name="phone2" value="{{ old('phone2') }}">
@@ -82,7 +98,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="address" class="form-label">العنوان</label>
                                     <input type="text" class="form-control @error('address') is-invalid @enderror"
                                      id="address" name="address" value="{{ old('address') }}">
@@ -90,6 +106,36 @@
                                 @error('address') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
 
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="bed_id" class="ms-0">اختر السرير</label>
+                                    <select class="form-control @error('bed_id') is-invalid @enderror" id="bed_id" name="bed_id">
+                                        <option value="">اختر السرير</option>
+                                        @foreach(\App\Models\Bed::where('status', 'متاح')->get() as $bed)
+                                            <option value="{{ $bed->id }}" {{ old('bed_id') == $bed->id ? 'selected' : '' }}>
+                                                {{ $bed->bed_number }} - {{ $bed->department }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('bed_id') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+
+
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="department_id">القسم</label>
+                                    <select name="department_id" id="department_id" class="form-control" required>
+                                        <option value="">اختر القسم</option>
+                                        @foreach($departments as $department)
+                                            <option value="{{ $department->id }}" {{ (old('department_id', $patient->department_id ?? '') == $department->id) ? 'selected' : '' }}>
+                                                {{ $department->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static my-3">
                                     <label for="date_of_birth">تاريخ الميلاد</label>
@@ -98,21 +144,8 @@
                                 </div>
                                 @error('date_of_birth') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="gender" class="ms-0">الجنس</label>
-                                    <select id="gender" name="gender" class="form-control @error('gender') is-invalid @enderror">
-                                        <option value="">اختر</option>
-                                        <option value="ذكر" {{ old('gender') == 'ذكر' ? 'selected' : '' }}>ذكر</option>
-                                        <option value="أنثى" {{ old('gender') == 'أنثى' ? 'selected' : '' }}>أنثى</option>
-                                    </select>
-                                </div>
-                                @error('gender') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-static mb-4">
+                                                        <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-static mb-3">
                                     <label for="governorate" class="ms-0">المحافظة</label>
                                     <select id="governorate" name="governorate" class="form-control @error('governorate') is-invalid @enderror">
                                         <option value="أسوان" {{ old('governorate') == 'أسوان' ? 'selected' : '' }}>أسوان</option>
@@ -141,57 +174,29 @@
                                 </div>
                                 @error('governorate') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
-
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="bed_id" class="ms-0">اختر السرير</label>
-                                    <select class="form-control @error('bed_id') is-invalid @enderror" id="bed_id" name="bed_id">
-                                        <option value="">اختر السرير</option>
-                                        @foreach(\App\Models\Bed::where('status', 'متاح')->get() as $bed)
-                                            <option value="{{ $bed->id }}" {{ old('bed_id') == $bed->id ? 'selected' : '' }}>
-                                                {{ $bed->bed_number }} - {{ $bed->department }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                <label class="form-label d-block mb-2">الجنس</label>
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check me-4">
+                                        <input class="form-check-input" type="radio" name="gender" id="customRadio1" value="ذكر" {{ old('gender', $patient->gender ?? '') == 'ذكر' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="customRadio1">ذكر</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="gender" id="customRadio2" value="أنثى" {{ old('gender', $patient->gender ?? '') == 'أنثى' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="customRadio2">أنثى</label>
+                                    </div>
                                 </div>
-                                @error('bed_id') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                 <div class="input-group input-group-static mb-4">
-                                <label for="medicalId">الرقم الطبي:</label>
-                                <input type="text" id="medicalId" name="medical_id"  value="{{ $medicalId }}" class="form-control">
-                            </div>
+                                @error('gender') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="uhi_number">
-                                        رقم التأمين الصحي الشامل
-                                        <img src="{{ asset('assets/img/uhi.png') }}" alt="UHI Icon" style="width: 20px; height: 20px; vertical-align: middle;">
-                                    </label>
-                                    <input type="text" name="uhi_number" id="uhi_number" class="form-control" value="{{ old('uhi_number', $patient->uhi_number ?? '') }}">
-                                </div>
-                            </div>
 
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-static mb-4">
-                                    <label for="department_id">القسم</label>
-                                    <select name="department_id" id="department_id" class="form-control" required>
-                                        <option value="">اختر القسم</option>
-                                        @foreach($departments as $department)
-                                            <option value="{{ $department->id }}" {{ (old('department_id', $patient->department_id ?? '') == $department->id) ? 'selected' : '' }}>
-                                                {{ $department->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+
 
                             {{-- <div class="col-md-12">
                                 <input id="attachments" type="file" class="file" data-preview-file-type="text" name="files[]" multiple>
                             </div> --}}
                             {{-- <div class="col-md-12 mb-3">
-                                <div class="input-group input-group-dynamic mb-4">
+                                <div class="input-group input-group-dynamic mb-3">
                                     <label for="notes" class="form-label">ملاحظات</label>
                                     <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes">{{ old('notes') }}</textarea>
                                 </div>

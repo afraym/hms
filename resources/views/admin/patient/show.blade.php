@@ -17,9 +17,25 @@
             <p><strong>رقم الهاتف:</strong> {{ $patient->phone }}</p>
             <p><strong>الرقم القومي:</strong> {{ $patient->national_id }}</p>
             <p><strong>تاريخ الميلاد:</strong> {{ $patient->date_of_birth }}</p>
-            <p><strong>الجنس:</strong> {{ $patient->gender }}</p>
+            <p><strong>الجنس:</strong> 
+                @if($patient->gender == 'male')
+                    ذكر
+                @elseif($patient->gender == 'female')
+                    أنثى
+                @else
+                    غير محدد
+                @endif
+            </p>
             
             <hr>
+            <ul>
+    @foreach($patient->attachments as $attachment)
+        <li>
+            <a href="{{ asset('storage/' . $attachment->file) }}" target="_blank">عرض المرفق</a>
+            {{ $attachment->description }}
+        </li>
+    @endforeach
+</ul>
             <h5>تفاصيل الدخول والخروج</h5>
             @if($patient->visits->isNotEmpty())
                 <table class="table">
@@ -47,6 +63,10 @@
             @endif
 
             <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-warning">تعديل</a>
+             <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm bg-gradient-primary">
+                                            طباعة الملصقات
+                                        </a>
+                                        
             <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                 @csrf
                 @method('PATCH')

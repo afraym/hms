@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use App\Models\Bed;
+use App\Models\Attchment;
 
 class PatientController extends Controller
 {
@@ -152,7 +153,7 @@ class PatientController extends Controller
      */
     public function show(Patient $patient)
     {
-        $patient->load('visits.bed'); // Load visits and related bed data
+        $patient->load(['visits.bed', 'attachments']); // Load visits, related bed data, and attachments
         return view('admin.patient.show', compact('patient'));
     }
 

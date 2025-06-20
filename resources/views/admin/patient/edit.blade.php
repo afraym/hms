@@ -52,6 +52,18 @@
                 <button type="submit" class="btn btn-success">حفظ التعديلات</button>
                 <a href="{{ route('patients.index') }}" class="btn btn-secondary">إلغاء</a>
             </form>
+
+            <!-- Form to upload attachments -->
+            <form action="{{ route('patients.attachments.upload', $patient->id) }}" method="POST" enctype="multipart/form-data" class="mb-3">
+                @csrf
+                <div class="mb-2">
+                    <input type="file" name="file" required class="form-control">
+                </div>
+                <div class="mb-2">
+                    <input type="text" name="description" class="form-control" placeholder="وصف المرفق (اختياري)">
+                </div>
+                <button type="submit" class="btn btn-success">رفع المرفق</button>
+            </form>
         </div>
     </div>
 </div>

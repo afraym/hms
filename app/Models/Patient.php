@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
+use App\Models\Attachment;
 
 class Patient extends Model
 {
@@ -16,6 +17,7 @@ class Patient extends Model
         'status', 'bed_id', 'medical_id', 'uhi_number', 'address', 'governorate'
     ];
 
+    // لغينا التشفير علشان مش ناقصين وجع دماغ
     // // Encrypt phone before saving
     // public function setPhoneAttribute($value)
     // {
@@ -61,5 +63,10 @@ class Patient extends Model
     public function visits()
     {
         return $this->hasMany(PatientVisit::class);
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(\App\Models\Attachment::class);
     }
 }

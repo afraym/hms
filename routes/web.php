@@ -38,6 +38,7 @@ Route::get('/api/check-national-id', [PatientController::class, 'checkNationalId
 Route::patch('/patients/{patient}/discharge', [PatientController::class, 'discharge'])->name('patients.discharge');
 Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
 Route::get('/patients/ajax-search', [PatientController::class, 'ajaxSearch'])->name('patients.ajaxSearch');
+Route::post('patients/{patient}/attachments', [PatientController::class, 'uploadAttachment'])->name('patients.attachments.upload');
 
 // require __DIR__.'/auth.php';
 
