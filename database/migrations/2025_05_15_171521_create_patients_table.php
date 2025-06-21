@@ -29,6 +29,8 @@ return new class extends Migration
             $table->string('uhi_number')->nullable()->unique(); // رقم التأمين الصحي الشامل
             $table->string('address')->nullable();
             $table->string('governorate')->nullable();
+            $table->string('companion_name')->nullable();
+            $table->string('companion_relation')->nullable();
             $table->timestamps();
         });
     }

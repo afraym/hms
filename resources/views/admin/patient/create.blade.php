@@ -17,26 +17,9 @@
                                     <label for="national_id" class="form-label">الرقم القومي</label>
                                     <input type="text" class="form-control @error('national_id') is-invalid @enderror"
                                      id="national_id" name="national_id" value="{{ old('national_id') }}" maxlength="14">
-                                    <div id="nationalIdInfo" class="form-text text-muted"></div>
+                                    {{-- <div id="nationalIdInfo" class="form-text text-muted"></div> --}}
                                 </div>
                                 @error('national_id') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-static mb-3 is-filled">
-                                    <label for="medicalId" class="form-label">الرقم الطبي:</label>
-                                    <input type="text" id="medicalId" name="medical_id" value="{{ $medicalId }}" class="form-control" autofocus>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-3">
-                                    <label for="uhi_number" class="form-label">
-                                        رقم التأمين الصحي الشامل
-                                        <img src="{{ asset('assets/img/uhi.png') }}" alt="UHI Icon" style="width: 20px; height: 25px; vertical-align: middle;">
-                                        :
-                                    </label>
-                                    <input type="text" name="uhi_number" id="uhi_number" class="form-control" value="{{ old('uhi_number', $patient->uhi_number ?? '') }}">
-                                </div>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -106,6 +89,19 @@
                                 @error('address') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
 
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="department_id">القسم</label>
+                                    <select name="department_id" id="department_id" class="form-control" >
+                                        <option value="">اختر القسم</option>
+                                        @foreach($departments as $department)
+                                            <option value="{{ $department->id }}" {{ (old('department_id', $patient->department_id ?? '') == $department->id) ? 'selected' : '' }}>
+                                                {{ $department->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                             
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static mb-3">
@@ -122,20 +118,41 @@
                                 @error('bed_id') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
 
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-dynamic mb-3">
+                                    <label for="companion_name" class="form-label">اسم المرافق</label>
+                                    <input type="text" class="form-control @error('companion_name') is-invalid @enderror"
+                                           id="companion_name" name="companion_name" value="{{ old('companion_name') }}">
+                                </div>
+                                @error('companion_name') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-dynamic mb-3">
+                                    <label for="companion_relation" class="form-label">صلة القرابة</label>
+                                    <input type="text" class="form-control @error('companion_relation') is-invalid @enderror"
+                                           id="companion_relation" name="companion_relation" value="{{ old('companion_relation') }}">
+                                </div>
+                                @error('companion_relation') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
 
                             <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-static mb-3">
-                                    <label for="department_id">القسم</label>
-                                    <select name="department_id" id="department_id" class="form-control" required>
-                                        <option value="">اختر القسم</option>
-                                        @foreach($departments as $department)
-                                            <option value="{{ $department->id }}" {{ (old('department_id', $patient->department_id ?? '') == $department->id) ? 'selected' : '' }}>
-                                                {{ $department->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                <div class="input-group input-group-static mb-3 is-filled">
+                                    <label for="medicalId" class="form-label">الرقم الطبي:</label>
+                                    <input type="text" id="medicalId" name="medical_id" value="{{ $medicalId }}" class="form-control" autofocus>
                                 </div>
                             </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-dynamic mb-3">
+                                    <label for="uhi_number" class="form-label">
+                                        رقم التأمين الصحي الشامل
+                                        <img src="{{ asset('assets/img/uhi.png') }}" alt="UHI Icon" style="width: 20px; height: 25px; vertical-align: middle;">
+                                        :
+                                    </label>
+                                    <input type="text" name="uhi_number" id="uhi_number" class="form-control" value="{{ old('uhi_number', $patient->uhi_number ?? '') }}">
+                                </div>
+                            </div>
+
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static my-3">
                                     <label for="date_of_birth">تاريخ الميلاد</label>
@@ -178,19 +195,16 @@
                                 <label class="form-label d-block mb-2">الجنس</label>
                                 <div class="d-flex align-items-center">
                                     <div class="form-check me-4">
-                                        <input class="form-check-input" type="radio" name="gender" id="customRadio1" value="ذكر" {{ old('gender', $patient->gender ?? '') == 'ذكر' ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="customRadio1">ذكر</label>
+                                        <input class="form-check-input" type="radio" name="gender" id="maleRadio" value="male" {{ old('gender', $patient->gender ?? '') == 'ذكر' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="maleRadio">ذكر</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="gender" id="customRadio2" value="أنثى" {{ old('gender', $patient->gender ?? '') == 'أنثى' ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="customRadio2">أنثى</label>
+                                        <input class="form-check-input" type="radio" name="gender" id="femaleRadio" value="female" {{ old('gender', $patient->gender ?? '') == 'أنثى' ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="femaleRadio">أنثى</label>
                                     </div>
                                 </div>
                                 @error('gender') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
-
-
-
 
                             {{-- <div class="col-md-12">
                                 <input id="attachments" type="file" class="file" data-preview-file-type="text" name="files[]" multiple>
@@ -386,7 +400,6 @@ function detectEgyptianNationalIdInfo(nationalId) {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const nationalIdInput = document.getElementById('national_id');
-    const infoDiv = document.getElementById('nationalIdInfo');
     const firstNameInput = document.getElementById('first_name');
     const secondNameInput = document.getElementById('second_name');
     const thirdNameInput = document.getElementById('third_name');
@@ -395,43 +408,83 @@ document.addEventListener('DOMContentLoaded', function () {
     const phoneInput = document.getElementById('phone');
     const phone2Input = document.getElementById('phone2');
     const birthdateInput = document.getElementById('date_of_birth');
-    const genderInput = document.getElementById('gender');
     const addressInput = document.getElementById('address');
     const governorateInput = document.getElementById('governorate');
+    const genderMaleRadio = document.getElementById('maleRadio');
+    const genderFemaleRadio = document.getElementById('femaleRadio');
+
+    // Helper: add 'is-filled' to parent if value exists
+    function markFilled(input) {
+        if (!input) return;
+        const group = input.closest('.input-group') || input.closest('.input-group-static') || input.parentElement;
+        if (group) {
+            if (input.value && input.value !== '') {
+                group.classList.add('is-filled');
+            } else {
+                group.classList.remove('is-filled');
+            }
+        }
+    }
+
+    function fillAndMark(input, value) {
+        if (!input) return;
+        input.value = value || '';
+        markFilled(input);
+    }
 
     if (nationalIdInput) {
         nationalIdInput.addEventListener('input', function () {
             const nationalId = this.value;
 
             if (nationalId.length === 14) {
+                // استخرج المعلومات من الرقم القومي
+                const info = detectEgyptianNationalIdInfo(nationalId);
+                if (info) {
+                    fillAndMark(birthdateInput, info.birthdate);
+                    if (governorateInput) {
+                        governorateInput.value = info.governorate;
+                        markFilled(governorateInput);
+                    }
+                    // gender radio
+                    if (info.gender === 'ذكر' && genderMaleRadio) {
+                        genderMaleRadio.checked = true;
+                        genderMaleRadio.closest('.form-check').classList.add('is-filled');
+                        if (genderFemaleRadio) genderFemaleRadio.closest('.form-check').classList.remove('is-filled');
+                    }
+                    if (info.gender === 'أنثى' && genderFemaleRadio) {
+                        genderFemaleRadio.checked = true;
+                        genderFemaleRadio.closest('.form-check').classList.add('is-filled');
+                        if (genderMaleRadio) genderMaleRadio.closest('.form-check').classList.remove('is-filled');
+                    }
+                }
+
+                // جلب بيانات المريض من السيرفر إذا كان موجود
                 fetch("{{ route('patients.checkNationalId') }}?national_id=" + nationalId)
                     .then(response => response.json())
                     .then(data => {
                         if (data.exists) {
                             const patient = data.patient;
-                            if (firstNameInput) firstNameInput.value = patient.first_name || '';
-                            if (secondNameInput) secondNameInput.value = patient.second_name || '';
-                            if (thirdNameInput) thirdNameInput.value = patient.third_name || '';
-                            if (fourthNameInput) fourthNameInput.value = patient.fourth_name || '';
-                            if (emailInput) emailInput.value = patient.email || '';
-                            if (phoneInput) phoneInput.value = patient.phone || '';
-                            if (phone2Input) phone2Input.value = patient.phone2 || '';
-                            if (birthdateInput) birthdateInput.value = patient.date_of_birth || '';
-                            if (genderInput) genderInput.value = patient.gender || '';
-                            if (addressInput) addressInput.value = patient.address || '';
-                            if (governorateInput) governorateInput.value = patient.governorate || '';
-                            // Focus all inputs
-                            if (firstNameInput) firstNameInput.focus();
-                            if (secondNameInput) secondNameInput.focus();
-                            if (thirdNameInput) thirdNameInput.focus();
-                            if (fourthNameInput) fourthNameInput.focus();
-                            if (emailInput) emailInput.focus();
-                            if (phoneInput) phoneInput.focus();
-                            if (phone2Input) phone2Input.focus();
-                            if (birthdateInput) birthdateInput.focus();
-                            if (genderInput) genderInput.focus();
-                            if (addressInput) addressInput.focus();
-                            if (governorateInput) governorateInput.focus();
+                            fillAndMark(firstNameInput, patient.first_name);
+                            fillAndMark(secondNameInput, patient.second_name);
+                            fillAndMark(thirdNameInput, patient.third_name);
+                            fillAndMark(fourthNameInput, patient.fourth_name);
+                            fillAndMark(emailInput, patient.email);
+                            fillAndMark(phoneInput, patient.phone);
+                            fillAndMark(phone2Input, patient.phone2);
+                            fillAndMark(birthdateInput, patient.date_of_birth);
+                            fillAndMark(addressInput, patient.address);
+                            fillAndMark(governorateInput, patient.governorate);
+                            // gender radio
+                            if (patient.gender === 'ذكر' && genderMaleRadio) {
+                                genderMaleRadio.checked = true;
+                                genderMaleRadio.closest('.form-check').classList.add('is-filled');
+                                if (genderFemaleRadio) genderFemaleRadio.closest('.form-check').classList.remove('is-filled');
+                            }
+                            if (patient.gender === 'أنثى' && genderFemaleRadio) {
+                                genderFemaleRadio.checked = true;
+                                genderFemaleRadio.closest('.form-check').classList.add('is-filled');
+                                if (genderMaleRadio) genderMaleRadio.closest('.form-check').classList.remove('is-filled');
+                            }
                             $.toast({
                                 heading: 'نجاح',
                                 text: 'هذا الرقم القومي موجود بالفعل وتم ملء البيانات تلقائيًا.',
@@ -454,42 +507,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        infoDiv.innerHTML = '<span class="text-danger">حدث خطأ أثناء البحث عن الرقم القومي.</span>';
                     });
-            } else {
-                infoDiv.innerHTML = '';
             }
         });
     }
 });
-
-     function generateMedicalId() {
-            const currentDate = new Date();
-            const year = String(currentDate.getFullYear()).slice(-2); // آخر رقمين من السنة
-            const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // الشهر بصيغة رقمية
-            const day = String(currentDate.getDate()).padStart(2, '0'); // اليوم بصيغة رقمية
-
-            // مفتاح اليوم الحالي لتخزين الرقم في localStorage
-            const todayKey = `${year}${month}${day}`;
-            let currentId = localStorage.getItem(todayKey);
-
-            if (!currentId) {
-                // إذا لم يكن هناك رقم مخزن لليوم الحالي، ابدأ من 001
-                currentId = 1;
-            } else {
-                // إذا كان هناك رقم مخزن، قم بزيادته بمقدار 1
-                currentId = parseInt(currentId) + 1;
-            }
-
-            // تخزين الرقم الحالي في localStorage
-            localStorage.setItem(todayKey, currentId);
-
-            // تنسيق الرقم ليكون ثلاثي الأرقام
-            const uniqueId = String(currentId).padStart(3, '0');
-
-            // توليد الرقم الطبي النهائي
-            const medicalId = `11803${year}${month}${day}${uniqueId}`;
-            document.getElementById('medicalId').value = medicalId;
-        }
 </script>
 @endsection

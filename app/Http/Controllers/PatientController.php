@@ -70,6 +70,8 @@ class PatientController extends Controller
             'medical_id'    => 'nullable',
             'bed_id'        => 'nullable',
             'department'    => 'nullable|max:255',
+            'companion_name' => 'nullable|max:255',
+            'companion_relation' => 'nullable|max:255',
         ]);
 
         // Check if a patient with the same national ID, medical ID, or UHI number exists
@@ -178,6 +180,8 @@ class PatientController extends Controller
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|max:10',
             'bed_id'        => 'nullable|exists:beds,id', // Ensure bed_id is valid
+            'companion_name' => 'nullable|max:255',
+            'companion_relation' => 'nullable|max:255',
         ]);
 
         // Update the patient's data
@@ -254,10 +258,22 @@ class PatientController extends Controller
     public function checkNationalId(Request $request)
     {
         $request->validate([
-            'national_id' => 'required|string|max:14',
+            'national_id' => 'nullable|string|max:14',
+            'medical_id'  => 'nullable|string',
+            'uhi_number'  => 'nullable|string',
         ]);
 
-        $patient = Patient::where('national_id', $request->national_id)->first();
+        $patient = Patient::where(function($query) use ($request) {
+            if ($request->filled('national_id')) {
+                $query->orWhere('national_id', $request->national_id);
+            }
+            if ($request->filled('medical_id')) {
+                $query->orWhere('medical_id', $request->medical_id);
+            }
+            if ($request->filled('uhi_number')) {
+                $query->orWhere('uhi_number', $request->uhi_number);
+            }
+        })->first();
 
         if ($patient) {
             return response()->json([
@@ -274,6 +290,9 @@ class PatientController extends Controller
                     'gender' => $patient->gender,
                     'address' => $patient->address,
                     'governorate' => $patient->governorate,
+                    'national_id' => $patient->national_id,
+                    'medical_id' => $patient->medical_id,
+                    'uhi_number' => $patient->uhi_number,
                 ],
             ]);
         }
