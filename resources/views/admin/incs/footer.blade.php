@@ -8,7 +8,7 @@
             </script>,
             تم التطوير بواسطة
             <a href="https://afraym.com" class="font-weight-bold company-link" target="_blank" style="display: inline-flex; align-items: center;">
-            شركة&nbsp;أمان
+            &nbsp;
             <img src="{{ asset('assets/img/amanlogo.png') }}" alt="Logo" style="height:100px; vertical-align:middle; margin-right:5px; margin-left:5px;">
             </a>
             إهداءً لمستشفيات اسوان الجامعية.
