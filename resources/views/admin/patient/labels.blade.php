@@ -7,33 +7,39 @@
         .no-print { display: none; }
         @page {
             size: A4 portrait;
-            margin: 0;
+            margin-right: 6px;
+            margin-left: 6px;
         }
         html, body {
-            width: 210mm;
+            width: 208mm;
             height: 297mm;
             margin: 0 !important;
             padding: 0 !important;
             background: #fff !important;
+            box-sizing: border-box;
         }
         .a4-sheet {
-            width: 210mm !important;
+            width: 208mm !important;
             height: 297mm !important;
-            min-height: unset !important;
             margin: 0 !important;
             padding: 0 !important;
             box-shadow: none !important;
             background: #fff !important;
             position: relative;
+            box-sizing: border-box;
         }
         .labels-table {
             width: 100% !important;
             height: 100% !important;
+            table-layout: fixed;
+            border-collapse: collapse;
         }
         .labels-table td {
-            height: 25mm !important; /* 10 rows × 25mm = 250mm (with borders fits A4) */
+            height: 29.7mm !important; /* 297mm / 10 rows = 29.7mm */
             width: 25% !important;
             padding: 0 !important;
+            box-sizing: border-box;
+            overflow: hidden;
         }
     }
     .a4-sheet {
@@ -77,6 +83,7 @@
         align-items: center;
         justify-content: center;
         line-height: 1.2;
+        box-sizing: border-box;
     }
     .label-name {
         font-weight: bold;
