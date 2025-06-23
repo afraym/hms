@@ -63,7 +63,7 @@
             @endif
 
             <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-warning">تعديل</a>
-             <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm bg-gradient-primary">
+             <a href="{{ route('patients.print.label', $patient->id) }}" class="btn bg-gradient-secondary">
                                             طباعة الملصقات
                                         </a>
                                         
