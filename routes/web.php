@@ -39,9 +39,13 @@ Route::patch('/patients/{patient}/discharge', [PatientController::class, 'discha
 Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
 Route::get('/patients/ajax-search', [PatientController::class, 'ajaxSearch'])->name('patients.ajaxSearch');
 Route::post('patients/{patient}/attachments', [PatientController::class, 'uploadAttachment'])->name('patients.attachments.upload');
+Route::post('/api/sync', [PatientController::class, 'sync'])->name('api.sync');
 
 // require __DIR__.'/auth.php';
 
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/offline', function () {
+    return view('offline');
+})->name('offline');

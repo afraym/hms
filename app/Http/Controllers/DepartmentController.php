@@ -31,7 +31,7 @@ class DepartmentController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:departments',
-            'status' => 'required|in:نشط,غير نشط',
+            'is_active' => 'required|boolean',
         ]);
 
         Department::create($validated);
@@ -62,7 +62,7 @@ class DepartmentController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:departments,name,' . $department->id,
-            'status' => 'required|in:نشط,غير نشط',
+            'is_active' => 'required|boolean',
         ]);
 
         $department->update($validated);

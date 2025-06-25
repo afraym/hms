@@ -31,6 +31,18 @@ return new class extends Migration
             $table->string('governorate')->nullable();
             $table->string('companion_name')->nullable();
             $table->string('companion_relation')->nullable();
+            $table->string('companion_national_id')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            // Add department foreign key
+            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
+            
+            // Additional fields
+            $table->text('notes')->nullable();                    // ملاحظات عامة
+            $table->string('blood_type')->nullable();            // فصيلة الدم
+            $table->string('marital_status')->nullable();        // الحالة الاجتماعية
+            $table->string('occupation')->nullable();            // المهنة
+            $table->boolean('is_active')->default(true);         // حالة نشاط المريض
+            $table->softDeletes();                              // يضيف حقل deleted_at للحذف الناعم
             $table->timestamps();
         });
     }

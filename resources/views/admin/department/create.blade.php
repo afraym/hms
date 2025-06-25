@@ -18,9 +18,9 @@
             </div>
             <div class="input-group input-group-static mb-4">
               <label for="status" class="ms-0">الحالة</label>
-              <select name="status" id="status" class="form-control" required>
-                <option value="نشط">نشط</option>
-                <option value="غير نشط">غير نشط</option>
+              <select name="is_active" id="status" class="form-control" required>
+                <option value="1">نشط</option>
+                <option value="0">غير نشط</option>
               </select>
             </div>
             <button type="submit" class="btn bg-gradient-info mt-3">إضافة</button>

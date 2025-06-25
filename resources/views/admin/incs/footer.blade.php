@@ -93,6 +93,18 @@
 <!-- jQuery Toast Plugin -->
 <link rel="stylesheet" href="{{ asset('assets/css/jquery.toast.min.css') }}">
 <script src="{{ asset('assets/js/jquery.toast.min.js') }}"></script>
+
+
+{{-- Before closing body --}}
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('ServiceWorker registered'))
+            .catch(err => console.log('ServiceWorker registration failed: ', err));
+    });
+}
+</script>
 <script>
     var win = navigator.platform.indexOf('Win') > -1;
     if (win && document.querySelector('#sidenav-scrollbar')) {

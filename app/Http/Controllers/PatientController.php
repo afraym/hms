@@ -205,8 +205,22 @@ class PatientController extends Controller
      */
     public function destroy(Patient $patient)
     {
-        $patient->delete();
-        return redirect()->route('patients.index')->with('success', 'تم حذف المريض بنجاح.');
+        // Release bed if patient has one assigned
+        if ($patient->bed_id) {
+            Bed::where('id', $patient->bed_id)->update(['status' => 'متاح']);
+        }
+        
+        // Store a discharge visit before soft deleting
+        $patient->visits()->create([
+            'type' => 'out',
+            'visit_at' => now(),
+            'notes' => 'تم حذف المريض من النظام'
+        ]);
+
+        $patient->delete(); // This will now soft delete
+        
+        return redirect()->route('patients.index')
+            ->with('success', 'تم حذف المريض بنجاح مع الاحتفاظ بسجله.');
     }
 
     /**
@@ -342,5 +356,45 @@ class PatientController extends Controller
         $patients = collect([$patient]); // ضع المريض في Collection ليتعامل معه الـBlade كقائمة
         $repeat = 8; // أو العدد الذي تريده
         return view('admin.patient.labels', compact('patients', 'repeat'));
+    }
+
+    /**
+     * Sync patients data.
+     */
+    public function sync(Request $request)
+    {
+        $pendingActions = $request->input('pendingSync');
+        $results = [];
+        
+        foreach ($pendingActions as $action) {
+            try {
+                switch ($action['action']) {
+                    case 'create':
+                        $patient = Patient::create($action['data']);
+                        $results[] = [
+                            'success' => true,
+                            'id' => $action['id'],
+                            'synced_id' => $patient->id
+                        ];
+                        break;
+                        
+                    case 'update':
+                        Patient::find($action['data']['id'])->update($action['data']);
+                        $results[] = [
+                            'success' => true,
+                            'id' => $action['id']
+                        ];
+                        break;
+                }
+            } catch (\Exception $e) {
+                $results[] = [
+                    'success' => false,
+                    'id' => $action['id'],
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+        
+        return response()->json($results);
     }
 }

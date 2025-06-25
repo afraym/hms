@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateAttachmentsTable extends Migration  // Define proper class name
 {
     /**
      * Run the migrations.
@@ -29,4 +29,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('attachments');
     }
-};
+}

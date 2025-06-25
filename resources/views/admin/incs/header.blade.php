@@ -29,7 +29,7 @@
     {{-- <script src="{{ asset('assets/themes/explorer-fa5/theme.js')}}" type="text/javascript"></script> --}}
 <!-- the fileinput plugin styling CSS file -->
 <link href="{{ asset('assets/css/fileinput.min.css')}}" media="all" rel="stylesheet" type="text/css" />
- 
+ <script src="{{ asset('assets/js/dexie.js') }}"></script>
 <!-- if using RTL (Right-To-Left) orientation, load the RTL CSS file after fileinput.css by uncommenting below -->
 <link rel="stylesheet" href="{{ asset('assets/css/fileinput-rtl.min.css')}}"> 
   <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -71,3 +71,16 @@ a:hover .hover-image {
     display: block;
 }
   </style>
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('ServiceWorker registered');
+      })
+      .catch(err => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+  });
+}
+</script>

@@ -344,58 +344,87 @@ function detectEgyptianNationalIdInfo(nationalId) {
 //     }
 // });
 </script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('patientForm');
+<script type="module">
+import { saveOfflinePatient, syncOfflineData } from '/js/offlineDb.js';
 
-        form.addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent default form submission
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('patientForm');
 
-            const formData = new FormData(form);
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('ServiceWorker registered'))
+            .catch(err => console.error('ServiceWorker registration failed:', err));
+    }
 
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-                body: formData,
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw response.json();
-                }
-                return response.json();
-            })
-            .then(data => {
-                $.toast({
-                    heading: 'نجاح',
-                    text: 'تم حفظ المريض بنجاح!',
-                    showHideTransition: 'slide',
-                    icon: 'success',
-                    position: 'top-center', // Position the toast in the center
-                    bgColor: '#28a745', // Background color
-                    textColor: '#fff',  // Text color
-                    loaderBg: '#fff',   // Loader background color
-                });
-                form.reset(); // Reset the form
-            })
-            .catch(async error => {
-                const errors = await error;
-                let errorMessage = "حدث خطأ أثناء حفظ البيانات.";
-                if (errors && errors.errors) {
-                    errorMessage = Object.values(errors.errors).join("<br>");
-                }
-                $.toast({
-                    heading: 'خطأ',
-                    text: errorMessage,
-                    showHideTransition: 'fade',
-                    icon: 'error',
-                    position: 'top-center', // Position the toast in the center
-                });
-            });
+    // Online/Offline handlers
+    window.addEventListener('online', async () => {
+        $.toast({
+            heading: 'متصل',
+            text: 'جاري مزامنة البيانات المحفوظة محلياً...',
+            icon: 'info'
+        });
+        await syncOfflineData();
+    });
+
+    window.addEventListener('offline', () => {
+        $.toast({
+            heading: 'غير متصل',
+            text: 'تم التحويل للوضع المحلي',
+            icon: 'warning'
         });
     });
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+
+        try {
+            if (!navigator.onLine) {
+                await saveOfflinePatient(formData);
+                $.toast({
+                    heading: 'تم الحفظ محلياً',
+                    text: 'سيتم مزامنة البيانات عند عودة الاتصال',
+                    icon: 'success'
+                });
+                form.reset();
+                return;
+            }
+
+            // Online submission
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw await response.json();
+            }
+
+            $.toast({
+                heading: 'نجاح',
+                text: 'تم حفظ المريض بنجاح!',
+                icon: 'success'
+            });
+            form.reset();
+
+        } catch (error) {
+            let errorMessage = "حدث خطأ أثناء الحفظ.";
+            if (error.errors) {
+                errorMessage = Object.values(error.errors).join("<br>");
+            }
+            $.toast({
+                heading: 'خطأ',
+                text: errorMessage,
+                icon: 'error'
+            });
+        }
+    });
+});
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
