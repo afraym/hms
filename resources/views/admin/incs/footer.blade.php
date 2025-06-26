@@ -146,7 +146,7 @@ $("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
         </a>
     </div>
 </noscript>
-@if(app()->environment('production'))
+{{-- @if(app()->environment('production')) --}}
 <script src="{{ asset('assets/js/rrweb.min.js') }}"></script>
 <script>
   // Initialize rrweb recording
@@ -173,4 +173,4 @@ $("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
       }
   }, 5000); // Send every 5 seconds
 </script>
-@endif
+{{-- @endif --}}
