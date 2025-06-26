@@ -7,7 +7,7 @@
             document.write(new Date().getFullYear())
             </script>,
             تم التطوير بواسطة
-            <a href="https://afraym.com" class="font-weight-bold company-link" target="_blank" style="display: inline-flex; align-items: center;">
+            <a href="https://aman.it.com" class="font-weight-bold company-link" target="_blank" style="display: inline-flex; align-items: center;">
             &nbsp;
             <img src="{{ asset('assets/img/amanlogo.png') }}" alt="Logo" style="height:100px; vertical-align:middle; margin-right:5px; margin-left:5px;">
             </a>

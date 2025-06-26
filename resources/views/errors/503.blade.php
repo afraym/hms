@@ -8,7 +8,7 @@
         <br>
          <h1 dir="rtl">عدي علينا بكرا.</h1>
            <!-- Default Statcounter code for hms
-https://hms.afraym.com/ -->
+https://hms.aman.it.com/ -->
 <script type="text/javascript">
 var sc_project=13136548; 
 var sc_invisible=1; 

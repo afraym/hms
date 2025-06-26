@@ -82,7 +82,7 @@
                             document.write(new Date().getFullYear())
                         </script>,
                         تم التطوير بواسطة
-                        <a href="https://afraym.com" class="font-weight-bold text-white" target="_blank">شركة أمان
+                        <a href="https://aman.it.com" class="font-weight-bold text-white" target="_blank">شركة أمان
                             <img src="{{ asset('assets/img/amanlogo.png') }}" alt="Logo" class="hover-image">
                         </a>
                         لخدمة أهل أسوان الكرام.
