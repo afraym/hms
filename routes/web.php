@@ -8,7 +8,7 @@ use App\Http\Controllers\ProxyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 
-Route::view('/', 'welcome');
+Route::redirect('/', '/admin/patients/create');
 
 
 
