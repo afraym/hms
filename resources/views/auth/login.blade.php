@@ -85,7 +85,7 @@
                         <a href="https://aman.it.com" class="font-weight-bold text-white" target="_blank">شركة أمان
                             <img src="{{ asset('assets/img/amanlogo.png') }}" alt="Logo" class="hover-image">
                         </a>
-                        لخدمة أهل أسوان الكرام.
+                        اهداءً لمستشفيات اسوان الجامعية.
                     </div>
                 </div>
             </div>
