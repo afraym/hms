@@ -55,24 +55,28 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request);
         $validated = $request->validate([
-            'first_name'    => 'nullable|max:255',
-            'second_name'   => 'nullable|max:255',
-            'third_name'    => 'nullable|max:255',
-            'fourth_name'   => 'nullable|max:255',
-            'email'         => 'nullable|max:255',
-            'phone'         => 'nullable|max:20',
-            'national_id'   => 'nullable|max:14',
-            'uhi_number'    => 'nullable|max:50',
+            'full_name'    => 'nullable|string|max:255',  // Replace individual name validations
+            'email'         => 'nullable|email|max:255',
+            'phone'         => 'nullable|string|max:20',
+            'phone2'         => 'nullable|string|max:20',
+            'national_id'   => 'nullable|string|max:14|unique:patients,national_id',
             'date_of_birth' => 'nullable|date',
-            'gender'        => 'nullable|max:10',
-            'medical_id'    => 'nullable',
-            'bed_id'        => 'nullable',
-            'department'    => 'nullable|max:255',
-            'companion_name' => 'nullable|max:255',
-            'companion_relation' => 'nullable|max:255',
+            'gender'        => 'nullable|in:female,male',
+            'status'        => 'nullable|string',
+            'bed_id'        => 'nullable|exists:beds,id',
+            'medical_id'    => 'nullable|string|unique:patients,medical_id',
+            'uhi_number'    => 'nullable|string|unique:patients,uhi_number',
+            'address'       => 'nullable|string',
+            'governorate'   => 'nullable|string',
+            'companion_name' => 'nullable|string|max:255',
+            'companion_relation' => 'nullable|string|max:255',
+            'companion_national_id' => 'nullable|string|max:14',
+            'department_id' => 'nullable|exists:departments,id',
         ]);
+
+        // Add the authenticated user's ID
+        $validated['created_by'] = auth()->id();
 
         // Check if a patient with the same national ID, medical ID, or UHI number exists
         $existingPatient = Patient::where(function($query) use ($validated) {
@@ -88,11 +92,12 @@ class PatientController extends Controller
         })->first();
 
         if ($existingPatient) {
-            // Store a new visit for the existing patient
+            // Add created_by to visit record
             $existingPatient->visits()->create([
                 'type'     => 'in', // Assuming it's an "in" visit
                 'visit_at' => now(),
                 'notes'    => 'تم تسجيل دخول للمريض الموجود بالفعل.',
+                'created_by' => auth()->id()
             ]);
 
             return response()->json([
@@ -114,6 +119,7 @@ class PatientController extends Controller
             'type'     => 'in', // Assuming it's an "in" visit
             'visit_at' => now(),
             'notes'    => 'اول زيارة للمريض عند تسجيل الدخول.',
+            'created_by' => auth()->id()
         ]);
 
         // Update the bed status if a bed is assigned
@@ -293,10 +299,7 @@ class PatientController extends Controller
             return response()->json([
                 'exists' => true,
                 'patient' => [
-                    'first_name' => $patient->first_name,
-                    'second_name' => $patient->second_name,
-                    'third_name' => $patient->third_name,
-                    'fourth_name' => $patient->fourth_name,
+                    'full_name' => $patient->full_name,  // Replace individual name fields
                     'email' => $patient->email,
                     'phone' => $patient->phone,
                     'phone2' => $patient->phone2,

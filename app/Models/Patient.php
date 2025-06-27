@@ -13,49 +13,19 @@ class Patient extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'first_name', 'second_name', 'third_name', 'fourth_name',
+        'full_name',  // Replace individual name fields
         'email', 'phone', 'phone2', 'national_id', 'date_of_birth', 'gender',
         'status', 'bed_id', 'medical_id', 'uhi_number', 'address', 'governorate',
-        'companion_name',
-        'companion_relation',
+        'companion_name', 'companion_relation', 'companion_national_id',
+        'department_id', 'created_by'
     ];
 
-    // لغينا التشفير علشان مش ناقصين وجع دماغ
-    // // Encrypt phone before saving
-    // public function setPhoneAttribute($value)
-    // {
-    //     $this->attributes['phone'] = Crypt::encryptString($value);
-    // }
+    // العلاقة مع المستخدم الذي أنشأ السجل
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
-    // // Decrypt phone when retrieving
-    // public function getPhoneAttribute($value)
-    // {
-    //     return $value ? Crypt::decryptString($value) : null;
-    // }
-
-    //   // Encrypt phone2 before saving
-    // public function setPhone2Attribute($value)
-    // {
-    //     $this->attributes['phone2'] = Crypt::encryptString($value);
-    // }
-
-    // // Decrypt phone2 when retrieving
-    // public function getPhone2Attribute($value)
-    // {
-    //     return $value ? Crypt::decryptString($value) : null;
-    // }
-    // Encrypt national_id before saving
-    // public function setNationalIdAttribute($value)
-    // {
-    //     // $this->attributes['national_id'] = Crypt::encryptString($value);
-    //     $this->attributes['national_id'] = hash('sha256', $value);
-    // }
-
-    // Decrypt national_id when retrieving
-    // public function getNationalIdAttribute($value)
-    // {
-    //     return $value ? Crypt::decryptString($value) : null;
-    // }
 
     public function department()
     {

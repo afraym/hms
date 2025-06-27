@@ -147,7 +147,7 @@ $("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
     </div>
 </noscript>
 {{-- @if(app()->environment('production')) --}}
-<script src="{{ asset('assets/js/rrweb.min.js') }}"></script>
+{{-- <script src="{{ asset('assets/js/rrweb.min.js') }}"></script>
 <script>
   // Initialize rrweb recording
   let events = [];
@@ -160,7 +160,7 @@ $("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
   // Periodically send recorded events to the server
   setInterval(() => {
       if (events.length > 0) {
-          fetch('https://tomato.afraym.com/api/session/record', {
+          fetch('https://tomato.test/api/session/record', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -172,5 +172,7 @@ $("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
           });
       }
   }, 5000); // Send every 5 seconds
-</script>
+</script> --}}
 {{-- @endif --}}
+</body>
+</html>

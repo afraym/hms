@@ -22,36 +22,18 @@
                                 @error('national_id') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-3">
-                                    <label for="first_name" class="form-label">الاسم الأول</label>
-                                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name"  value="{{ old('first_name') }}">
-                                </div>
-                                @error('first_name') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-3">
-                                    <label for="second_name" class="form-label">اسم الأب</label>
-                                    <input type="text" class="form-control @error('second_name') is-invalid @enderror" id="second_name" name="second_name" value="{{ old('second_name') }}">
-                                </div>
-                                @error('second_name') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-3">
-                                    <label for="third_name" class="form-label">اسم الجد</label>
-                                    <input type="text" class="form-control @error('third_name') is-invalid @enderror"
-                                     id="third_name" name="third_name" value="{{ old('third_name') }}">
-                                </div>
-                                @error('third_name') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-3">
-                                    <label for="fourth_name" class="form-label">اسم العائلة</label>
-                                    <input type="text" class="form-control @error('fourth_name') is-invalid @enderror"
-                                     id="fourth_name" name="fourth_name" value="{{ old('fourth_name') }}">
-                                </div>
-                                @error('fourth_name') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
+<div class="col-md-12 mb-3">
+    <div class="input-group input-group-dynamic mb-3">
+        <label for="full_name" class="form-label">الاسم كاملاً</label>
+        <input type="text" 
+               class="form-control @error('full_name') is-invalid @enderror" 
+               id="full_name" 
+               name="full_name" 
+               value="{{ old('full_name') }}"
+               placeholder="الاسم الرباعي">
+    </div>
+    @error('full_name') <span class="text-danger">{{ $message }}</span> @enderror
+</div>
 
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-dynamic mb-3">
@@ -91,15 +73,16 @@
 
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="department_id">القسم</label>
-                                    <select name="department_id" id="department_id" class="form-control" >
+                                    <label for="department_id">القسم <span class="text-danger">*</span></label>
+                                    <select name="department_id" id="department_id" class="form-control @error('department_id') is-invalid @enderror" >
                                         <option value="">اختر القسم</option>
                                         @foreach($departments as $department)
-                                            <option value="{{ $department->id }}" {{ (old('department_id', $patient->department_id ?? '') == $department->id) ? 'selected' : '' }}>
+                                            <option value="{{ $department->id }}" {{ old('department_id') == $department->id ? 'selected' : '' }}>
                                                 {{ $department->name }}
                                             </option>
                                         @endforeach
                                     </select>
+                                    @error('department_id') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                             
@@ -163,8 +146,9 @@
                             </div>
                                                         <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="governorate" class="ms-0">المحافظة</label>
-                                    <select id="governorate" name="governorate" class="form-control @error('governorate') is-invalid @enderror">
+                                    <label for="governorate" class="ms-0">المحافظة <span class="text-danger">*</span></label>
+                                    <select id="governorate" name="governorate" class="form-control @error('governorate') is-invalid @enderror" >
+                                        <option value="">اختر المحافظة</option>
                                         <option value="أسوان" {{ old('governorate') == 'أسوان' ? 'selected' : '' }}>أسوان</option>
                                         <option value="الأقصر" {{ old('governorate') == 'الأقصر' ? 'selected' : '' }}>الأقصر</option>
                                         <option value="قنا" {{ old('governorate') == 'قنا' ? 'selected' : '' }}>قنا</option>
@@ -204,6 +188,21 @@
                                     </div>
                                 </div>
                                 @error('gender') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-dynamic mb-3">
+                                    <label for="companion_national_id" class="form-label">الرقم القومي للمرافق</label>
+                                    <input type="text" 
+                                           class="form-control @error('companion_national_id') is-invalid @enderror"
+                                           id="companion_national_id" 
+                                           name="companion_national_id" 
+                                           value="{{ old('companion_national_id') }}" 
+                                           maxlength="14">
+                                </div>
+                                @error('companion_national_id') 
+                                    <span class="text-danger">{{ $message }}</span> 
+                                @enderror
                             </div>
 
                             {{-- <div class="col-md-12">
@@ -493,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(data => {
                         if (data.exists) {
                             const patient = data.patient;
-                            fillAndMark(firstNameInput, patient.first_name);
+                            fillAndMark(document.getElementById('full_name'), patient.full_name);
                             fillAndMark(secondNameInput, patient.second_name);
                             fillAndMark(thirdNameInput, patient.third_name);
                             fillAndMark(fourthNameInput, patient.fourth_name);
@@ -513,6 +512,21 @@ document.addEventListener('DOMContentLoaded', function () {
                                 genderFemaleRadio.checked = true;
                                 genderFemaleRadio.closest('.form-check').classList.add('is-filled');
                                 if (genderMaleRadio) genderMaleRadio.closest('.form-check').classList.remove('is-filled');
+                            }
+                            fillAndMark(document.getElementById('companion_national_id'), patient.companion_national_id);
+                            
+                            // تحديد القسم إذا كان موجود
+                            if (patient.department_id) {
+                                const departmentSelect = document.getElementById('department_id');
+                                departmentSelect.value = patient.department_id;
+                                markFilled(departmentSelect);
+                            }
+                            
+                            // تحديد المحافظة
+                            if (patient.governorate) {
+                                const governorateSelect = document.getElementById('governorate');
+                                governorateSelect.value = patient.governorate;
+                                markFilled(governorateSelect);
                             }
                             $.toast({
                                 heading: 'نجاح',

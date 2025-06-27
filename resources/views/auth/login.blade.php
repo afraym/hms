@@ -11,6 +11,7 @@
             })
             ->values();
         $week = date('W'); // Get the current week number
+        // $week = 6;
         $image = $files->count() > 0
             ? asset('assets/img/login-backgrounds/' . $files[$week % $files->count()]->getFilename())
             : asset('assets/img/default.jpg');
@@ -46,9 +47,9 @@
                         <span class="text-danger small">{{ $message }}</span>
                     @enderror
 
-                    <div class="form-check form-switch d-flex align-items-center mb-3">
-                        <input class="form-check-input" type="checkbox" name="remember" id="rememberMe" {{ old('remember') ? 'checked' : '' }}>
-                        <label class="form-check-label mb-0 ms-3" for="rememberMe">تذكرني</label>
+                    <div class="form-check form-switch mb-3 d-flex justify-content-end" style="padding-left: 80%;">
+                        <input class="form-check-input ms-2" type="checkbox" name="remember" id="rememberMe" {{ old('remember') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="rememberMe">تذكرني</label>
                     </div>
 
                     <div class="text-center">

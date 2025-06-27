@@ -37,4 +37,20 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
     }
+
+    protected function redirectTo()
+    {
+        switch(auth()->user()->role) {
+            case 'admin':
+                return '/admin/patients/create';
+            case 'manager':
+                return '/manager/dashboard';
+            case 'reception':
+                return '/admin/patients/create';
+            case 'kitchen':
+                return '/kitchen/dashboard';
+            default:
+                return '/home';
+        }
+    }
 }
