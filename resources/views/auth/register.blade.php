@@ -10,6 +10,7 @@
             })
             ->values();
         $week = date('W');
+        $week = 27;
         $image = $files->count() > 0
             ? asset('assets/img/login-backgrounds/' . $files[$week % $files->count()]->getFilename())
             : asset('assets/img/default.jpg');

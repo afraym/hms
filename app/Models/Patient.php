@@ -14,11 +14,23 @@ class Patient extends Model
 
     protected $fillable = [
         'full_name',  // Replace individual name fields
-        'email', 'phone', 'phone2', 'national_id', 'date_of_birth', 'gender',
+        'email', 'phone', 'companion_phone', 'national_id', 'date_of_birth', 'gender',
         'status', 'bed_id', 'medical_id', 'uhi_number', 'address', 'governorate',
         'companion_name', 'companion_relation', 'companion_national_id',
-        'department_id', 'created_by'
+        'department_id', 'created_by', 'created_at' // أضف created_at
     ];
+
+    // أضف هذا لتحويل الحقل تلقائياً إلى كائن DateTime
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i',
+        'date_of_birth' => 'date'
+    ];
+
+    // Add this method to automatically convert times to Egyptian timezone
+    public function getCreatedAtAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->timezone('Africa/Cairo');
+    }
 
     // العلاقة مع المستخدم الذي أنشأ السجل
     public function creator()
@@ -40,6 +52,13 @@ class Patient extends Model
 
     public function attachments()
     {
-        return $this->hasMany(\App\Models\Attachment::class);
+        return $this->hasMany(Attachment::class);
+    }
+
+    // Add this helper method to get the storage path for attachments
+    public function getAttachmentPath()
+    {
+        $date = $this->created_at ?? now();
+        return "attachments/{$date->format('Y/m/d')}/{$this->medical_id}";
     }
 }

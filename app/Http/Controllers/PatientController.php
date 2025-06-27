@@ -6,6 +6,9 @@ use App\Models\Patient;
 use Illuminate\Http\Request;
 use App\Models\Bed;
 use App\Models\Attchment;
+use Illuminate\Support\Facades\Cache;
+use App\Exports\PatientsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PatientController extends Controller
 {
@@ -59,13 +62,13 @@ class PatientController extends Controller
             'full_name'    => 'nullable|string|max:255',  // Replace individual name validations
             'email'         => 'nullable|email|max:255',
             'phone'         => 'nullable|string|max:20',
-            'phone2'         => 'nullable|string|max:20',
+            'companion_phone' => 'nullable|string|max:20', // Updated from phone2
             'national_id'   => 'nullable|string|max:14|unique:patients,national_id',
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|in:female,male',
             'status'        => 'nullable|string',
             'bed_id'        => 'nullable|exists:beds,id',
-            'medical_id'    => 'nullable|string|unique:patients,medical_id',
+            'medical_id'    => 'required|unique:patients,medical_id',
             'uhi_number'    => 'nullable|string|unique:patients,uhi_number',
             'address'       => 'nullable|string',
             'governorate'   => 'nullable|string',
@@ -73,7 +76,13 @@ class PatientController extends Controller
             'companion_relation' => 'nullable|string|max:255',
             'companion_national_id' => 'nullable|string|max:14',
             'department_id' => 'nullable|exists:departments,id',
+            'created_at' => 'nullable|date',
         ]);
+
+        // إذا لم يتم تحديد وقت، استخدم الوقت الحالي
+        if (!isset($validated['created_at'])) {
+            $validated['created_at'] = now();
+        }
 
         // Add the authenticated user's ID
         $validated['created_by'] = auth()->id();
@@ -107,8 +116,29 @@ class PatientController extends Controller
             ]);
         }
 
-        // Create a new patient if they don't exist
+        $validated['attachments'] = $request->hasFile('attachments') ? $request->file('attachments') : [];
+
         $patient = Patient::create($validated);
+
+        // Handle attachments
+        if (!empty($validated['attachments'])) {
+            foreach ($validated['attachments'] as $file) {
+                $path = $file->store($patient->getAttachmentPath(), 'public');
+                
+                $patient->attachments()->create([
+                    'file' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'type' => $file->getClientMimeType(),
+                    'description' => $request->input('description'),
+                ]);
+            }
+        }
+
+        // Update the counter in cache if needed
+        $currentCounter = Cache::get('medical_id_counter', 0);
+        if ((int)$validated['medical_id'] > $currentCounter) {
+            Cache::put('medical_id_counter', (int)$validated['medical_id']);
+        }
 
         // Update the status based on bed assignment
         $status = !empty($validated['bed_id']) ? 'admitted' : 'waiting';
@@ -182,12 +212,13 @@ class PatientController extends Controller
             'first_name'    => 'max:255',
             'email'         => 'nullable|email|max:255',
             'phone'         => 'nullable|max:20',
+            'companion_phone' => 'nullable|max:20', // Updated from phone2
+            'companion_name' => 'nullable|max:255',
+            'companion_relation' => 'nullable|max:255',
             'national_id'   => 'nullable|max:50|unique:patients,national_id,' . $patient->id,
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|max:10',
             'bed_id'        => 'nullable|exists:beds,id', // Ensure bed_id is valid
-            'companion_name' => 'nullable|max:255',
-            'companion_relation' => 'nullable|max:255',
         ]);
 
         // Update the patient's data
@@ -399,5 +430,40 @@ class PatientController extends Controller
         }
         
         return response()->json($results);
+    }
+
+    /**
+     * Upload an attachment for the patient.
+     */
+    public function uploadAttachment(Request $request, Patient $patient)
+    {
+        $request->validate([
+            'file' => 'required|file|max:10240', // 10MB max
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store($patient->getAttachmentPath(), 'public');
+
+        $attachment = $patient->attachments()->create([
+            'file' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'type' => $file->getClientMimeType(),
+            'description' => $request->description,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم رفع المرفق بنجاح',
+            'attachment' => $attachment
+        ]);
+    }
+
+    /**
+     * Export patients data to Excel.
+     */
+    public function export() 
+    {
+        return Excel::download(new PatientsExport, 'patients-' . now()->format('Y-m-d') . '.xlsx');
     }
 }

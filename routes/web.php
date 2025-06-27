@@ -41,6 +41,11 @@ Route::view('profile', 'profile')
         Route::get('/patients/ajax-search', [PatientController::class, 'ajaxSearch'])->name('patients.ajaxSearch');
         Route::post('patients/{patient}/attachments', [PatientController::class, 'uploadAttachment'])->name('patients.attachments.upload');
         Route::post('/api/sync', [PatientController::class, 'sync'])->name('api.sync');
+        Route::post('/increment-medical-id', function () {
+            $newMedicalId = Cache::increment('medical_id_counter', 1);
+            return response()->json(['medical_id' => $newMedicalId]);
+        })->name('increment.medical.id');
+        Route::get('patients/export', [PatientController::class, 'export'])->name('patients.export');
     });
 
 // require __DIR__.'/auth.php';

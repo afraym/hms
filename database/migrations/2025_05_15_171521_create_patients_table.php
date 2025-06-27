@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('full_name')->nullable()->index();  // Replace individual name fields
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
-            $table->string('phone2')->nullable();
+            $table->string('companion_phone')->nullable(); // Renamed from phone2
             $table->string('national_id')->nullable()->unique(); // Make national_id nullable and unique
             $table->date('date_of_birth')->nullable();
             $table->string('gender')->nullable();

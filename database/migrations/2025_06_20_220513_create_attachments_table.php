@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAttachmentsTable extends Migration  // Define proper class name
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,12 @@ class CreateAttachmentsTable extends Migration  // Define proper class name
     {
         Schema::create('attachments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('patient_id')->constrained()->onDelete('cascade');
+            $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
             $table->string('file');
+            $table->string('original_name');  // Add this column
             $table->string('type')->nullable();
-            $table->string('description')->nullable();
             $table->string('title')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
@@ -29,4 +30,4 @@ class CreateAttachmentsTable extends Migration  // Define proper class name
     {
         Schema::dropIfExists('attachments');
     }
-}
+};

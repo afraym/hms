@@ -9,7 +9,7 @@
                     <h6>إضافة مريض جديد</h6>
                 </div>
                 <div class="card-body">
-                    <form id="patientForm" action="{{ route('patients.store') }}" method="POST" autocomplete="on">
+                    <form id="patientForm" action="{{ route('patients.store') }}" method="POST" autocomplete="on" enctype="multipart/form-data">
                         @csrf
                         <div class="row mb-3">
                             <div class="col-md-6 mb-3">
@@ -22,27 +22,26 @@
                                 @error('national_id') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
 
-<div class="col-md-12 mb-3">
+<div class="col-md-6 mb-3">
     <div class="input-group input-group-dynamic mb-3">
         <label for="full_name" class="form-label">الاسم كاملاً</label>
         <input type="text" 
                class="form-control @error('full_name') is-invalid @enderror" 
                id="full_name" 
                name="full_name" 
-               value="{{ old('full_name') }}"
-               placeholder="الاسم الرباعي">
+               value="{{ old('full_name') }}">
     </div>
     @error('full_name') <span class="text-danger">{{ $message }}</span> @enderror
 </div>
 
-                            <div class="col-md-6 mb-3">
+                            {{-- <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-dynamic mb-3">
                                     <label for="email" class="form-label">البريد الإلكتروني</label>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror"
                                      id="email" name="email" value="{{ old('email') }}">
                                 </div>
                                 @error('email') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
+                            </div> --}}
 
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-dynamic mb-3">
@@ -53,14 +52,7 @@
                                 @error('phone') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-3">
-                                    <label for="phone2" class="form-label">رقم الهاتف الثاني</label>
-                                    <input type="text" class="form-control @error('phone2') is-invalid @enderror"
-                                     id="phone2" name="phone2" value="{{ old('phone2') }}">
-                                </div>
-                                @error('phone2') <span class="text-danger">{{ $message }}</span> @enderror
-                            </div>
+                           
 
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-dynamic mb-3">
@@ -73,7 +65,7 @@
 
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="department_id">القسم <span class="text-danger">*</span></label>
+                                    <label for="department_id">القسم </label>
                                     <select name="department_id" id="department_id" class="form-control @error('department_id') is-invalid @enderror" >
                                         <option value="">اختر القسم</option>
                                         @foreach($departments as $department)
@@ -103,11 +95,33 @@
 
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-dynamic mb-3">
-                                    <label for="companion_name" class="form-label">اسم المرافق</label>
+                                    <label for="companion_name" class="form-label">اسم المُرافق</label>
                                     <input type="text" class="form-control @error('companion_name') is-invalid @enderror"
                                            id="companion_name" name="companion_name" value="{{ old('companion_name') }}">
                                 </div>
                                 @error('companion_name') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-dynamic mb-3">
+                                    <label for="companion_national_id" class="form-label">الرقم القومي للمُرافق</label>
+                                    <input type="text" 
+                                           class="form-control @error('companion_national_id') is-invalid @enderror"
+                                           id="companion_national_id" 
+                                           name="companion_national_id" 
+                                           value="{{ old('companion_national_id') }}" 
+                                           maxlength="14">
+                                </div>
+                                @error('companion_national_id') 
+                                    <span class="text-danger">{{ $message }}</span> 
+                                @enderror
+                            </div>
+                             <div class="col-md-6 mb-3">
+                                <div class="input-group input-group-dynamic mb-3">
+                                    <label for="phone2" class="form-label">رقم هاتف المُرافق</label>
+                                    <input type="text" class="form-control @error('phone2') is-invalid @enderror"
+                                     id="phone2" name="phone2" value="{{ old('phone2') }}">
+                                </div>
+                                @error('phone2') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-dynamic mb-3">
@@ -146,7 +160,7 @@
                             </div>
                                                         <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="governorate" class="ms-0">المحافظة <span class="text-danger">*</span></label>
+                                    <label for="governorate" class="ms-0">المحافظة </label>
                                     <select id="governorate" name="governorate" class="form-control @error('governorate') is-invalid @enderror" >
                                         <option value="">اختر المحافظة</option>
                                         <option value="أسوان" {{ old('governorate') == 'أسوان' ? 'selected' : '' }}>أسوان</option>
@@ -190,31 +204,32 @@
                                 @error('gender') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <div class="input-group input-group-dynamic mb-3">
-                                    <label for="companion_national_id" class="form-label">الرقم القومي للمرافق</label>
-                                    <input type="text" 
-                                           class="form-control @error('companion_national_id') is-invalid @enderror"
-                                           id="companion_national_id" 
-                                           name="companion_national_id" 
-                                           value="{{ old('companion_national_id') }}" 
-                                           maxlength="14">
+                            {{-- Add this inside the form after the gender field --}}
+                         <div class="col-md-6 mb-3">
+    <div class="input-group input-group-static my-3">
+        <label for="created_at">وقت الدخول</label>
+        <input type="datetime-local" 
+               class="form-control @error('created_at') is-invalid @enderror"
+               id="created_at" 
+               name="created_at" 
+               value="{{ old('created_at', now()->timezone('Africa/Cairo')->format('Y-m-d\TH:i')) }}">
+    </div>
+    @error('created_at') <span class="text-danger">{{ $message }}</span> @enderror
+</div>
+                            <div class="col-md-12 mb-3">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">المرفقات</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="file-loading">
+                                            <input id="attachments" name="attachments[]" type="file" multiple>
+                                        </div>
+                                        <small class="text-muted">يمكنك رفع ملفات PDF, الصور, المستندات (الحد الأقصى: 10 ملفات، 10 ميجابايت لكل ملف)</small>
+                                    </div>
                                 </div>
-                                @error('companion_national_id') 
-                                    <span class="text-danger">{{ $message }}</span> 
-                                @enderror
                             </div>
-
-                            {{-- <div class="col-md-12">
-                                <input id="attachments" type="file" class="file" data-preview-file-type="text" name="files[]" multiple>
-                            </div> --}}
-                            {{-- <div class="col-md-12 mb-3">
-                                <div class="input-group input-group-dynamic mb-3">
-                                    <label for="notes" class="form-label">ملاحظات</label>
-                                    <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes">{{ old('notes') }}</textarea>
-                                </div>
-                                @error('notes') <span class="text-danger">{{ $message }}</span> @enderror
-                        </div> --}}
+                        </div>
                         <button type="submit" class="btn btn-dark">حفظ</button>
                         <a href="{{ route('patients.index') }}" class="btn btn-outline-secondary">إلغاء</a>
                     </form>
@@ -384,7 +399,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 $.toast({
                     heading: 'تم الحفظ محلياً',
                     text: 'سيتم مزامنة البيانات عند عودة الاتصال',
-                    icon: 'success'
+                    icon: 'success',
+                    position: 'top-center'
                 });
                 form.reset();
                 return;
@@ -404,12 +420,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw await response.json();
             }
 
+            // Increment medical ID after successful submission
+            const incrementResponse = await fetch('{{ route("increment.medical.id") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (incrementResponse.ok) {
+                const data = await incrementResponse.json();
+                document.getElementById('medicalId').value = data.medical_id;
+            }
+
             $.toast({
                 heading: 'نجاح',
                 text: 'تم حفظ المريض بنجاح!',
-                icon: 'success'
+                icon: 'success',
+                position: 'top-center',
+                hideAfter: 6000,
+                showHideTransition: 'fade'
             });
             form.reset();
+
+            // Reset the medical ID input with the new value
+            const medicalIdInput = document.getElementById('medicalId');
+            if (medicalIdInput) {
+                medicalIdInput.value = (parseInt(medicalIdInput.value) + 1).toString().padStart(6, '0');
+            }
 
         } catch (error) {
             let errorMessage = "حدث خطأ أثناء الحفظ.";
@@ -419,7 +458,10 @@ document.addEventListener('DOMContentLoaded', function () {
             $.toast({
                 heading: 'خطأ',
                 text: errorMessage,
-                icon: 'error'
+                icon: 'error',
+                position: 'top-center',
+                hideAfter: 6000,
+                showHideTransition: 'fade'
             });
         }
     });
@@ -492,17 +534,57 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(data => {
                         if (data.exists) {
                             const patient = data.patient;
+                            
+                            // Basic Information
                             fillAndMark(document.getElementById('full_name'), patient.full_name);
-                            fillAndMark(secondNameInput, patient.second_name);
-                            fillAndMark(thirdNameInput, patient.third_name);
-                            fillAndMark(fourthNameInput, patient.fourth_name);
-                            fillAndMark(emailInput, patient.email);
-                            fillAndMark(phoneInput, patient.phone);
-                            fillAndMark(phone2Input, patient.phone2);
-                            fillAndMark(birthdateInput, patient.date_of_birth);
-                            fillAndMark(addressInput, patient.address);
-                            fillAndMark(governorateInput, patient.governorate);
-                            // gender radio
+                            fillAndMark(document.getElementById('national_id'), patient.national_id);
+                            fillAndMark(document.getElementById('phone'), patient.phone);
+                            fillAndMark(document.getElementById('address'), patient.address);
+                            fillAndMark(document.getElementById('governorate'), patient.governorate);
+                            fillAndMark(document.getElementById('medical_id'), patient.medical_id);
+                            fillAndMark(document.getElementById('uhi_number'), patient.uhi_number);
+
+                            // Handle birth date properly
+                            const birthDateInput = document.getElementById('date_of_birth');
+                            if (birthDateInput && patient.date_of_birth) {
+                                // Convert the date to YYYY-MM-DD format for the date input
+                                const birthDate = new Date(patient.date_of_birth);
+                                const formattedDate = birthDate.toISOString().split('T')[0];
+                                fillAndMark(birthDateInput, formattedDate);
+                                
+                                // Add visual feedback
+                                birthDateInput.closest('.input-group').classList.add('is-filled');
+                                birthDateInput.classList.add('has-value');
+                            } else if (nationalId.length === 14) {
+                                // Try to extract birth date from national ID if available
+                                const info = detectEgyptianNationalIdInfo(nationalId);
+                                if (info && info.birthdate) {
+                                    fillAndMark(birthDateInput, info.birthdate);
+                                    birthDateInput.closest('.input-group').classList.add('is-filled');
+                                    birthDateInput.classList.add('has-value');
+                                }
+                            }
+
+                            // Department and Bed
+                            if (patient.department_id) {
+                                const departmentSelect = document.getElementById('department_id');
+                                departmentSelect.value = patient.department_id;
+                                markFilled(departmentSelect);
+                            }
+
+                            if (patient.bed_id) {
+                                const bedSelect = document.getElementById('bed_id');
+                                bedSelect.value = patient.bed_id;
+                                markFilled(bedSelect);
+                            }
+
+                            // Companion Information
+                            fillAndMark(document.getElementById('companion_name'), patient.companion_name);
+                            fillAndMark(document.getElementById('companion_national_id'), patient.companion_national_id);
+                            fillAndMark(document.getElementById('phone2'), patient.companion_phone);
+                            fillAndMark(document.getElementById('companion_relation'), patient.companion_relation);
+
+                            // Gender Selection
                             if (patient.gender === 'ذكر' && genderMaleRadio) {
                                 genderMaleRadio.checked = true;
                                 genderMaleRadio.closest('.form-check').classList.add('is-filled');
@@ -513,38 +595,45 @@ document.addEventListener('DOMContentLoaded', function () {
                                 genderFemaleRadio.closest('.form-check').classList.add('is-filled');
                                 if (genderMaleRadio) genderMaleRadio.closest('.form-check').classList.remove('is-filled');
                             }
-                            fillAndMark(document.getElementById('companion_national_id'), patient.companion_national_id);
-                            
-                            // تحديد القسم إذا كان موجود
-                            if (patient.department_id) {
-                                const departmentSelect = document.getElementById('department_id');
-                                departmentSelect.value = patient.department_id;
-                                markFilled(departmentSelect);
+
+                            // Created At (Admission Time)
+                            if (patient.created_at) {
+                                const createdAtInput = document.getElementById('created_at');
+                                if (createdAtInput) {
+                                    const date = new Date(patient.created_at);
+                                    const egyptianDate = new Date(date.getTime() + (2 * 60 * 60 * 1000));
+                                    const localDateTime = egyptianDate.toISOString().slice(0, 16);
+                                    fillAndMark(createdAtInput, localDateTime);
+                                }
                             }
-                            
-                            // تحديد المحافظة
-                            if (patient.governorate) {
-                                const governorateSelect = document.getElementById('governorate');
-                                governorateSelect.value = patient.governorate;
-                                markFilled(governorateSelect);
-                            }
+
+                            // Show success toast
                             $.toast({
-                                heading: 'نجاح',
-                                text: 'هذا الرقم القومي موجود بالفعل وتم ملء البيانات تلقائيًا.',
-                                showHideTransition: 'slide',
+                                heading: 'تم العثور على المريض',
+                                text: 'تم ملئ جميع البيانات المتوفرة تلقائياً',
                                 icon: 'success',
                                 position: 'top-center',
+                                hideAfter: 6000,
+                                showHideTransition: 'fade',
                                 bgColor: '#28a745',
                                 textColor: '#fff',
-                                loaderBg: '#fff',
+                                loaderBg: '#fff'
                             });
+
+                            // Add visual indicator that form is pre-filled
+                            form.classList.add('is-prefilled');
                         } else {
+                            // Reset form if no patient found
+                            form.reset();
+                            form.classList.remove('is-prefilled');
+                            
                             $.toast({
-                                heading: 'معلومة',
-                                text: 'هذا المريض أول مرة يتم تسجيله في النظام.',
-                                showHideTransition: 'fade',
+                                heading: 'مريض جديد',
+                                text: 'هذا المريض غير مسجل من قبل',
                                 icon: 'info',
                                 position: 'top-center',
+                                hideAfter: 6000,
+                                showHideTransition: 'fade'
                             });
                         }
                     })

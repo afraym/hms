@@ -28,14 +28,6 @@
             </p>
             
             <hr>
-            <ul>
-    @foreach($patient->attachments as $attachment)
-        <li>
-            <a href="{{ asset('storage/' . $attachment->file) }}" target="_blank">عرض المرفق</a>
-            {{ $attachment->description }}
-        </li>
-    @endforeach
-</ul>
             <h5>تفاصيل الدخول والخروج</h5>
             @if($patient->visits->isNotEmpty())
                 <table class="table">
@@ -62,6 +54,14 @@
                 <p>لا توجد تفاصيل دخول أو خروج لهذا المريض.</p>
             @endif
 
+            <p><strong>بيانات المرافق:</strong></p>
+<ul>
+    <li><strong>الاسم:</strong> {{ $patient->companion_name ?: 'غير محدد' }}</li>
+    <li><strong>الاسم:</strong> {{ $patient->companion_national_id ?: 'غير محدد' }}</li>
+    <li><strong>الهاتف:</strong> {{ $patient->companion_phone ?: 'غير محدد' }}</li>
+    <li><strong>صلة القرابة:</strong> {{ $patient->companion_relation ?: 'غير محدد' }}</li>
+</ul>
+
             <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-warning">تعديل</a>
              <a href="{{ route('patients.print.label', $patient->id) }}" class="btn bg-gradient-secondary">
                                             طباعة الملصقات
@@ -75,5 +75,45 @@
             <a href="{{ route('patients.index') }}" class="btn btn-secondary">رجوع</a>
         </div>
     </div>
+
+    <div class="card mt-4">
+    <div class="card-header">
+        <h5>المرفقات</h5>
+    </div>
+    <div class="card-body">
+        @if($patient->attachments->count() > 0)
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>اسم الملف</th>
+                            <th>النوع</th>
+                            <th>الوصف</th>
+                            <th>تاريخ الرفع</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($patient->attachments as $attachment)
+                            <tr>
+                                <td>{{ $attachment->original_name }}</td>
+                                <td>{{ $attachment->type }}</td>
+                                <td>{{ $attachment->description }}</td>
+                                <td>{{ $attachment->created_at->format('Y-m-d H:i') }}</td>
+                                <td>
+                                    <a href="{{ $attachment->url }}" class="btn btn-sm btn-info" target="_blank">
+                                        <i class="material-icons">visibility</i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p class="text-muted">لا توجد مرفقات</p>
+        @endif
+    </div>
+</div>
 </div>
 @endsection

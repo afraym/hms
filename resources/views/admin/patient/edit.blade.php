@@ -49,10 +49,17 @@
                         <option value="female" @if($patient->gender == 'female') selected @endif>أنثى</option>
                     </select>
                 </div>
+                {{-- Add companion name and phone --}}
                 <div class="input-group input-group-static mb-4">
                     <label for="companion_name">اسم المرافق</label>
                     <input type="text" name="companion_name" id="companion_name" class="form-control" value="{{ $patient->companion_name }}">
                 </div>
+
+                <div class="input-group input-group-static mb-4">
+                    <label for="companion_phone">هاتف المرافق</label>
+                    <input type="text" name="companion_phone" id="companion_phone" class="form-control" value="{{ $patient->companion_phone }}">
+                </div>
+
                 <div class="input-group input-group-static mb-4">
                     <label for="companion_relation">صلة القرابة</label>
                     <input type="text" name="companion_relation" id="companion_relation" class="form-control" value="{{ $patient->companion_relation }}">

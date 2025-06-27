@@ -58,3 +58,32 @@ label, .form-label {
             page-break-after: always;
         }
     }
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item i {
+  font-size: 1.2rem;
+}
+
+#userDropdown {
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  min-width: 200px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  border: 0;
+}
+
+.dropdown-divider {
+  margin: 0.5rem 0;
+}
