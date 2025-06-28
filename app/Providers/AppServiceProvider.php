@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
-        if (!Cache::has('medical_id_counter')) {
+        if (Schema::hasTable('patients') && !Cache::has('medical_id_counter')) {
             // Get the last medical ID from database or start from 0
             $lastMedicalId = \App\Models\Patient::max('medical_id') ?? 0;
             Cache::forever('medical_id_counter', (int)$lastMedicalId);

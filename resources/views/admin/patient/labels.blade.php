@@ -11,7 +11,7 @@
             margin-left: 6px;
         }
         html, body {
-            width: 208mm;
+            width: 210mm;
             height: 297mm;
             margin: 0 !important;
             padding: 0 !important;
@@ -19,7 +19,7 @@
             box-sizing: border-box;
         }
         .a4-sheet {
-            width: 208mm !important;
+            width: 210mm !important;
             height: 297mm !important;
             margin: 0 !important;
             padding: 0 !important;

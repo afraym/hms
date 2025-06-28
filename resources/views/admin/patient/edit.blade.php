@@ -29,7 +29,7 @@
                 </div>
                 <div class="input-group input-group-static mb-4">
                     <label for="date_of_birth">تاريخ الميلاد</label>
-                    <input type="date" name="date_of_birth" id="date_of_birth" class="form-control" value="{{ $patient->date_of_birth }}">
+                    <input type="date" name="date_of_birth" id="date_of_birth" class="form-control" value="{{ old('date_of_birth', $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->format('Y-m-d') : '') }}">
                 </div>
                 <div class="input-group input-group-static mb-4">
                     <label for="gender">الجنس</label>
