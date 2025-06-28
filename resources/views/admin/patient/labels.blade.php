@@ -121,11 +121,11 @@
                     // 2: medical id + last visit date
                     '<div class="label-content"><div class="label-medical-id">'.$patient->medical_id.'</div><div style="font-weight:bold;font-size:13px;margin-top:4px;">'.($lastVisit ? \Carbon\Carbon::parse($lastVisit)->format('d-m-Y') : '-').'</div></div>',
                     // 3: full name only
-                    '<div class="label-content"><div class="label-name">'.$patient->first_name.' '.$patient->second_name.' '.$patient->third_name.' '.$patient->fourth_name.'</div></div>',
+                    '<div class="label-content"><div class="label-name">'.$patient->full_name.'</div></div>',
                     // 4: full label
                     '<div class="label-content">'
-                        .'<div class="label-name">'.$patient->first_name.' '.$patient->second_name.' '.$patient->third_name.' '.$patient->fourth_name.'</div>'
-                        .'<div class="label-dept">القسم: '.($patient->department->name ?? '-').'</div>'
+                        .'<div class="label-name">'.$patient->full_name.'</div>'
+                        // .'<div class="label-dept">القسم: '.($patient->department->name ?? '-').'</div>'
                         .'<div class="label-age">السن: '.($patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : '-').' سنة</div>'
                         .'<div class="label-medical-id">'.$patient->medical_id.'</div>'
                     .'</div>',
@@ -134,8 +134,8 @@
                 $restLabels = [];
                 for($i=0; $i<36; $i++) {
                     $restLabels[] = '<div class="label-content">'
-                        .'<div class="label-name">'.$patient->first_name.' '.$patient->second_name.' '.$patient->third_name.' '.$patient->fourth_name.'</div>'
-                        .'<div class="label-age">السن: '.($patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : '-').' -سنة' .($patient->department->name ?? '-').'</div>'
+                        .'<div class="label-name">'.$patient->full_name.'</div>'
+                        .'<div class="label-age">السن: '.($patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : '-').' سنه - ' .($patient->department->name ?? '-').'</div>'
                         .'<div class="label-medical-id">'.$patient->medical_id.'</div>'
                         .'</div>';
                 }

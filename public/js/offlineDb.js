@@ -3,7 +3,7 @@ import Dexie from '/assets/js/dexie.mjs';
 const db = new Dexie('HmsOfflineDB');
 
 db.version(1).stores({
-    patients: 'id,national_id,medical_id,first_name',
+    patients: 'id,national_id,medical_id,full_name',
     pendingSync: '++id,action,timestamp'
 });
 

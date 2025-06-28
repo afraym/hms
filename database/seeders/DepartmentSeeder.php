@@ -55,7 +55,7 @@ class DepartmentSeeder extends Seeder
             'عنابه القلب المتوسطه',
             'عنايات الباطنة العامة',
             'عناية الباطنة',
-            '(عناية الباطنة (طوارئ'
+            ' (عناية الباطنة (طوارئ'
         ];
 
         foreach ($departments as $department) {

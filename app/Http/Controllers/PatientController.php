@@ -209,7 +209,7 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient)
     {
         $validated = $request->validate([
-            'first_name'    => 'max:255',
+            'full_name'    => 'max:255',
             'email'         => 'nullable|email|max:255',
             'phone'         => 'nullable|max:20',
             'companion_phone' => 'nullable|max:20', // Updated from phone2
@@ -356,10 +356,11 @@ class PatientController extends Controller
         $query = $request->input('query');
 
         // Search patients by first name, second name, phone, or national ID
-        $patients = Patient::where('first_name', 'LIKE', "%{$query}%")
-            ->orWhere('second_name', 'LIKE', "%{$query}%")
+        $patients = Patient::where('full_name', 'LIKE', "%{$query}%")
             ->orWhere('phone', 'LIKE', "%{$query}%")
             ->orWhere('national_id', 'LIKE', "%{$query}%")
+            ->orWhere('medical_id', 'LIKE', "%{$query}%")
+            ->orWhere('uhi_number', 'LIKE', "%{$query}%")
             ->get();
 
         return view('admin.patient.index', compact('patients'))->with('query', $query);
@@ -373,10 +374,11 @@ class PatientController extends Controller
         $query = $request->input('query');
 
         // Search patients by first name, second name, phone, or national ID
-        $patients = Patient::where('first_name', 'LIKE', "%{$query}%")
-            ->orWhere('second_name', 'LIKE', "%{$query}%")
+        $patients = Patient::where('full_name', 'LIKE', "%{$query}%")
             ->orWhere('phone', 'LIKE', "%{$query}%")
             ->orWhere('national_id', 'LIKE', "%{$query}%")
+            ->orWhere('medical_id', 'LIKE', "%{$query}%")
+            ->orWhere('uhi_number', 'LIKE', "%{$query}%")
             ->get();
 
         return response()->json($patients);

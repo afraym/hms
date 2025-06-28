@@ -8,7 +8,7 @@
   <hr class="horizontal light mt-0 mb-2">
   <div class="collapse navbar-collapse px-0 w-auto" id="sidenav-collapse-main">
     <ul class="navbar-nav">
-      @canany(['admin', 'manager'])
+      {{-- @canany(['admin', 'manager']) --}}
         <li class="nav-item">
           <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
             <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
@@ -17,7 +17,7 @@
             <span class="nav-link-text me-1">لوحة التحكم</span>
           </a>
         </li>
-      @endcanany
+      {{-- @endcanany --}}
       <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('patients.index') ? 'active' : '' }}" href="{{ route('patients.index') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">

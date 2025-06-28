@@ -280,7 +280,7 @@ function detectEgyptianNationalIdInfo(nationalId) {
 //     const birthdateInput = document.getElementById('date_of_birth');
 //     const genderInput = document.getElementById('gender');
 //     const governorateInput = document.getElementById('governorate');
-//     const firstNameInput = document.getElementById('first_name');
+//     const firstNameInput = document.getElementById('full_name');
 //     const secondNameInput = document.getElementById('second_name');
 //     const thirdNameInput = document.getElementById('third_name');
 //     const fourthNameInput = document.getElementById('fourth_name');
@@ -470,10 +470,10 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const nationalIdInput = document.getElementById('national_id');
-    const firstNameInput = document.getElementById('first_name');
-    const secondNameInput = document.getElementById('second_name');
-    const thirdNameInput = document.getElementById('third_name');
-    const fourthNameInput = document.getElementById('fourth_name');
+    const firstNameInput = document.getElementById('full_name');
+    // const secondNameInput = document.getElementById('second_name');
+    // const thirdNameInput = document.getElementById('third_name');
+    // const fourthNameInput = document.getElementById('fourth_name');
     const emailInput = document.getElementById('email');
     const phoneInput = document.getElementById('phone');
     const phone2Input = document.getElementById('phone2');

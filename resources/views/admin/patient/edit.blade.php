@@ -11,21 +11,10 @@
                 @csrf
                 @method('PUT')
                 <div class="input-group input-group-static mb-4">
-                    <label for="first_name">الاسم الأول</label>
-                    <input type="text" name="first_name" id="first_name" class="form-control" value="{{ $patient->first_name }}" required>
+                    <label for="full_name">الاسم </label>
+                    <input type="text" name="full_name" id="full_name" class="form-control" value="{{ $patient->full_name }}" required>
                 </div>
-                <div class="input-group input-group-static mb-4">
-                    <label for="second_name">الاسم الثاني</label>
-                    <input type="text" name="second_name" id="second_name" class="form-control" value="{{ $patient->second_name }}">
-                </div>
-                <div class="input-group input-group-static mb-4">
-                    <label for="third_name">الاسم الثالث</label>
-                    <input type="text" name="third_name" id="third_name" class="form-control" value="{{ $patient->third_name }}">
-                </div>
-                <div class="input-group input-group-static mb-4">
-                    <label for="fourth_name">الاسم الرابع</label>
-                    <input type="text" name="fourth_name" id="fourth_name" class="form-control" value="{{ $patient->fourth_name }}">
-                </div>
+
                 <div class="input-group input-group-static mb-4">
                     <label for="email">البريد الإلكتروني</label>
                     <input type="email" name="email" id="email" class="form-control" value="{{ $patient->email }}">

@@ -21,8 +21,7 @@
                             <thead>
                                 <tr>
                                     <th>الصورة</th>
-                                    <th>الاسم الأول</th>
-                                    <th>الاسم الثاني</th>
+                                    <th>الاسم </th>
                                     <th>رقم الهاتف</th>
                                     <th>الرقم القومي</th>
                                     <th>الجنس</th>
@@ -39,8 +38,7 @@
                                              class="avatar" 
                                              style="width: 50px; height: 50px; border-radius: 50%;">
                                     </td>
-                                    <td>{{ $patient->first_name }}</td>
-                                    <td>{{ $patient->second_name }}</td>
+                                    <td>{{ $patient->full_name }}</td>
                                     <td>{{ $patient->phone }}</td>
                                     <td>{{ $patient->national_id }}</td>
                                     <td>{{ $patient->gender == 'male' ? 'ذكر' : ($patient->gender == 'female' ? 'أنثى' : 'غير محدد') }}</td>
@@ -124,8 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <td>
                                         <img src="${avatar}" alt="Avatar" class="avatar" style="width: 50px; height: 50px; border-radius: 50%;">
                                     </td>
-                                    <td>${patient.first_name}</td>
-                                    <td>${patient.second_name}</td>
+                                    <td>${patient.full_name}</td>
                                     <td>${patient.phone}</td>
                                     <td>${patient.national_id}</td>
                                     <td>${gender}</td>

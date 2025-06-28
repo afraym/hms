@@ -8,10 +8,10 @@
         </div>
         <div class="card-body">
             <p><strong>الاسم الكامل:</strong> 
-                {{ $patient->first_name }} 
-                {{ $patient->second_name }} 
+                {{ $patient->full_name }} 
+                {{-- {{ $patient->second_name }} 
                 {{ $patient->third_name }} 
-                {{ $patient->fourth_name }}
+                {{ $patient->fourth_name }} --}}
             </p>
             <p><strong>البريد الإلكتروني:</strong> {{ $patient->email }}</p>
             <p><strong>رقم الهاتف:</strong> {{ $patient->phone }}</p>

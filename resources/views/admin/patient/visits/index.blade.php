@@ -28,10 +28,10 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>
-                                        {{ $visit->patient->first_name }} 
-                                        {{ $visit->patient->second_name }} 
+                                        {{ $visit->patient->full_name }} 
+                                        {{-- {{ $visit->patient->second_name }} 
                                         {{ $visit->patient->third_name }} 
-                                        {{ $visit->patient->fourth_name }}
+                                        {{ $visit->patient->fourth_name }} --}}
                                     </td>
                                     <td>
                                         <span class="badge badge-sm 
