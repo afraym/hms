@@ -64,7 +64,7 @@
                                 <div class="input-group input-group-static mb-3">
                                     <label class="ms-0">نوع المستخدم</label>
                                     <select name="role" class="form-control @error('role') is-invalid @enderror">
-                                        <option value="reception" selected>موظف استقبال</option>
+                                        <option value="reception" selected> استقبال</option>
                                         {{-- <option value="manager">مدير</option>
                                         <option value="kitchen">موظف مطبخ</option> --}}
                                     </select>

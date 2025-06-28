@@ -399,11 +399,13 @@ class PatientController extends Controller
     {
         $pendingActions = $request->input('pendingSync');
         $results = [];
-        
+
         foreach ($pendingActions as $action) {
             try {
                 switch ($action['action']) {
                     case 'create':
+                        // إزالة الحقول التي قد تسبب تعارض في الإنشاء
+                        unset($action['data']['id']);
                         $patient = Patient::create($action['data']);
                         $results[] = [
                             'success' => true,
@@ -411,13 +413,34 @@ class PatientController extends Controller
                             'synced_id' => $patient->id
                         ];
                         break;
-                        
+
                     case 'update':
-                        Patient::find($action['data']['id'])->update($action['data']);
-                        $results[] = [
-                            'success' => true,
-                            'id' => $action['id']
-                        ];
+                        $data = $action['data'];
+                        $id = $data['id'] ?? null;
+                        if ($id) {
+                            // إزالة الحقول التي لا يجب تحديثها أو تسبب تعارض
+                            unset($data['created_at'], $data['id']);
+                            $patient = Patient::find($id);
+                            if ($patient) {
+                                $patient->update($data);
+                                $results[] = [
+                                    'success' => true,
+                                    'id' => $action['id']
+                                ];
+                            } else {
+                                $results[] = [
+                                    'success' => false,
+                                    'id' => $action['id'],
+                                    'error' => 'Patient not found'
+                                ];
+                            }
+                        } else {
+                            $results[] = [
+                                'success' => false,
+                                'id' => $action['id'],
+                                'error' => 'Missing patient id'
+                            ];
+                        }
                         break;
                 }
             } catch (\Exception $e) {
@@ -428,7 +451,7 @@ class PatientController extends Controller
                 ];
             }
         }
-        
+
         return response()->json($results);
     }
 
