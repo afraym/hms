@@ -114,6 +114,25 @@
   </script>
 
   <script src="{{ asset('assets/js/material-dashboard.min.js?v=3.1.0') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // لكل input داخل .input-group-outline
+    document.querySelectorAll('.input-group-outline input').forEach(function(input) {
+        // عند تحميل الصفحة: إذا كان هناك قيمة، أضف is-filled
+        if (input.value) {
+            input.parentElement.classList.add('is-filled');
+        }
+        // عند الكتابة أو التغيير
+        input.addEventListener('input', function() {
+            if (input.value) {
+                input.parentElement.classList.add('is-filled');
+            } else {
+                input.parentElement.classList.remove('is-filled');
+            }
+        });
+    });
+});
+</script>
 </body>
 
 </html>

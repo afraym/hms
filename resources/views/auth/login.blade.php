@@ -11,7 +11,8 @@
             })
             ->values();
         $week = date('W'); // Get the current week number
-        // $week = 6;
+        // $week = 26;
+        // dd($week);
         $image = $files->count() > 0
             ? asset('assets/img/login-backgrounds/' . $files[$week % $files->count()]->getFilename())
             : asset('assets/img/default.jpg');
@@ -153,4 +154,5 @@
         </div>
     </div>
 </div> --}}
+
 @endsection
