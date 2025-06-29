@@ -387,11 +387,14 @@ class PatientController extends Controller
     /**
      * Print labels for patients.
      */
-    public function printLabels(Patient $patient)
+    public function printLabels(Patient $patient, Request $request)
     {
-        $patients = collect([$patient]); // ضع المريض في Collection ليتعامل معه الـBlade كقائمة
-        $repeat = 8; // أو العدد الذي تريده
-        return view('admin.patient.labels', compact('patients', 'repeat'));
+        $patients = collect([$patient]);
+        $requestedLabels = (int) $request->input('labels', 36); // Default to 36 additional labels
+        $totalCells = 40; // Total number of cells to show
+        $repeat = 4 + $requestedLabels; // 4 fixed + requested additional labels
+        
+        return view('admin.patient.labels', compact('patients', 'repeat', 'totalCells'));
     }
 
     /**

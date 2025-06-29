@@ -108,46 +108,54 @@
         <strong>Margins: None</strong> &nbsp; | &nbsp;
         <strong>Scale: 100%</strong>
     </div>
-    <button class="btn btn-primary no-print mb-3" onclick="window.print()">طباعة كل الملصقات</button>
+    <form method="get" class="no-print mb-3" style="text-align:center;">
+        <label>عدد الملصقات الإضافية: </label>
+        <input type="number" name="labels" min="0" max="96" value="{{ request('labels', $repeat - 4) }}" style="width:70px;">
+        <small class="text-muted">(سيتم إضافتها بعد الـ 4 ملصقات الأساسية)</small>
+        <button type="submit" class="btn btn-info btn-sm">تحديث</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">طباعة كل الملصقات</button>
+    </form>
     <table class="labels-table">
         <tbody>
         @foreach($patients as $patient)
             @php
-                // Prepare the first 4 labels
+                // أول 4 ملصقات متنوعة (ثابتة)
                 $lastVisit = optional($patient->visits()->latest('visit_at')->first())->visit_at;
                 $firstLabels = [
-                    // 1: medical id only
                     '<div class="label-content"><div class="label-medical-id">'.$patient->medical_id.'</div></div>',
-                    // 2: medical id + last visit date
                     '<div class="label-content"><div class="label-medical-id">'.$patient->medical_id.'</div><div style="font-weight:bold;font-size:13px;margin-top:4px;">'.($lastVisit ? \Carbon\Carbon::parse($lastVisit)->format('d-m-Y') : '-').'</div></div>',
-                    // 3: full name only
                     '<div class="label-content"><div class="label-name">'.$patient->full_name.'</div></div>',
-                    // 4: full label
                     '<div class="label-content">'
                         .'<div class="label-name">'.$patient->full_name.'</div>'
-                        // .'<div class="label-dept">القسم: '.($patient->department->name ?? '-').'</div>'
                         .'<div class="label-age">السن: '.($patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : '-').' سنة</div>'
                         .'<div class="label-medical-id">'.$patient->medical_id.'</div>'
                     .'</div>',
                 ];
-                // Prepare the rest of the labels (36 labels)
-                $restLabels = [];
-                for($i=0; $i<36; $i++) {
-                    $restLabels[] = '<div class="label-content">'
+
+                // الملصقات الإضافية
+                $additionalLabels = [];
+                $additionalCount = max(0, $repeat - 4); // عدد الملصقات الإضافية
+                for($i=0; $i < $additionalCount; $i++) {
+                    $additionalLabels[] = '<div class="label-content">'
                         .'<div class="label-name">'.$patient->full_name.'</div>'
                         .'<div class="label-age">السن: '.($patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : '-').' سنه - ' .($patient->department->name ?? '-').'</div>'
                         .'<div class="label-medical-id">'.$patient->medical_id.'</div>'
                         .'</div>';
                 }
-                $allLabels = array_merge($firstLabels, $restLabels); // total 40
+
+                // دمج الملصقات الأساسية مع الإضافية
+                $allLabels = array_merge($firstLabels, $additionalLabels);
             @endphp
 
-            {{-- Print the labels in rows of 4 --}}
-            @for($row=0; $row<10; $row++)
+            {{-- Print exactly 40 cells (10 rows × 4 columns) --}}
+            @for($row=0; $row < 10; $row++)
                 <tr>
                     @for($col=0; $col<4; $col++)
-                        @php $idx = $row*4 + $col; @endphp
-                        <td>{!! $allLabels[$idx] ?? '' !!}</td>
+                        @php 
+                            $idx = $row*4 + $col;
+                            $showLabel = $idx < count($allLabels); // Only show content if we have a label for this cell
+                        @endphp
+                        <td>{!! $showLabel ? $allLabels[$idx] : '' !!}</td>
                     @endfor
                 </tr>
             @endfor
