@@ -390,9 +390,22 @@ class PatientController extends Controller
     public function printLabels(Patient $patient, Request $request)
     {
         $patients = collect([$patient]);
-        $requestedLabels = (int) $request->input('labels', 36); // Default to 36 additional labels
-        $totalCells = 40; // Total number of cells to show
-        $repeat = 4 + $requestedLabels; // 4 fixed + requested additional labels
+        $requestedLabels = (int) $request->input('labels', 36);
+        $totalCells = 40;
+        $repeat = 4 + $requestedLabels;
+        
+        if ($request->ajax()) {
+            // For Ajax requests, return just the table content
+            return view('admin.patient.labels', compact('patients', 'repeat', 'totalCells'))
+                ->renderSections()['content'];
+        }
+        
+        // For initial page load, check localStorage value from header
+        $savedLabels = $request->header('X-Saved-Labels');
+        if ($savedLabels !== null) {
+            $requestedLabels = (int) $savedLabels;
+            $repeat = 4 + $requestedLabels;
+        }
         
         return view('admin.patient.labels', compact('patients', 'repeat', 'totalCells'));
     }

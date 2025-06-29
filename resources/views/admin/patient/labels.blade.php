@@ -108,13 +108,70 @@
         <strong>Margins: None</strong> &nbsp; | &nbsp;
         <strong>Scale: 100%</strong>
     </div>
-    <form method="get" class="no-print mb-3" style="text-align:center;">
+    <form class="no-print mb-3" style="text-align:center;" onsubmit="return false;">
         <label>عدد الملصقات الإضافية: </label>
-        <input type="number" name="labels" min="0" max="96" value="{{ request('labels', $repeat - 4) }}" style="width:70px;">
+        <input type="number" name="labels" min="0" max="36" 
+               id="labelsInput"
+               value="{{ request('labels', $repeat - 4) }}" 
+               style="width:70px;">
         <small class="text-muted">(سيتم إضافتها بعد الـ 4 ملصقات الأساسية)</small>
-        <button type="submit" class="btn btn-info btn-sm">تحديث</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">طباعة كل الملصقات</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+            طباعة <span id="totalLabels">{{ $repeat }}</span> ملصق
+        </button>
     </form>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const labelsInput = document.getElementById('labelsInput');
+        
+        // Load saved value from localStorage
+        const savedLabels = localStorage.getItem('labelsCount');
+        if (savedLabels !== null) {
+            labelsInput.value = savedLabels;
+            updateTotalLabels(savedLabels);
+            
+            // Update the table content with saved value
+            updateTableContent(savedLabels);
+        }
+
+        // Add input event listener for Ajax update
+        labelsInput.addEventListener('input', function(e) {
+            const value = this.value;
+            updateTotalLabels(value);
+            updateTableContent(value);
+        });
+    });
+
+    function updateTotalLabels(additionalLabels) {
+        // Save to localStorage
+        localStorage.setItem('labelsCount', additionalLabels);
+        
+        // Update display
+        const total = parseInt(additionalLabels) + 4;
+        document.getElementById('totalLabels').textContent = total;
+    }
+
+    function updateTableContent(labels) {
+        fetch(`${window.location.pathname}?labels=${labels}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-Saved-Labels': labels
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Update only the table content
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTable = doc.querySelector('.labels-table');
+            if (newTable) {
+                document.querySelector('.labels-table').innerHTML = newTable.innerHTML;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    </script>
+
     <table class="labels-table">
         <tbody>
         @foreach($patients as $patient)
