@@ -102,22 +102,26 @@
 </style>
 
 <div class="a4-sheet">
-    <div class="alert alert-info no-print" style="text-align:center;">
+    {{-- <div class="alert alert-info no-print" style="text-align:center;">
         يرجى التأكد من ضبط إعدادات الطباعة على:
         <strong>Paper size: A4</strong> &nbsp; | &nbsp;
         <strong>Margins: None</strong> &nbsp; | &nbsp;
         <strong>Scale: 100%</strong>
-    </div>
+    </div> --}}
     <form class="no-print mb-3" style="text-align:center;" onsubmit="return false;">
-        <label>عدد الملصقات الإضافية: </label>
-        <input type="number" name="labels" min="0" max="36" 
-               id="labelsInput"
-               value="{{ request('labels', $repeat - 4) }}" 
-               style="width:70px;">
-        <small class="text-muted">(سيتم إضافتها بعد الـ 4 ملصقات الأساسية)</small>
-        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
-            طباعة <span id="totalLabels">{{ $repeat }}</span> ملصق
-        </button>
+        <div style="display: flex; align-items: center; gap: 16px; justify-content: center;">
+            <div class="input-group input-group-outline my-3 focused is-focused" style="width:110px; margin-bottom:0;">
+                <label class="form-label">عدد الملصقات:</label>
+                <input type="number" name="labels" min="4" max="40" 
+                       id="labelsInput"
+                       value="{{ request('labels', 4) }}" 
+                       style="width:70px;" class="form-control ">
+            </div>
+            <small class="text-muted" style="margin-bottom:0;">(الحد الأدنى 4 ملصقات)</small>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()" style="margin-bottom:0;">
+                طباعة <span id="totalLabels">{{ $repeat }}</span> ملصق
+            </button>
+        </div>
     </form>
 
     <script>
@@ -129,38 +133,39 @@
         if (savedLabels !== null) {
             labelsInput.value = savedLabels;
             updateTotalLabels(savedLabels);
-            
-            // Update the table content with saved value
             updateTableContent(savedLabels);
         }
 
-        // Add input event listener for Ajax update
+        // Add input event listener
         labelsInput.addEventListener('input', function(e) {
-            const value = this.value;
+            let value = parseInt(this.value);
+            // Ensure minimum of 4 labels
+            if (value < 4) value = 4;
+            // Ensure maximum of 40 labels
+            if (value > 40) value = 40;
+            this.value = value;
             updateTotalLabels(value);
             updateTableContent(value);
         });
     });
 
-    function updateTotalLabels(additionalLabels) {
+    function updateTotalLabels(total) {
         // Save to localStorage
-        localStorage.setItem('labelsCount', additionalLabels);
+        localStorage.setItem('labelsCount', total);
         
         // Update display
-        const total = parseInt(additionalLabels) + 4;
         document.getElementById('totalLabels').textContent = total;
     }
 
-    function updateTableContent(labels) {
-        fetch(`${window.location.pathname}?labels=${labels}`, {
+    function updateTableContent(total) {
+        fetch(`${window.location.pathname}?labels=${total}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-Saved-Labels': labels
+                'X-Total-Labels': total
             }
         })
         .then(response => response.text())
         .then(html => {
-            // Update only the table content
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             const newTable = doc.querySelector('.labels-table');
@@ -176,41 +181,55 @@
         <tbody>
         @foreach($patients as $patient)
             @php
-                // أول 4 ملصقات متنوعة (ثابتة)
+                function formatAge($birthDate) {
+                    if (!$birthDate) return '-';
+                    
+                    $birth = \Carbon\Carbon::parse($birthDate);
+                    $now = \Carbon\Carbon::now();
+                    
+                    $years = $birth->diffInYears($now);
+                    $months = $birth->copy()->addYears($years)->diffInDays($now) / 30.44;
+                    
+                    if ($years >= 1) {
+                        return round($years) . ' سنة';  // Round to whole years
+                    } else {
+                        return round($birth->diffInDays($now) / 30.44) . ' شهر';  // Round to whole months
+                    }
+                }
+
                 $lastVisit = optional($patient->visits()->latest('visit_at')->first())->visit_at;
-                $firstLabels = [
+        
+                // Define all labels array by combining first and additional labels
+                $allLabels = [
+                    // First 4 labels
                     '<div class="label-content"><div class="label-medical-id">'.$patient->medical_id.'</div></div>',
                     '<div class="label-content"><div class="label-medical-id">'.$patient->medical_id.'</div><div style="font-weight:bold;font-size:13px;margin-top:4px;">'.($lastVisit ? \Carbon\Carbon::parse($lastVisit)->format('d-m-Y') : '-').'</div></div>',
                     '<div class="label-content"><div class="label-name">'.$patient->full_name.'</div></div>',
                     '<div class="label-content">'
                         .'<div class="label-name">'.$patient->full_name.'</div>'
-                        .'<div class="label-age">السن: '.($patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : '-').' سنة</div>'
+                        .'<div class="label-age">العمر: '.formatAge($patient->date_of_birth).'</div>'
                         .'<div class="label-medical-id">'.$patient->medical_id.'</div>'
-                    .'</div>',
+                    .'</div>'
                 ];
 
-                // الملصقات الإضافية
-                $additionalLabels = [];
-                $additionalCount = max(0, $repeat - 4); // عدد الملصقات الإضافية
-                for($i=0; $i < $additionalCount; $i++) {
-                    $additionalLabels[] = '<div class="label-content">'
+                // Add additional labels
+                $additionalCount = max(0, $repeat - 4);
+                for($i = 0; $i < $additionalCount; $i++) {
+                    $allLabels[] = '<div class="label-content">'
                         .'<div class="label-name">'.$patient->full_name.'</div>'
-                        .'<div class="label-age">السن: '.($patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->age : '-').' سنه - ' .($patient->department->name ?? '-').'</div>'
+                        .'<div class="label-age">العمر: '.formatAge($patient->date_of_birth).' - ' .($patient->department->name ?? '-').'</div>'
                         .'<div class="label-medical-id">'.$patient->medical_id.'</div>'
                         .'</div>';
                 }
-
-                // دمج الملصقات الأساسية مع الإضافية
-                $allLabels = array_merge($firstLabels, $additionalLabels);
             @endphp
 
             {{-- Print exactly 40 cells (10 rows × 4 columns) --}}
-            @for($row=0; $row < 10; $row++)
+            @for($row = 0; $row < 10; $row++)
                 <tr>
-                    @for($col=0; $col<4; $col++)
+                    @for($col = 0; $col < 4; $col++)
                         @php 
-                            $idx = $row*4 + $col;
-                            $showLabel = $idx < count($allLabels); // Only show content if we have a label for this cell
+                            $idx = $row * 4 + $col;
+                            $showLabel = $idx < count($allLabels);
                         @endphp
                         <td>{!! $showLabel ? $allLabels[$idx] : '' !!}</td>
                     @endfor

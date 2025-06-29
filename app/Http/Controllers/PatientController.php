@@ -390,21 +390,13 @@ class PatientController extends Controller
     public function printLabels(Patient $patient, Request $request)
     {
         $patients = collect([$patient]);
-        $requestedLabels = (int) $request->input('labels', 36);
-        $totalCells = 40;
-        $repeat = 4 + $requestedLabels;
+        $repeat = (int) $request->input('labels', 4); // Default to 4 labels total
+        $totalCells = 40; // Keep 40 cells (10 rows × 4 columns)
         
         if ($request->ajax()) {
             // For Ajax requests, return just the table content
             return view('admin.patient.labels', compact('patients', 'repeat', 'totalCells'))
                 ->renderSections()['content'];
-        }
-        
-        // For initial page load, check localStorage value from header
-        $savedLabels = $request->header('X-Saved-Labels');
-        if ($savedLabels !== null) {
-            $requestedLabels = (int) $savedLabels;
-            $repeat = 4 + $requestedLabels;
         }
         
         return view('admin.patient.labels', compact('patients', 'repeat', 'totalCells'));
@@ -505,6 +497,9 @@ class PatientController extends Controller
      */
     public function export() 
     {
-        return Excel::download(new PatientsExport, 'patients-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(
+            new PatientsExport, 
+            'patients-' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 }

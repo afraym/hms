@@ -25,10 +25,7 @@ class PatientFactory extends Factory
         $medicalId = "11803{$year}{$month}{$day}{$sequence}";
 
         return [
-            'full_name' => $this->faker->firstName, // Egyptian first name
-            // 'second_name' => $this->faker->lastName, // Egyptian last name
-            // 'third_name' => $this->faker->lastName, // Optional
-            // 'fourth_name' => $this->faker->lastName, // Optional
+            'full_name' => $this->faker->firstName . ' ' . $this->faker->lastName . ' ' . $this->faker->lastName . ' ' . $this->faker->lastName, // Full 4 names (first + 3 last names)
             'email' => $this->faker->unique()->safeEmail, // Egyptian email
             'phone' => $this->faker->numerify('010########'), // Egyptian phone number
             'phone2' => $this->faker->optional()->numerify('011########'), // Optional Egyptian phone number
@@ -36,7 +33,7 @@ class PatientFactory extends Factory
             'date_of_birth' => $this->faker->date('Y-m-d', '2005-01-01'), // Date of birth
             'gender' => $this->faker->randomElement(['ذكر', 'أنثى']), // Changed to Arabic
             'medical_id' => $medicalId,
-            'uhi_number' => $this->faker->optional()->numerify('UHI#########'),
+            'uhi_number' => $this->faker->optional()->numerify('#########'),
             'department_id' => \App\Models\Department::inRandomOrder()->first()?->id,
             'status' => $this->faker->randomElement(['admitted', 'waiting', 'discharged']),
         ];
