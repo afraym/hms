@@ -16,7 +16,7 @@
                     <div class="d-flex gap-2">
                         <a href="{{ route('patients.create') }}" class="btn btn-primary">إضافة مريض جديد</a>
                         <a href="{{ route('patients.export') }}" class="btn btn-success">
-                            <i class="material-icons opacity-10">file_download</i>
+                            <i class="material-icons opacity-10">file_copy</i>
                             تحويل إلى Excel
                         </a>
                     </div>
