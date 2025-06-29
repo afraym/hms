@@ -31,7 +31,7 @@ class PatientFactory extends Factory
             'phone2' => $this->faker->optional()->numerify('011########'), // Optional Egyptian phone number
             'national_id' => $this->faker->unique()->numerify('##############'), // 14-digit Egyptian national ID
             'date_of_birth' => $this->faker->date('Y-m-d', '2005-01-01'), // Date of birth
-            'gender' => $this->faker->randomElement(['ذكر', 'أنثى']), // Changed to Arabic
+            'gender' => $this->faker->randomElement(['male', 'female']), // Changed to Arabic
             'medical_id' => $medicalId,
             'uhi_number' => $this->faker->optional()->numerify('#########'),
             'department_id' => \App\Models\Department::inRandomOrder()->first()?->id,
