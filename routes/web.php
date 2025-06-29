@@ -48,9 +48,9 @@ Route::view('profile', 'profile')
         Route::get('patients/export', [PatientController::class, 'export'])->name('patients.export');
     });
 
-    Route::middleware(['auth', 'checkrole:admin|manager'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-    });
+    // Route::middleware(['auth', 'checkrole:admin|manager'])->group(function () {
+    //     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    // });
 
 // require __DIR__.'/auth.php';
 
