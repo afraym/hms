@@ -13,11 +13,13 @@
             <div class="card my-4">
                 <div class="card-header pb-0 d-flex justify-content-between align-items-center">
                     <h6>قائمة المرضى</h6>
-                    <a href="{{ route('patients.create') }}" class="btn btn-primary">إضافة مريض جديد</a>
-                     <a href="{{ route('patients.export') }}" class="btn btn-success">
-                <i class="material-icons opacity-10">file_download</i>
-                تصدير إلى Excel
-            </a>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('patients.create') }}" class="btn btn-primary">إضافة مريض جديد</a>
+                        <a href="{{ route('patients.export') }}" class="btn btn-success">
+                            <i class="material-icons opacity-10">file_download</i>
+                            تحويل إلى Excel
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
                     <div class="table-responsive p-0">
