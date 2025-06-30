@@ -46,6 +46,7 @@ Route::view('profile', 'profile')
             return response()->json(['medical_id' => $newMedicalId]);
         })->name('increment.medical.id');
         Route::get('patients/export', [PatientController::class, 'export'])->name('patients.export');
+        Route::post('/patients/{patient}/restore', [PatientController::class, 'restore'])->name('patients.restore');
     });
 
     // Route::middleware(['auth', 'checkrole:admin|manager'])->group(function () {

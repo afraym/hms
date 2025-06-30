@@ -328,6 +328,7 @@ class PatientController extends Controller
 
         if ($patient) {
             return response()->json([
+                'deleted' => $patient->trashed(),
                 'exists' => true,
                 'patient' => [
                     'full_name' => $patient->full_name,  // Replace individual name fields
@@ -501,5 +502,25 @@ class PatientController extends Controller
             new PatientsExport, 
             'patients-' . now()->format('Y-m-d') . '.xlsx'
         );
+    }
+
+    /**
+     * Display a listing of trashed patients.
+     */
+    public function trashed()
+    {
+        $patients = Patient::onlyTrashed()->paginate(50);
+        return view('admin.patient.trashed', compact('patients'));
+    }
+
+    /**
+     * Restore the specified patient.
+     */
+    public function restore($id)
+    {
+        $patient = Patient::withTrashed()->findOrFail($id);
+        $patient->restore();
+
+        return redirect()->route('patients.trashed')->with('success', 'تم استعادة المريض بنجاح.');
     }
 }
