@@ -73,14 +73,12 @@ a:hover .hover-image {
   </style>
   <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('ServiceWorker registered');
-      })
-      .catch(err => {
-        console.log('ServiceWorker registration failed: ', err);
-      });
-  });
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+            registration.unregister().then(() => {
+                console.log('Service worker unregistered successfully.');
+            });
+        });
+    });
 }
 </script>
