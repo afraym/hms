@@ -38,8 +38,12 @@
                         <tr>
                             <th>نوع التردد</th>
                             <th>تاريخ التردد</th>
-                            <th>ملاحظات</th>
+                            <th>القسم</th>
                             <th>السرير</th>
+                            <th>اسم المرافق</th>
+                            <th>صلة القرابة</th>
+                            <th>هاتف المرافق</th>
+                            <th>الرقم القومي للمرافق</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,8 +51,12 @@
                             <tr>
                                 <td>{{ $visit->type == 'in' ? 'دخول' : 'خروج' }}</td>
                                 <td>{{ $visit->visit_at }}</td>
-                                <td>{{ $visit->notes ?? 'لا توجد ملاحظات' }}</td>
+                                <td>{{ $visit->department->name ?? 'غير محدد' }}</td>
                                 <td>{{ $visit->bed->bed_number ?? 'غير محدد' }}</td>
+                                <td>{{ $visit->companion_name ?? 'غير محدد' }}</td>
+                                <td>{{ $visit->companion_relation ?? 'غير محدد' }}</td>
+                                <td>{{ $visit->companion_phone ?? 'غير محدد' }}</td>
+                                <td>{{ $visit->companion_national_id ?? 'غير محدد' }}</td>
                             </tr>
                         @endforeach
                     </tbody>

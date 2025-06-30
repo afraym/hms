@@ -9,6 +9,8 @@ use App\Models\Attchment;
 use Illuminate\Support\Facades\Cache;
 use App\Exports\PatientsExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\PatientsImport;
+use Illuminate\Support\Facades\Log;
 
 class PatientController extends Controller
 {
@@ -59,109 +61,34 @@ class PatientController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'full_name'    => 'nullable|string|max:255',  // Replace individual name validations
-            'email'         => 'nullable|email|max:255',
-            'phone'         => 'nullable|string|max:20',
-            'companion_phone' => 'nullable|string|max:20', // Updated from phone2
-            'national_id'   => 'nullable|string|max:14|unique:patients,national_id',
+            'full_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'national_id' => 'nullable|string|max:14|unique:patients,national_id',
             'date_of_birth' => 'nullable|date',
-            'gender'        => 'nullable|in:female,male',
-            'status'        => 'nullable|string',
-            'bed_id'        => 'nullable|exists:beds,id',
-            'medical_id'    => 'required|unique:patients,medical_id',
-            'uhi_number'    => 'nullable|string|unique:patients,uhi_number',
-            'address'       => 'nullable|string',
-            'governorate'   => 'nullable|string',
-            'companion_name' => 'nullable|string|max:255',
-            'companion_relation' => 'nullable|string|max:255',
-            'companion_national_id' => 'nullable|string|max:14',
-            'department_id' => 'nullable|exists:departments,id',
-            'created_at' => 'nullable|date',
+            'gender' => 'nullable|in:male,female',
+            'medical_id' => 'required|unique:patients,medical_id',
         ]);
 
-        // إذا لم يتم تحديد وقت، استخدم الوقت الحالي
-        if (!isset($validated['created_at'])) {
-            $validated['created_at'] = now();
-        }
-
-        // Add the authenticated user's ID
         $validated['created_by'] = auth()->id();
-
-        // Check if a patient with the same national ID, medical ID, or UHI number exists
-        $existingPatient = Patient::where(function($query) use ($validated) {
-            if (!empty($validated['national_id'])) {
-                $query->where('national_id', $validated['national_id']);
-            }
-            if (!empty($validated['medical_id'])) {
-                $query->orWhere('medical_id', $validated['medical_id']);
-            }
-            if (!empty($validated['uhi_number'])) {
-                $query->orWhere('uhi_number', $validated['uhi_number']);
-            }
-        })->first();
-
-        if ($existingPatient) {
-            // Add created_by to visit record
-            $existingPatient->visits()->create([
-                'type'     => 'in', // Assuming it's an "in" visit
-                'visit_at' => now(),
-                'notes'    => 'تم تسجيل دخول للمريض الموجود بالفعل.',
-                'created_by' => auth()->id()
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'تم تسجيل دخول للمريض الموجود بالفعل.',
-                'patient_id' => $existingPatient->id,
-            ]);
-        }
-
-        $validated['attachments'] = $request->hasFile('attachments') ? $request->file('attachments') : [];
-
         $patient = Patient::create($validated);
 
-        // Handle attachments
-        if (!empty($validated['attachments'])) {
-            foreach ($validated['attachments'] as $file) {
-                $path = $file->store($patient->getAttachmentPath(), 'public');
-                
-                $patient->attachments()->create([
-                    'file' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'type' => $file->getClientMimeType(),
-                    'description' => $request->input('description'),
-                ]);
-            }
-        }
-
-        // Update the counter in cache if needed
-        $currentCounter = Cache::get('medical_id_counter', 0);
-        if ((int)$validated['medical_id'] > $currentCounter) {
-            Cache::put('medical_id_counter', (int)$validated['medical_id']);
-        }
-
-        // Update the status based on bed assignment
-        $status = !empty($validated['bed_id']) ? 'admitted' : 'waiting';
-        $patient->update(['status' => $status]);
-
-        // Store the initial visit for the new patient
-        $patient->visits()->create([
-            'type'     => 'in', // Assuming it's an "in" visit
-            'visit_at' => now(),
-            'notes'    => 'اول زيارة للمريض عند تسجيل الدخول.',
-            'created_by' => auth()->id()
+        // Create the initial visit
+        $visitData = $request->validate([
+            'department_id' => 'nullable|exists:departments,id',
+            'bed_id' => 'nullable|exists:beds,id',
+            'companion_name' => 'nullable|string|max:255',
+            'companion_relation' => 'nullable|string|max:255',
+            'companion_phone' => 'nullable|string|max:20',
+            'companion_national_id' => 'nullable|string|max:14',
         ]);
 
-        // Update the bed status if a bed is assigned
-        if (!empty($validated['bed_id'])) {
-            Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
-        }
+        $visitData['patient_id'] = $patient->id;
+        $visitData['type'] = 'in';
+        $visitData['visit_at'] = now();
+        PatientVisit::create($visitData);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'تم إضافة المريض وتسجيل دخوله بنجاح.',
-            'patient_id' => $patient->id,
-        ]);
+        return redirect()->route('patients.index')->with('success', 'تم إضافة المريض وتسجيل دخوله بنجاح.');
     }
 
     /**
@@ -531,5 +458,35 @@ class PatientController extends Controller
         $patient->restore();
 
         return redirect()->route('patients.trashed')->with('success', 'تم استعادة المريض بنجاح.');
+    }
+
+    /**
+     * Import patients data from an Excel file.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            $file = $request->file('file');
+            Excel::import(new PatientsImport, $file);
+
+            return redirect()->route('patients.index')
+                ->with('success', 'تم استيراد المرضى بنجاح');
+        } catch (\Exception $e) {
+            Log::error('Import failed: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'فشل الاستيراد: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the form for importing patients.
+     */
+    public function importForm()
+    {
+        return view('admin.patient.import');
     }
 }

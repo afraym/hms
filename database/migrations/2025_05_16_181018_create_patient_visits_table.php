@@ -17,6 +17,12 @@ return new class extends Migration
             $table->enum('type', ['in', 'out']);
             $table->dateTime('visit_at');
             $table->text('notes')->nullable();
+            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
+            $table->foreignId('bed_id')->nullable()->constrained('beds')->nullOnDelete();
+            $table->string('companion_name')->nullable();
+            $table->string('companion_relation')->nullable();
+            $table->string('companion_phone')->nullable();
+            $table->string('companion_national_id')->nullable();
             $table->timestamps();
         });
     }

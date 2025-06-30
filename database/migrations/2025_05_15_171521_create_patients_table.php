@@ -16,22 +16,15 @@ return new class extends Migration
             $table->string('full_name')->nullable()->index();  // Replace individual name fields
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
-            $table->string('companion_phone')->nullable(); // Renamed from phone2
             $table->string('national_id')->nullable()->unique(); // Make national_id nullable and unique
             $table->date('date_of_birth')->nullable();
             $table->string('gender')->nullable();
             $table->string('status')->default('waiting');
             $table->string('medical_id')->unique()->nullable(); // الرقم الطبي 
-            $table->unsignedBigInteger('bed_id')->nullable();
             $table->string('uhi_number')->nullable()->unique(); // رقم التأمين الصحي الشامل
             $table->string('address')->nullable();
             $table->string('governorate')->nullable();
-            $table->string('companion_name')->nullable();
-            $table->string('companion_relation')->nullable();
-            $table->string('companion_national_id')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            // Add department foreign key
-            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
             
             // Additional fields
             $table->text('notes')->nullable();                    // ملاحظات عامة

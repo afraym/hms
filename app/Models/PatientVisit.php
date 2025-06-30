@@ -10,10 +10,8 @@ class PatientVisit extends Model
     use HasFactory;
 
     protected $fillable = [
-        'patient_id',
-        'type', // 'in' or 'out'
-        'visit_at',
-        'notes',
+        'patient_id', 'type', 'visit_at', 'notes', 'department_id', 'bed_id',
+        'companion_name', 'companion_relation', 'companion_phone', 'companion_national_id',
     ];
 
     public function patient()

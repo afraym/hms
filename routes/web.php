@@ -48,6 +48,8 @@ Route::view('profile', 'profile')
         Route::get('patients/export', [PatientController::class, 'export'])->name('patients.export');
         Route::post('/patients/{patient}/restore', [PatientController::class, 'restore'])->name('patients.restore');
         Route::get('/patients/trashed', [PatientController::class, 'trashed'])->name('patients.trashed');
+        Route::get('/patients/import', [PatientController::class, 'importForm'])->name('patients.importForm');
+        Route::post('/patients/import', [PatientController::class, 'import'])->name('patients.import');
     });
 
     // Route::middleware(['auth', 'checkrole:admin|manager'])->group(function () {
@@ -66,3 +68,5 @@ Route::get('/offline', function () {
 Route::middleware('role:admin')->group(function () {
     // Admin routes
 });
+
+Route::get('/update-companion-details', [PatientVisitController::class, 'updateCompanionDetails']);

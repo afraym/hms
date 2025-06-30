@@ -14,10 +14,9 @@ class Patient extends Model
 
     protected $fillable = [
         'full_name',  // Replace individual name fields
-        'email', 'phone', 'companion_phone', 'national_id', 'date_of_birth', 'gender',
-        'status', 'bed_id', 'medical_id', 'uhi_number', 'address', 'governorate',
-        'companion_name', 'companion_relation', 'companion_national_id',
-        'department_id', 'created_by', 'created_at' // أضف created_at
+        'email', 'phone', 'national_id', 'date_of_birth', 'gender',
+        'status', 'medical_id', 'uhi_number', 'address', 'governorate', 'created_by','created_at',
+        'notes', 'blood_type', 'marital_status', 'occupation', 'is_active',
     ];
 
     // أضف هذا لتحويل الحقل تلقائياً إلى كائن DateTime
