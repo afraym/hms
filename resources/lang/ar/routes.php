@@ -14,6 +14,8 @@ return [
     'patients.store'         => 'حفظ المريض',
     'patients.discharge'     => 'خروج المريض',
     'patients.print.label'   => 'طباعة ملصق مريض',
+    'patients.trashed'       => 'عرض المرضى المحذوفين',
+    'patients.restore'       => 'استعادة مريض',
     'patient_visits.index'   => 'زيارات المرضى',
     'patient_visits.create'  => 'إضافة زيارة',
     'patient_visits.edit'    => 'تعديل زيارة',

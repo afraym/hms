@@ -659,49 +659,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(data => {
                         if (data.exists) {
                             if (data.deleted) {
-                                // Toast for deleted patient
-                                $.toast({
-                                    heading: 'مريض محذوف',
-                                    text: 'هذا المريض محذوف. هل تريد استعادته؟',
-                                    icon: 'warning',
-                                    position: 'top-center',
-                                    hideAfter: 6000,
-                                    showHideTransition: 'fade'
-                                });
+                                // Prompt to restore the patient
+                                if (confirm('هذا المريض محذوف. هل تريد استعادته؟')) {
+                                    fetch("{{ route('patients.restore', ':id') }}".replace(':id', data.patient.id), {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                            'Accept': 'application/json',
+                                        },
+                                    })
+                                    .then(response => response.json())
+                                    .then(result => {
+                                        if (result.success) {
+                                            alert('تم استعادة المريض بنجاح.');
+                                            location.reload();
+                                        } else {
+                                            alert('حدث خطأ أثناء استعادة المريض.');
+                                        }
+                                    })
+                                    .catch(error => console.error('Error:', error));
+                                }
                             } else {
-                                // Toast for existing patient
-                                $.toast({
-                                    heading: 'مريض موجود',
-                                    text: 'هذا المريض مسجل بالفعل.',
-                                    icon: 'info',
-                                    position: 'top-center',
-                                    hideAfter: 6000,
-                                    showHideTransition: 'fade'
-                                });
+                                alert('هذا المريض موجود بالفعل.');
                             }
-                        } else {
-                            // Toast for new patient
-                            $.toast({
-                                heading: 'مريض جديد',
-                                text: 'هذا المريض غير مسجل من قبل.',
-                                icon: 'success',
-                                position: 'top-center',
-                                hideAfter: 6000,
-                                showHideTransition: 'fade'
-                            });
                         }
                     })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        $.toast({
-                            heading: 'خطأ',
-                            text: 'حدث خطأ أثناء التحقق من الرقم القومي.',
-                            icon: 'error',
-                            position: 'top-center',
-                            hideAfter: 6000,
-                            showHideTransition: 'fade'
-                        });
-                    });
+                    .catch(error => console.error('Error:', error));
             }
         });
     }

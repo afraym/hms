@@ -315,7 +315,7 @@ class PatientController extends Controller
             'uhi_number'  => 'nullable|string',
         ]);
 
-        $patient = Patient::where(function($query) use ($request) {
+        $patient = Patient::withTrashed()->where(function($query) use ($request) {
             if ($request->filled('national_id')) {
                 $query->orWhere('national_id', $request->national_id);
             }
@@ -329,20 +329,28 @@ class PatientController extends Controller
 
         if ($patient) {
             return response()->json([
-                'deleted' => $patient->trashed(),
                 'exists' => true,
+                'deleted' => $patient->trashed(),
                 'patient' => [
-                    'full_name' => $patient->full_name,  // Replace individual name fields
-                    'email' => $patient->email,
-                    'phone' => $patient->phone,
-                    'phone2' => $patient->phone2,
-                    'date_of_birth' => $patient->date_of_birth,
-                    'gender' => $patient->gender,
-                    'address' => $patient->address,
-                    'governorate' => $patient->governorate,
+                    'id' => $patient->id,
+                    'full_name' => $patient->full_name,
                     'national_id' => $patient->national_id,
                     'medical_id' => $patient->medical_id,
                     'uhi_number' => $patient->uhi_number,
+                    'email' => $patient->email,
+                    'phone' => $patient->phone,
+                    'date_of_birth' => $patient->date_of_birth,
+                    'gender' => $patient->gender,
+                    'status' => $patient->status,
+                    'address' => $patient->address,
+                    'governorate' => $patient->governorate,
+                    'department_id' => $patient->department_id,
+                    'bed_id' => $patient->bed_id,
+                    'created_at' => $patient->created_at,
+                    'companion_name' => $patient->companion_name,
+                    'companion_relation' => $patient->companion_relation,
+                    'companion_phone' => $patient->companion_phone,
+                    'companion_national_id' => $patient->companion_national_id,
                 ],
             ]);
         }
