@@ -19,6 +19,9 @@
                             <i class="material-icons opacity-10">file_open</i>
                             تحويل إلى Excel
                         </a>
+                        <a href="{{ route('patients.trashed') }}" class="btn btn-secondary">
+                            <i class="material-icons opacity-10">delete</i>
+                            عرض المرضى المحذوفين</a>
                     </div>
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
@@ -65,6 +68,9 @@
                                     </td>
                                     <td>
                                         <a href="{{ route('patients.show', $patient->id) }}" class="btn btn-sm bg-gradient-info">عرض</a>
+                                        <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm btn-primary">
+                                         الملصقات
+                                        </a>
                                         <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-sm bg-gradient-warning">تعديل</a>
                                         <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                                             @csrf
@@ -76,9 +82,7 @@
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
                                         </form>
-                                        <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm btn-primary">
-                                         الملصقات
-                                        </a>
+                                        
                                     </td>
                                 </tr>
                                 @empty
@@ -145,6 +149,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </td>
                                     <td>
                                         <a href="/admin/patients/${patient.id}" class="btn btn-sm bg-gradient-info">عرض</a>
+                                        <a href="/admin/patients/${patient.id}/label" class="btn btn-primary no-print">
+                                         الملصقات
+                                        </a>
                                         <a href="/admin/patients/${patient.id}/edit" class="btn btn-sm bg-gradient-warning">تعديل</a>
                                         <form action="/admin/patients/${patient.id}/discharge" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
@@ -156,9 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                             <input type="hidden" name="_method" value="DELETE">
                                             <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
                                         </form>
-                                        <a href="/admin/patients/${patient.id}/label" class="btn btn-primary no-print">
-                                         الملصقات
-                                        </a>
+                                        
                                     </td>
                                 </tr>
                             `;

@@ -16,7 +16,10 @@
             <p><strong>البريد الإلكتروني:</strong> {{ $patient->email }}</p>
             <p><strong>رقم الهاتف:</strong> {{ $patient->phone }}</p>
             <p><strong>الرقم القومي:</strong> {{ $patient->national_id }}</p>
-            <p><strong>تاريخ الميلاد:</strong> {{ $patient->date_of_birth }}</p>
+            <p><strong>تاريخ الميلاد:</strong> 
+                {{ \Carbon\Carbon::parse($patient->date_of_birth)->format('Y-m-d') }} 
+                ({{ \Carbon\Carbon::parse($patient->date_of_birth)->age }} سنة)
+            </p>
             <p><strong>الجنس:</strong> 
                 @if($patient->gender == 'male')
                     ذكر

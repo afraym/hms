@@ -47,6 +47,7 @@ Route::view('profile', 'profile')
         })->name('increment.medical.id');
         Route::get('patients/export', [PatientController::class, 'export'])->name('patients.export');
         Route::post('/patients/{patient}/restore', [PatientController::class, 'restore'])->name('patients.restore');
+        Route::get('/patients/trashed', [PatientController::class, 'trashed'])->name('patients.trashed');
     });
 
     // Route::middleware(['auth', 'checkrole:admin|manager'])->group(function () {

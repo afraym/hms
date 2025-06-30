@@ -119,7 +119,7 @@
             </div>
             <small class="text-muted" style="margin-bottom:0;">(الحد الأدنى 4 ملصقات)</small>
             <button type="button" class="btn btn-primary btn-sm" onclick="window.print()" style="margin-bottom:0;">
-                طباعة <span id="totalLabels">{{ $repeat }}</span> ملصق
+                طباعة <span id="totalLabels">{{ min(4, $repeat) }}</span> ملصق
             </button>
         </div>
     </form>
@@ -140,7 +140,7 @@
         labelsInput.addEventListener('input', function(e) {
             let value = parseInt(this.value);
             // Ensure minimum of 4 labels
-            if (value < 4) value = 4;
+            // if (value < 4) value = 4;
             // Ensure maximum of 40 labels
             if (value > 40) value = 40;
             this.value = value;

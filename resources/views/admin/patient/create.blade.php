@@ -645,4 +645,66 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const nationalIdInput = document.getElementById('national_id');
+
+    if (nationalIdInput) {
+        nationalIdInput.addEventListener('input', function () {
+            const nationalId = this.value;
+
+            if (nationalId.length === 14) {
+                fetch("{{ route('patients.checkNationalId') }}?national_id=" + nationalId)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exists) {
+                            if (data.deleted) {
+                                // Toast for deleted patient
+                                $.toast({
+                                    heading: 'مريض محذوف',
+                                    text: 'هذا المريض محذوف. هل تريد استعادته؟',
+                                    icon: 'warning',
+                                    position: 'top-center',
+                                    hideAfter: 6000,
+                                    showHideTransition: 'fade'
+                                });
+                            } else {
+                                // Toast for existing patient
+                                $.toast({
+                                    heading: 'مريض موجود',
+                                    text: 'هذا المريض مسجل بالفعل.',
+                                    icon: 'info',
+                                    position: 'top-center',
+                                    hideAfter: 6000,
+                                    showHideTransition: 'fade'
+                                });
+                            }
+                        } else {
+                            // Toast for new patient
+                            $.toast({
+                                heading: 'مريض جديد',
+                                text: 'هذا المريض غير مسجل من قبل.',
+                                icon: 'success',
+                                position: 'top-center',
+                                hideAfter: 6000,
+                                showHideTransition: 'fade'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        $.toast({
+                            heading: 'خطأ',
+                            text: 'حدث خطأ أثناء التحقق من الرقم القومي.',
+                            icon: 'error',
+                            position: 'top-center',
+                            hideAfter: 6000,
+                            showHideTransition: 'fade'
+                        });
+                    });
+            }
+        });
+    }
+});
+</script>
 @endsection

@@ -215,6 +215,7 @@ class PatientController extends Controller
             'companion_phone' => 'nullable|max:20', // Updated from phone2
             'companion_name' => 'nullable|max:255',
             'companion_relation' => 'nullable|max:255',
+            'companion_national_id' => 'nullable|string|max:14|unique:patients,companion_national_id,' . $patient->id,
             'national_id'   => 'nullable|max:50|unique:patients,national_id,' . $patient->id,
             'date_of_birth' => 'nullable|date',
             'gender'        => 'nullable|max:10',
