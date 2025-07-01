@@ -42,6 +42,11 @@ class PatientsTableSeeder extends Seeder
         $insertedPatientsCount = 0;
         $insertedVisitsCount = 0;
 
+        // Prepare to store repeated entries
+        $repeatedEntries = [];
+        $processedNationalIds = [];
+        $duplicateEntries = [];
+
         while (($row = fgetcsv($file)) !== false) {
             $rowAssoc = array_combine($header, $row); // Create associative array for easier access
 
@@ -49,35 +54,97 @@ class PatientsTableSeeder extends Seeder
             $patientData = [
                 'medical_id' => $rowAssoc['رقم مسلسل المريض'] ?? null,
                 'full_name' => $rowAssoc['الاسم رباعي'] ?? null,
-                'gender' => $this->translateGender($rowAssoc['النوع'] ?? null),
+                'gender' => $this->verifyGenderFromNationalId($rowAssoc['الرقم القومي'] ?? null),
                 'national_id' => $this->cleanNationalId($rowAssoc['الرقم القومي'] ?? null),
                 'address' => $rowAssoc['العنوان'] ?? null,
                 'phone' => $this->cleanPhoneNumber($rowAssoc['رقم التليفون'] ?? null),
+                'date_of_birth' => $this->extractBirthdateFromNationalId($rowAssoc['الرقم القومي'] ?? null),
+                'governorate' => $this->extractGovernorateFromNationalId($rowAssoc['الرقم القومي'] ?? null),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
 
-            // Check if the patient already exists
+            // Check if the patient already exists by `national_id`
             $existingPatient = Patient::where('national_id', $patientData['national_id'])->first();
 
             if ($existingPatient) {
-                // If the patient exists, create a new visit
+                // Use the first medical_id for repeated national_id
+                $patientData['medical_id'] = $existingPatient->medical_id;
+
+                // Check if the current medical_id is different from the existing one
+                if ($existingPatient->medical_id !== $rowAssoc['رقم مسلسل المريض']) {
+                    $repeatedEntries[] = $rowAssoc; // Store the repeated entry
+                }
+
+                // Create a new visit for the existing patient
                 $visitData = $this->extractVisitData($rowAssoc, $existingPatient->id);
                 PatientVisit::create($visitData);
                 $insertedVisitsCount++;
             } else {
                 // If the patient does not exist, create the patient and the initial visit
+                // If the medical_id already exists, generate a unique one
+                if (Patient::where('medical_id', $patientData['medical_id'])->exists()) {
+                    $patientData['medical_id'] = 'MED-' . uniqid() . '-'. $patientData['medical_id'];
+                }
                 $newPatient = Patient::create($patientData);
                 $visitData = $this->extractVisitData($rowAssoc, $newPatient->id);
                 PatientVisit::create($visitData);
                 $insertedPatientsCount++;
                 $insertedVisitsCount++;
             }
+
+            // Check for duplicate medical_id
+            if (Patient::where('medical_id', $patientData['medical_id'])->exists()) {
+                $duplicateEntries[] = $rowAssoc; // Store duplicate entry for review
+            }
+
+            // Mark the national_id as processed
+            $processedNationalIds[] = $patientData['national_id'];
         }
 
         fclose($file);
 
+        // Save repeated entries to a separate CSV file
+        $this->saveRepeatedEntries($header, $repeatedEntries);
+        $this->saveDuplicateEntries($header, $duplicateEntries);
+
         $this->command->info("Successfully seeded {$insertedPatientsCount} patients and {$insertedVisitsCount} visits.");
+    }
+
+    private function saveRepeatedEntries($header, $repeatedEntries)
+    {
+        $outputFile = database_path('seeders/repeated_entries.csv');
+        $file = fopen($outputFile, 'w');
+
+        // Write the header row
+        fputcsv($file, $header);
+
+        // Write the repeated entries
+        foreach ($repeatedEntries as $entry) {
+            fputcsv($file, $entry);
+        }
+
+        fclose($file);
+
+        $this->command->info("Repeated entries saved to repeated_entries.csv.");
+    }
+
+    private function saveDuplicateEntries($header, $duplicateEntries)
+    {
+        $outputFile = database_path('seeders/duplicate_entries.csv');
+        $file = fopen($outputFile, 'w');
+
+        // Write the header row
+        fputcsv($file, $header);
+
+        // Write the duplicate entries
+        foreach ($duplicateEntries as $entry) {
+            fputcsv($file, $entry);
+        }
+
+        fclose($file);
+
+        $this->command->info("Duplicate entries saved to duplicate_entries.csv.");
     }
 
     private function translateGender($gender)
@@ -91,13 +158,28 @@ class PatientsTableSeeder extends Seeder
 
     private function cleanNationalId($value)
     {
-        $cleanedValue = preg_replace('/[^0-9]/', '', $value);
-        return (strlen($cleanedValue) === 14 && ctype_digit($cleanedValue)) ? $cleanedValue : null;
+        // Remove any unwanted characters
+        $cleanedValue = preg_replace('/[^a-zA-Z0-9]/', '', $value);
+
+        // Accept IDs that are either 14 digits or start with a letter (e.g., passports)
+        if ((strlen($cleanedValue) === 14 && ctype_digit($cleanedValue)) || preg_match('/^[a-zA-Z]/', $cleanedValue)) {
+            return $cleanedValue;
+        }
+
+        return null;
     }
 
     private function cleanPhoneNumber($value)
     {
+        // Remove any unwanted characters
         $cleanedValue = preg_replace('/[^0-9]/', '', $value);
+
+        // Ensure the phone number starts with '0'
+        // if (!empty($cleanedValue) && $cleanedValue[0] !== '0') {
+        //     $cleanedValue = '0' . $cleanedValue;
+        // }
+
+        // Validate the phone number length
         return (strlen($cleanedValue) >= 10 && strlen($cleanedValue) <= 15 && ctype_digit($cleanedValue)) ? $cleanedValue : null;
     }
 
@@ -109,7 +191,7 @@ class PatientsTableSeeder extends Seeder
             'bed_id' => null, // Assuming bed_id is not provided in the CSV
             'companion_name' => $rowAssoc['اسم مرافق المريض عند تسجيل الدخول'] ?? null,
             'companion_relation' => $rowAssoc['صلة القرابة'] ?? null,
-            'companion_phone' => $this->cleanPhoneNumber($rowAssoc['رقم التليفون للمرافق'] ?? null),
+            'companion_phone' => $this->cleanPhoneNumber($rowAssoc['رقم تليفون المرافق'] ?? null),
             'companion_national_id' => $this->cleanNationalId($rowAssoc['الرقم القومي للمرافق'] ?? null),
             'visit_at' => $this->transformDate($rowAssoc['وقت الدخول'] ?? null),
             'notes' => null,
@@ -135,5 +217,70 @@ class PatientsTableSeeder extends Seeder
         } catch (\Exception $e) {
             return now();
         }
+    }
+
+    private function extractBirthdateFromNationalId($nationalId)
+    {
+        if (strlen($nationalId) === 14) {
+            $yearPrefix = substr($nationalId, 0, 1) === '2' ? '19' : '20';
+            $year = $yearPrefix . substr($nationalId, 1, 2);
+            $month = substr($nationalId, 3, 2);
+            $day = substr($nationalId, 5, 2);
+
+            try {
+                return \Carbon\Carbon::createFromFormat('Y-m-d', "$year-$month-$day")->format('Y-m-d');
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractGovernorateFromNationalId($nationalId)
+    {
+        $governorateCodes = [
+            '01' => 'القاهرة',
+            '02' => 'الإسكندرية',
+            '03' => 'بورسعيد',
+            '04' => 'السويس',
+            '11' => 'دمياط',
+            '12' => 'الدقهلية',
+            '13' => 'الشرقية',
+            '14' => 'القليوبية',
+            '15' => 'كفر الشيخ',
+            '16' => 'الغربية',
+            '17' => 'المنوفية',
+            '18' => 'البحيرة',
+            '19' => 'الإسماعيلية',
+            '21' => 'الجيزة',
+            '22' => 'بني سويف',
+            '23' => 'الفيوم',
+            '24' => 'المنيا',
+            '25' => 'أسيوط',
+            '26' => 'سوهاج',
+            '27' => 'قنا',
+            '28' => 'أسوان',
+            '29' => 'الأقصر',
+            '31' => 'البحر الأحمر',
+            '32' => 'الوادي الجديد',
+            '33' => 'مطروح',
+            '34' => 'شمال سيناء',
+            '35' => 'جنوب سيناء',
+        ];
+
+        $governorateCode = substr($nationalId, 7, 2);
+
+        return $governorateCodes[$governorateCode] ?? 'غير معروف';
+    }
+
+    private function verifyGenderFromNationalId($nationalId)
+    {
+        if (strlen($nationalId) === 14) {
+            $genderDigit = substr($nationalId, 12, 1);
+            return $genderDigit % 2 === 0 ? 'female' : 'male';
+        }
+
+        return null;
     }
 }
