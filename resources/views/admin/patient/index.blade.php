@@ -5,7 +5,7 @@
     <div class="row">
         <div class="ms-md-auto pe-md-3 d-flex align-items-center">
     <div class="input-group input-group-dynamic mb-4">
-        <label class="form-label">ابحث عن مريض بالاسم او الرقم القومي...</label>
+        <label class="form-label">ابحث عن مريض بالاسم او الرقم القومي او الرقم الطبي ...</label>
         <input type="text" id="searchQuery" class="form-control">
     </div>
 </div>
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </td>
                                     <td>
                                         <a href="/admin/patients/${patient.id}" class="btn btn-sm bg-gradient-info">عرض</a>
-                                        <a href="/admin/patients/${patient.id}/label" class="btn btn-primary no-print">
+                                        <a href="/admin/patients/${patient.id}/label" class="btn btn-sm btn-primary">
                                          الملصقات
                                         </a>
                                         <a href="/admin/patients/${patient.id}/edit" class="btn btn-sm bg-gradient-warning">تعديل</a>
@@ -169,12 +169,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <form action="/admin/patients/${patient.id}/discharge" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="PATCH">
-                                            <button type="submit" class="btn btn-sm bg-gradient-secondary" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-success" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
                                         </form>
                                         <form action="/admin/patients/${patient.id}/deceased" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟ لا يمكن التراجع عن هذا الإجراء.');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="PATCH">
-                                            <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة">وفاة</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة"> تسجيل وفاة</button>
                                         </form>
                                         ` : ''}
                                         <form action="/admin/patients/${patient.id}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
