@@ -16,7 +16,7 @@ class PatientsTableSeeder extends Seeder
      */
     public function run()
     {
-        $csvFile = database_path('seeders/20-06-2025.csv');
+        $csvFile = database_path('seeders/30-06-2025.csv');
         $file = fopen($csvFile, 'r');
 
         // Skip the header row

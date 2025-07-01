@@ -14,9 +14,18 @@ class PatientVisit extends Model
         'companion_name', 'companion_relation', 'companion_phone', 'companion_national_id',
     ];
 
+    protected $casts = [
+        'visit_at' => 'datetime',
+    ];
+
     public function patient()
     {
         return $this->belongsTo(Patient::class);
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function bed()

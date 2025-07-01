@@ -1,5 +1,45 @@
 @extends('layouts.admin')
 
+@push('styles')
+<!-- Additional FontAwesome for file input icons -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<!-- Custom styles for file upload zone -->
+<style>
+.file-drop-zone {
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+    text-align: center;
+    padding: 40px 20px;
+    margin: 20px 0;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+.file-drop-zone:hover {
+    border-color: #0056b3;
+    background-color: #e9ecef;
+}
+.file-drop-zone-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 10px;
+}
+.file-preview {
+    margin-top: 20px;
+}
+.kv-fileinput-caption {
+    text-align: right !important;
+}
+.file-loading:before {
+    content: "جاري تحميل منطقة الملفات...";
+    display: block;
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+}
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid py-4">
     <div class="row justify-content-center">
@@ -117,11 +157,11 @@
                             </div>
                              <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-dynamic mb-3">
-                                    <label for="phone2" class="form-label">رقم هاتف المُرافق</label>
-                                    <input type="text" class="form-control @error('phone2') is-invalid @enderror"
-                                     id="phone2" name="phone2" value="{{ old('phone2') }}">
+                                    <label for="companion_phone" class="form-label">رقم هاتف المُرافق</label>
+                                    <input type="text" class="form-control @error('companion_phone') is-invalid @enderror"
+                                     id="companion_phone" name="companion_phone" value="{{ old('companion_phone') }}">
                                 </div>
-                                @error('phone2') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('companion_phone') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-dynamic mb-3">
@@ -332,10 +372,10 @@ function detectEgyptianNationalIdInfo(nationalId) {
 //                                 phone1Input.focus();
 //                             }
 //                             // Fill second phone
-//                             const phone2Input = document.getElementById('phone2');
-//                             if (phone2Input && data.basicData.Mobile2) {
-//                                 phone2Input.value = data.basicData.Mobile2;
-//                                 phone2Input.focus();
+//                             const companion_phoneInput = document.getElementById('companion_phone');
+//                             if (companion_phoneInput && data.basicData.Mobile2) {
+//                                 companion_phoneInput.value = data.basicData.Mobile2;
+//                                 companion_phoneInput.focus();
 //                             }
 //                             // Fill address
 //                             const addressInput = document.getElementById('address');
@@ -476,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // const fourthNameInput = document.getElementById('fourth_name');
     const emailInput = document.getElementById('email');
     const phoneInput = document.getElementById('phone');
-    const phone2Input = document.getElementById('phone2');
+    const companion_phoneInput = document.getElementById('companion_phone');
     const birthdateInput = document.getElementById('date_of_birth');
     const addressInput = document.getElementById('address');
     const governorateInput = document.getElementById('governorate');
@@ -581,7 +621,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             // Companion Information
                             fillAndMark(document.getElementById('companion_name'), patient.companion_name);
                             fillAndMark(document.getElementById('companion_national_id'), patient.companion_national_id);
-                            fillAndMark(document.getElementById('phone2'), patient.companion_phone);
+                            fillAndMark(document.getElementById('companion_phone'), patient.companion_phone);
                             fillAndMark(document.getElementById('companion_relation'), patient.companion_relation);
 
                             // Gender Selection
@@ -680,7 +720,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     .catch(error => console.error('Error:', error));
                                 }
                             } else {
-                                alert('هذا المريض موجود بالفعل.');
+                                // alert('هذا المريض موجود بالفعل.');
                             }
                         }
                     })
@@ -688,6 +728,148 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+});
+</script>
+<script>
+// Initialize file input plugin for attachments
+$(document).ready(function() {
+    $("#attachments").fileinput({
+        rtl: true,
+        language: "ar",
+        theme: "fa5",
+        showUpload: false,
+        showRemove: true,
+        showCancel: false,
+        showBrowse: true,
+        browseOnZoneClick: true,
+        dropZoneEnabled: true,
+        dropZoneTitle: '<i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i><br><h5 class="text-primary">اسحب الملفات هنا أو اضغط للاختيار</h5>',
+        dropZoneClickTitle: '<br><small class="text-muted">(يمكنك إضافة ملفات متعددة)</small>',
+        allowedFileExtensions: ["jpg", "png", "jpeg", "gif", "pdf", "doc", "docx", "txt", "xls", "xlsx"],
+        maxFileCount: 10,
+        maxFileSize: 10240, // 10 MB
+        overwriteInitial: false, // Don't reset the zone when adding files
+        initialPreviewAsData: true,
+        uploadIcon: '<i class="fas fa-cloud-upload-alt"></i>',
+        removeIcon: '<i class="fas fa-trash-alt"></i>',
+        cancelIcon: '<i class="fas fa-times"></i>',
+        browseIcon: '<i class="fas fa-folder-open"></i>',
+        removeTitle: 'إزالة الملف',
+        cancelTitle: 'إلغاء الرفع',
+        browseLabel: ' <i class="fas fa-folder-open"></i> تصفح الملفات',
+        removeLabel: ' <i class="fas fa-trash-alt"></i> إزالة الكل',
+        cancelLabel: 'إلغاء',
+        fileActionSettings: {
+            removeIcon: '<i class="fas fa-trash text-danger"></i>',
+            removeClass: 'btn btn-sm btn-kv btn-outline-danger',
+            removeTitle: 'إزالة الملف',
+            uploadIcon: '<i class="fas fa-upload text-info"></i>',
+            uploadClass: 'btn btn-sm btn-kv btn-outline-info',
+            uploadTitle: 'رفع الملف',
+            zoomIcon: '<i class="fas fa-search-plus text-warning"></i>',
+            zoomClass: 'btn btn-sm btn-kv btn-outline-warning',
+            zoomTitle: 'عرض تفاصيل الملف',
+            dragIcon: '<i class="fas fa-arrows-alt text-info"></i>',
+            dragClass: 'btn btn-sm btn-kv btn-outline-info',
+            dragTitle: 'حرك لإعادة الترتيب',
+            dragSettings: {},
+            indicatorNew: '<i class="fas fa-plus-circle text-warning"></i>',
+            indicatorSuccess: '<i class="fas fa-check-circle text-success"></i>',
+            indicatorError: '<i class="fas fa-exclamation-circle text-danger"></i>',
+            indicatorLoading: '<i class="fas fa-spinner fa-spin text-muted"></i>'
+        },
+        msgFilesTooMany: "عدد الملفات المحددة ({n}) يتجاوز الحد الأقصى المسموح به {m}.",
+        msgFileNotFound: "الملف '{name}' غير موجود!",
+        msgFileSecured: "قيود الأمان تمنع قراءة الملف '{name}'.",
+        msgFileNotReadable: "الملف '{name}' غير قابل للقراءة.",
+        msgFilePreviewAborted: "تم إلغاء معاينة الملف '{name}'.",
+        msgFilePreviewError: "حدث خطأ أثناء قراءة الملف '{name}'.",
+        msgInvalidFileName: "أحرف غير صالحة أو غير مدعومة في اسم الملف '{name}'.",
+        msgInvalidFileType: "نوع ملف غير صالح لـ '{name}'. الأنواع المدعومة فقط: '{types}'.",
+        msgInvalidFileExtension: "امتداد ملف غير صالح لـ '{name}'. الامتدادات المدعومة فقط: '{extensions}'.",
+        msgSizeTooLarge: "الملف '{name}' ({size} كيلوبايت) يتجاوز الحد الأقصى المسموح للحجم {maxSize} كيلوبايت.",
+        msgFilesTooFew: "يجب اختيار {n} ملف على الأقل للرفع.",
+        msgFileTypes: {
+            'image': 'صورة',
+            'html': 'HTML',
+            'text': 'نص',
+            'video': 'فيديو',
+            'audio': 'صوت',
+            'flash': 'فلاش',
+            'pdf': 'PDF',
+            'object': 'كائن'
+        },
+        previewFileIcon: '<i class="fas fa-file fa-2x text-info"></i>',
+        previewFileIconSettings: {
+            'doc': '<i class="fas fa-file-word fa-2x text-primary"></i>',
+            'docx': '<i class="fas fa-file-word fa-2x text-primary"></i>',
+            'xls': '<i class="fas fa-file-excel fa-2x text-success"></i>',
+            'xlsx': '<i class="fas fa-file-excel fa-2x text-success"></i>',
+            'ppt': '<i class="fas fa-file-powerpoint fa-2x text-danger"></i>',
+            'pptx': '<i class="fas fa-file-powerpoint fa-2x text-danger"></i>',
+            'pdf': '<i class="fas fa-file-pdf fa-2x text-danger"></i>',
+            'zip': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
+            'rar': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
+            'tar': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
+            'gz': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
+            'jpg': '<i class="fas fa-file-image fa-2x text-info"></i>',
+            'jpeg': '<i class="fas fa-file-image fa-2x text-info"></i>',
+            'png': '<i class="fas fa-file-image fa-2x text-info"></i>',
+            'gif': '<i class="fas fa-file-image fa-2x text-info"></i>',
+            'txt': '<i class="fas fa-file-alt fa-2x text-secondary"></i>'
+        },
+        previewFileIconClass: 'file-other-icon',
+        layoutTemplates: {
+            actionDelete: '<button type="button" class="kv-file-remove {removeClass}" title="{removeTitle}"{dataUrl}{dataKey}>{removeIcon}</button>',
+            actionUpload: '<button type="button" class="kv-file-upload {uploadClass}" title="{uploadTitle}">{uploadIcon}</button>',
+            actionZoom: '<button type="button" class="kv-file-zoom {zoomClass}" title="{zoomTitle}">{zoomIcon}</button>',
+            actionDrag: '<button type="button" class="kv-file-drag {dragClass}" title="{dragTitle}">{dragIcon}</button>'
+        },
+        previewFileExtSettings: {
+            'doc': function(ext) {
+                return ext && ['doc', 'docx'].indexOf(ext) > -1;
+            },
+            'xls': function(ext) {
+                return ext && ['xls', 'xlsx'].indexOf(ext) > -1;
+            },
+            'ppt': function(ext) {
+                return ext && ['ppt', 'pptx'].indexOf(ext) > -1;
+            },
+            'zip': function(ext) {
+                return ext && ['zip', 'rar', 'tar', 'gzip', 'gz'].indexOf(ext) > -1;
+            },
+            'image': function(ext) {
+                return ext && ['jpg', 'jpeg', 'png', 'gif'].indexOf(ext) > -1;
+            },
+            'text': function(ext) {
+                return ext && ['txt', 'csv'].indexOf(ext) > -1;
+            }
+        }
+    });
+    
+    // Event handlers for better UX
+    $('#attachments').on('fileselect', function(event, numFiles, label) {
+        console.log('Files selected: ' + numFiles);
+    });
+    
+    $('#attachments').on('fileclear', function(event) {
+        console.log('Files cleared');
+    });
+    
+    $('#attachments').on('filebatchselected', function(event, files) {
+        console.log('Batch files selected: ' + files.length);
+    });
+    
+    // Add custom styling after initialization
+    setTimeout(function() {
+        $('.file-drop-zone').addClass('border-2 border-dashed border-primary rounded bg-light p-4');
+        $('.file-drop-zone-title').addClass('text-primary fw-bold');
+        $('.kv-file-content').addClass('text-center');
+        
+        // Style the file preview thumbnails
+        $('.file-preview-frame').addClass('m-2 border rounded shadow-sm');
+        $('.file-actions').addClass('text-center mt-2');
+    }, 200);
 });
 </script>
 @endsection

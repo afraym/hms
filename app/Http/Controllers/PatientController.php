@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Patient;
+use App\Models\PatientVisit;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Models\Bed;
 use App\Models\Attchment;
@@ -50,9 +52,12 @@ class PatientController extends Controller
         $medicalId = $this->generateMedicalId();
 
         // جلب الأقسام من جدول الأقسام (Department)
-        $departments = \App\Models\Department::all();
+        $departments = Department::all();
+        
+        // جلب الأسرة المتاحة
+        $beds = Bed::where('status', 'متاح')->get();
 
-        return view('admin.patient.create', compact('medicalId', 'departments'));
+        return view('admin.patient.create', compact('medicalId', 'departments', 'beds'));
     }
 
     /**
@@ -60,20 +65,31 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Validate patient data
+        $patientData = $request->validate([
             'full_name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'national_id' => 'nullable|string|max:14|unique:patients,national_id',
+            'national_id' => 'nullable|string|max:14',
             'date_of_birth' => 'nullable|date',
-            'gender' => 'nullable|in:male,female',
-            'medical_id' => 'required|unique:patients,medical_id',
+            'gender' => 'nullable|in:male,female,ذكر,أنثى',
+            'medical_id' => 'required|string',
+            'uhi_number' => 'nullable|string',
+            'address' => 'nullable|string',
+            'governorate' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'blood_type' => 'nullable|string',
+            'marital_status' => 'nullable|string',
+            'occupation' => 'nullable|string',
+            'created_at' => 'nullable|date',
         ]);
 
-        $validated['created_by'] = auth()->id();
-        $patient = Patient::create($validated);
+        // Convert created_at from datetime-local format to Y-m-d H:i:s format
+        if (!empty($patientData['created_at'])) {
+            $patientData['created_at'] = \Carbon\Carbon::parse($patientData['created_at'])->format('Y-m-d H:i:s');
+        }
 
-        // Create the initial visit
+        // Validate visit data
         $visitData = $request->validate([
             'department_id' => 'nullable|exists:departments,id',
             'bed_id' => 'nullable|exists:beds,id',
@@ -81,14 +97,48 @@ class PatientController extends Controller
             'companion_relation' => 'nullable|string|max:255',
             'companion_phone' => 'nullable|string|max:20',
             'companion_national_id' => 'nullable|string|max:14',
+            'visit_notes' => 'nullable|string',
         ]);
 
-        $visitData['patient_id'] = $patient->id;
-        $visitData['type'] = 'in';
-        $visitData['visit_at'] = now();
-        PatientVisit::create($visitData);
+      
 
-        return redirect()->route('patients.index')->with('success', 'تم إضافة المريض وتسجيل دخوله بنجاح.');
+        // Check if patient already exists
+        $existingPatient = $this->findExistingPatient($patientData);
+
+        if ($existingPatient) {
+            // Patient exists, create new visit using helper method
+            $visit = $this->createVisitForExistingPatient(
+                $existingPatient, 
+                $visitData, 
+                $patientData['created_at'] ?? null
+            );
+            
+            return redirect()->route('patients.show', $existingPatient->id)
+                ->with('success', 'تم تسجيل زيارة جديدة للمريض الموجود بنجاح.');
+        } else {
+            // Create new patient
+            $patientData['created_by'] = auth()->id();
+            $patientData['status'] = 'waiting';
+            
+            // Handle created_at if provided
+            if (isset($patientData['created_at'])) {
+                $patientData['created_at'] = \Carbon\Carbon::parse($patientData['created_at']);
+            }
+            
+            $patient = Patient::create($patientData);
+
+            // Create the initial visit
+            $visitData['patient_id'] = $patient->id;
+            $visitData['type'] = 'in';
+            $visitData['visit_at'] = $patientData['created_at'] ?? now();
+            $visitData['notes'] = $visitData['visit_notes'] ?? 'أول زيارة - تسجيل دخول';
+            unset($visitData['visit_notes']);
+            
+            PatientVisit::create($visitData);
+
+            return redirect()->route('patients.show', $patient->id)
+                ->with('success', 'تم إضافة المريض وتسجيل دخوله بنجاح.');
+        }
     }
 
     /**
@@ -136,31 +186,24 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient)
     {
         $validated = $request->validate([
-            'full_name'    => 'max:255',
-            'email'         => 'nullable|email|max:255',
-            'phone'         => 'nullable|max:20',
-            'companion_phone' => 'nullable|max:20', // Updated from phone2
-            'companion_name' => 'nullable|max:255',
-            'companion_relation' => 'nullable|max:255',
-            'companion_national_id' => 'nullable|string|max:14|unique:patients,companion_national_id,' . $patient->id,
-            'national_id'   => 'nullable|max:50|unique:patients,national_id,' . $patient->id,
+            'full_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'national_id' => 'nullable|string|max:14|unique:patients,national_id,' . $patient->id,
             'date_of_birth' => 'nullable|date',
-            'gender'        => 'nullable|max:10',
-            'bed_id'        => 'nullable|exists:beds,id', // Ensure bed_id is valid
+            'gender' => 'nullable|in:male,female,ذكر,أنثى',
+            'uhi_number' => 'nullable|string|unique:patients,uhi_number,' . $patient->id,
+            'address' => 'nullable|string',
+            'governorate' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'blood_type' => 'nullable|string',
+            'marital_status' => 'nullable|string',
+            'occupation' => 'nullable|string',
+            'is_active' => 'boolean',
         ]);
 
         // Update the patient's data
         $patient->update($validated);
-
-        // Update the status based on bed assignment
-        if (!empty($validated['bed_id'])) {
-            $patient->update(['status' => 'admitted']);
-
-            // Update the bed status to "محجوز"
-            Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
-        } else {
-            $patient->update(['status' => 'waiting']);
-        }
 
         return redirect()->route('patients.show', $patient->id)->with('success', 'تم تحديث بيانات المريض بنجاح.');
     }
@@ -170,9 +213,15 @@ class PatientController extends Controller
      */
     public function destroy(Patient $patient)
     {
-        // Release bed if patient has one assigned
-        if ($patient->bed_id) {
-            Bed::where('id', $patient->bed_id)->update(['status' => 'متاح']);
+        // Find the latest 'in' visit with a bed assignment and release it
+        $lastInVisit = $patient->visits()
+            ->where('type', 'in')
+            ->whereNotNull('bed_id')
+            ->latest('visit_at')
+            ->first();
+
+        if ($lastInVisit && $lastInVisit->bed_id) {
+            Bed::where('id', $lastInVisit->bed_id)->update(['status' => 'متاح']);
         }
         
         // Store a discharge visit before soft deleting
@@ -193,10 +242,16 @@ class PatientController extends Controller
      */
     public function discharge(Patient $patient)
     {
-        // Check if the patient has a bed assigned
-        if ($patient->bed_id) {
-            // Update the bed status to "متاح"
-            Bed::where('id', $patient->bed_id)->update(['status' => 'متاح']);
+        // Find the latest 'in' visit with a bed assignment
+        $lastInVisit = $patient->visits()
+            ->where('type', 'in')
+            ->whereNotNull('bed_id')
+            ->latest('visit_at')
+            ->first();
+
+        // Release the bed if there was one assigned
+        if ($lastInVisit && $lastInVisit->bed_id) {
+            Bed::where('id', $lastInVisit->bed_id)->update(['status' => 'متاح']);
         }
 
         // Store a discharge visit
@@ -206,9 +261,7 @@ class PatientController extends Controller
             'notes'    => 'Discharged by system',
         ]);
 
-        // Update the patient's bed_id to null and status to "discharged"
-        // If using Eloquent relationships, detach the bed properly
-        $patient->bed_id = null;
+        // Update the patient's status to "discharged"
         $patient->status = 'discharged';
         $patient->save();
 
@@ -221,14 +274,54 @@ class PatientController extends Controller
     public function storeVisit(Request $request, Patient $patient)
     {
         $validated = $request->validate([
-            'type'      => '|in:in,out',
-            'visit_at'  => '|date',
-            'notes'     => 'nullable',
+            'type' => 'required|in:in,out',
+            'visit_at' => 'required|date',
+            'notes' => 'nullable|string',
+            'department_id' => 'nullable|exists:departments,id',
+            'bed_id' => 'nullable|exists:beds,id',
+            'companion_name' => 'nullable|string|max:255',
+            'companion_relation' => 'nullable|string|max:255',
+            'companion_phone' => 'nullable|string|max:20',
+            'companion_national_id' => 'nullable|string|max:14',
         ]);
 
         $visit = $patient->visits()->create($validated);
 
+        // Update patient status based on visit type
+        if ($validated['type'] === 'in') {
+            $patient->update(['status' => 'admitted']);
+            
+            // If bed is assigned, mark it as occupied
+            if (!empty($validated['bed_id'])) {
+                Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+            }
+        } elseif ($validated['type'] === 'out') {
+            $patient->update(['status' => 'discharged']);
+            
+            // Release any assigned bed
+            $lastInVisit = $patient->visits()
+                ->where('type', 'in')
+                ->whereNotNull('bed_id')
+                ->latest('visit_at')
+                ->first();
+            
+            if ($lastInVisit && $lastInVisit->bed_id) {
+                Bed::where('id', $lastInVisit->bed_id)->update(['status' => 'متاح']);
+            }
+        }
+
         return redirect()->route('patients.show', $patient->id)->with('success', 'تم تسجيل الزيارة بنجاح.');
+    }
+
+    /**
+     * Create a new visit form for existing patient.
+     */
+    public function createVisit(Patient $patient)
+    {
+        $departments = Department::all();
+        $beds = Bed::where('status', 'متاح')->get();
+        
+        return view('admin.patient.create-visit', compact('patient', 'departments', 'beds'));
     }
 
     /**
@@ -255,6 +348,9 @@ class PatientController extends Controller
         })->first();
 
         if ($patient) {
+            // Get latest visit information
+            $latestVisit = $patient->visits()->latest('visit_at')->first();
+            
             return response()->json([
                 'exists' => true,
                 'deleted' => $patient->trashed(),
@@ -271,13 +367,23 @@ class PatientController extends Controller
                     'status' => $patient->status,
                     'address' => $patient->address,
                     'governorate' => $patient->governorate,
-                    'department_id' => $patient->department_id,
-                    'bed_id' => $patient->bed_id,
+                    'notes' => $patient->notes,
+                    'blood_type' => $patient->blood_type,
+                    'marital_status' => $patient->marital_status,
+                    'occupation' => $patient->occupation,
+                    'is_active' => $patient->is_active,
                     'created_at' => $patient->created_at,
-                    'companion_name' => $patient->companion_name,
-                    'companion_relation' => $patient->companion_relation,
-                    'companion_phone' => $patient->companion_phone,
-                    'companion_national_id' => $patient->companion_national_id,
+                    'latest_visit' => $latestVisit ? [
+                        'id' => $latestVisit->id,
+                        'type' => $latestVisit->type,
+                        'visit_at' => $latestVisit->visit_at,
+                        'department_id' => $latestVisit->department_id,
+                        'bed_id' => $latestVisit->bed_id,
+                        'companion_name' => $latestVisit->companion_name,
+                        'companion_relation' => $latestVisit->companion_relation,
+                        'companion_phone' => $latestVisit->companion_phone,
+                        'companion_national_id' => $latestVisit->companion_national_id,
+                    ] : null,
                 ],
             ]);
         }
@@ -488,5 +594,88 @@ class PatientController extends Controller
     public function importForm()
     {
         return view('admin.patient.import');
+    }
+
+    /**
+     * Create a visit for an existing patient.
+     */
+    private function createVisitForExistingPatient(Patient $patient, array $visitData, $visitTime = null)
+    {
+        $visitData['patient_id'] = $patient->id;
+        $visitData['type'] = 'in';
+        $visitData['visit_at'] = $visitTime ?? now();
+        
+        // Handle visit notes
+        $visitData['notes'] = $visitData['visit_notes'] ?? 'زيارة جديدة';
+        unset($visitData['visit_notes']);
+        
+        // Create the visit
+        $visit = PatientVisit::create($visitData);
+        
+        // Update patient status
+        $patient->update(['status' => 'admitted']);
+        
+        // Handle bed assignment
+        if (!empty($visitData['bed_id'])) {
+            Bed::where('id', $visitData['bed_id'])->update(['status' => 'محجوز']);
+        }
+        
+        return $visit;
+    }
+
+    /**
+     * Find existing patient by multiple identifiers.
+     */
+    private function findExistingPatient(array $patientData)
+    {
+        $query = Patient::query();
+        
+        if (!empty($patientData['national_id'])) {
+            $patient = $query->where('national_id', $patientData['national_id'])->first();
+            if ($patient) return $patient;
+        }
+        
+        if (!empty($patientData['medical_id'])) {
+            $patient = Patient::where('medical_id', $patientData['medical_id'])->first();
+            if ($patient) return $patient;
+        }
+        
+        if (!empty($patientData['uhi_number'])) {
+            $patient = Patient::where('uhi_number', $patientData['uhi_number'])->first();
+            if ($patient) return $patient;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Mark the patient as deceased.
+     */
+    public function markDeceased(Patient $patient)
+    {
+        // Find the latest 'in' visit with a bed assignment and release it
+        $lastInVisit = $patient->visits()
+            ->where('type', 'in')
+            ->whereNotNull('bed_id')
+            ->latest('visit_at')
+            ->first();
+
+        // Release the bed if there was one assigned
+        if ($lastInVisit && $lastInVisit->bed_id) {
+            Bed::where('id', $lastInVisit->bed_id)->update(['status' => 'متاح']);
+        }
+
+        // Store a death record as a visit
+        $patient->visits()->create([
+            'type'     => 'out',
+            'visit_at' => now(),
+            'notes'    => 'وفاة',
+        ]);
+
+        // Update the patient's status to "deceased"
+        $patient->status = 'deceased';
+        $patient->save();
+
+        return redirect()->route('patients.index')->with('success', 'تم تسجيل وفاة المريض. رحمه الله وأسكنه فسيح جناته.');
     }
 }

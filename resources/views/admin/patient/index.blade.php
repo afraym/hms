@@ -54,13 +54,16 @@
                                     <td>
                                         @switch($patient->status)
                                             @case('admitted')
-                                                <span class="badge bg-success">محجوز في سرير</span>
+                                                <span class="badge bg-info">محجوز في سرير</span>
                                                 @break
                                             @case('waiting')
                                                 <span class="badge bg-warning">في انتظار سرير</span>
                                                 @break
                                             @case('discharged')
-                                                <span class="badge bg-secondary">خرج</span>
+                                                <span class="badge bg-success">خرج</span>
+                                                @break
+                                            @case('deceased')
+                                                <span class="badge bg-dark">وفاة</span>
                                                 @break
                                             @default
                                                 <span class="badge bg-light text-dark">غير محدد</span>
@@ -72,11 +75,18 @@
                                          الملصقات
                                         </a>
                                         <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-sm bg-gradient-warning">تعديل</a>
+                                        @if($patient->status !== 'deceased')
                                         <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="btn btn-sm bg-gradient-secondary" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-success" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
                                         </form>
+                                        <form action="{{ route('patients.deceased', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟ لا يمكن التراجع عن هذا الإجراء.');">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة">تسجيل وفاة</button>
+                                        </form>
+                                        @endif
                                         <form action="{{ route('patients.destroy', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
                                             @csrf
                                             @method('DELETE')
@@ -139,12 +149,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <td>
                                         ${
                                             patient.status === 'admitted'
-                                                ? '<span class="badge bg-success">محجوز في سرير</span>'
+                                                ? '<span class="badge bg-info">محجوز في سرير</span>'
                                                 : patient.status === 'waiting'
                                                     ? '<span class="badge bg-warning">في انتظار سرير</span>'
                                                     : patient.status === 'discharged'
-                                                        ? '<span class="badge bg-secondary">خرج</span>'
-                                                        : '<span class="badge bg-light text-dark">غير محدد</span>'
+                                                        ? '<span class="badge bg-success">خرج</span>'
+                                                        : patient.status === 'deceased'
+                                                            ? '<span class="badge bg-dark">متوفى</span>'
+                                                            : '<span class="badge bg-light text-dark">غير محدد</span>'
                                         }
                                     </td>
                                     <td>
@@ -153,11 +165,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                          الملصقات
                                         </a>
                                         <a href="/admin/patients/${patient.id}/edit" class="btn btn-sm bg-gradient-warning">تعديل</a>
+                                        ${patient.status !== 'deceased' ? `
                                         <form action="/admin/patients/${patient.id}/discharge" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="PATCH">
                                             <button type="submit" class="btn btn-sm bg-gradient-secondary" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
                                         </form>
+                                        <form action="/admin/patients/${patient.id}/deceased" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟ لا يمكن التراجع عن هذا الإجراء.');">
+                                            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+                                            <input type="hidden" name="_method" value="PATCH">
+                                            <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة">وفاة</button>
+                                        </form>
+                                        ` : ''}
                                         <form action="/admin/patients/${patient.id}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="DELETE">

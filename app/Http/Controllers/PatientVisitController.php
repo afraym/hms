@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\PatientVisit;
 use App\Models\Patient;
+use App\Models\Department;
+use App\Models\Bed;
 use Illuminate\Http\Request;
 
 class PatientVisitController extends Controller
@@ -13,7 +15,9 @@ class PatientVisitController extends Controller
      */
     public function index()
     {
-        $visits = PatientVisit::with('patient')->latest()->get();
+        $visits = PatientVisit::with(['patient', 'department', 'bed'])
+            ->latest('visit_at')
+            ->paginate(50);
         return view('admin.patient_visit.index', compact('visits'));
     }
 
@@ -22,8 +26,11 @@ class PatientVisitController extends Controller
      */
     public function create()
     {
-        $patients = Patient::all();
-        return view('admin.patient_visit.create', compact('patients'));
+        $patients = Patient::where('is_active', true)->get();
+        $departments = Department::all();
+        $beds = Bed::where('status', 'متاح')->get();
+        
+        return view('admin.patient_visit.create', compact('patients', 'departments', 'beds'));
     }
 
     /**
@@ -33,9 +40,9 @@ class PatientVisitController extends Controller
     {
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
-            'type'      => 'required|in:in,out',
-            'visit_at'  => 'required|date',
-            'notes'     => 'nullable|string',
+            'type' => 'required|in:in,out',
+            'visit_at' => 'required|date',
+            'notes' => 'nullable|string',
             'department_id' => 'nullable|exists:departments,id',
             'bed_id' => 'nullable|exists:beds,id',
             'companion_name' => 'nullable|string|max:255',
@@ -44,7 +51,31 @@ class PatientVisitController extends Controller
             'companion_national_id' => 'nullable|string|max:14',
         ]);
 
-        PatientVisit::create($validated);
+        $visit = PatientVisit::create($validated);
+        
+        // Update patient status based on visit type
+        $patient = Patient::find($validated['patient_id']);
+        if ($validated['type'] === 'in') {
+            $patient->update(['status' => 'admitted']);
+            
+            // If bed is assigned, mark it as occupied
+            if (!empty($validated['bed_id'])) {
+                Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+            }
+        } elseif ($validated['type'] === 'out') {
+            $patient->update(['status' => 'discharged']);
+            
+            // Release any assigned bed from the latest 'in' visit
+            $lastInVisit = $patient->visits()
+                ->where('type', 'in')
+                ->whereNotNull('bed_id')
+                ->latest('visit_at')
+                ->first();
+            
+            if ($lastInVisit && $lastInVisit->bed_id) {
+                Bed::where('id', $lastInVisit->bed_id)->update(['status' => 'متاح']);
+            }
+        }
 
         return redirect()->route('patient_visits.index')->with('success', 'تم تسجيل الزيارة بنجاح');
     }
@@ -54,7 +85,8 @@ class PatientVisitController extends Controller
      */
     public function show(PatientVisit $patientVisit)
     {
-        //
+        $patientVisit->load(['patient', 'department', 'bed']);
+        return view('admin.patient_visit.show', compact('patientVisit'));
     }
 
     /**
@@ -62,7 +94,11 @@ class PatientVisitController extends Controller
      */
     public function edit(PatientVisit $patientVisit)
     {
-        //
+        $patients = Patient::where('is_active', true)->get();
+        $departments = Department::all();
+        $beds = Bed::all(); // Show all beds for editing
+        
+        return view('admin.patient_visit.edit', compact('patientVisit', 'patients', 'departments', 'beds'));
     }
 
     /**
@@ -70,7 +106,36 @@ class PatientVisitController extends Controller
      */
     public function update(Request $request, PatientVisit $patientVisit)
     {
-        //
+        $validated = $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'type' => 'required|in:in,out',
+            'visit_at' => 'required|date',
+            'notes' => 'nullable|string',
+            'department_id' => 'nullable|exists:departments,id',
+            'bed_id' => 'nullable|exists:beds,id',
+            'companion_name' => 'nullable|string|max:255',
+            'companion_relation' => 'nullable|string|max:255',
+            'companion_phone' => 'nullable|string|max:20',
+            'companion_national_id' => 'nullable|string|max:14',
+        ]);
+
+        // Handle bed status changes
+        $oldBedId = $patientVisit->bed_id;
+        $newBedId = $validated['bed_id'];
+        
+        if ($oldBedId && $oldBedId !== $newBedId) {
+            // Release old bed
+            Bed::where('id', $oldBedId)->update(['status' => 'متاح']);
+        }
+        
+        if ($newBedId && $validated['type'] === 'in') {
+            // Assign new bed
+            Bed::where('id', $newBedId)->update(['status' => 'محجوز']);
+        }
+
+        $patientVisit->update($validated);
+
+        return redirect()->route('patient_visits.index')->with('success', 'تم تحديث الزيارة بنجاح');
     }
 
     /**
@@ -78,7 +143,14 @@ class PatientVisitController extends Controller
      */
     public function destroy(PatientVisit $patientVisit)
     {
-        //
+        // Release bed if assigned
+        if ($patientVisit->bed_id && $patientVisit->type === 'in') {
+            Bed::where('id', $patientVisit->bed_id)->update(['status' => 'متاح']);
+        }
+        
+        $patientVisit->delete();
+
+        return redirect()->route('patient_visits.index')->with('success', 'تم حذف الزيارة بنجاح');
     }
 
     /**
