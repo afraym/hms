@@ -63,21 +63,556 @@
             </form>
 
             <!-- Form to upload attachments -->
-            <form action="{{ route('patients.attachments.upload', $patient->id) }}" method="POST" enctype="multipart/form-data" class="mb-3">
+            <form action="{{ route('patients.attachments.upload', $patient->id) }}" method="POST" enctype="multipart/form-data" class="mb-3" id="attachmentForm">
                 @csrf
-                <div class="mb-2">
-                    <input type="file" name="file" required class="form-control">
+                <div class="input-group input-group-static mb-4">
+                    <label for="attachments">مرفقات المريض</label>
+                    <input id="attachments" name="attachments[]" type="file" class="form-control" multiple>
                 </div>
                 <div class="mb-2">
                     <input type="text" name="description" class="form-control" placeholder="وصف المرفق (اختياري)">
                 </div>
-                <button type="submit" class="btn btn-success">رفع المرفق</button>
+                <button type="submit" class="btn btn-success">رفع المرفقات</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Patient Visits Management Section -->
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>إدارة زيارات المريض</h5>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVisitModal">
+                إضافة زيارة جديدة
+            </button>
+        </div>
+        <div class="card-body">
+            @if($patient->visits->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>نوع الزيارة</th>
+                                <th>تاريخ الزيارة</th>
+                                <th>القسم</th>
+                                <th>السرير</th>
+                                <th>المرافق</th>
+                                <th>الملاحظات</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($patient->visits()->latest('visit_at')->get() as $visit)
+                                <tr>
+                                    <td>
+                                        <span class="badge {{ $visit->type == 'in' ? 'bg-gradient-success' : 'bg-gradient-danger' }}">
+                                            {{ $visit->type == 'in' ? 'دخول' : 'خروج' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $visit->visit_at->format('Y-m-d H:i') }}</td>
+                                    <td>{{ $visit->department->name ?? 'غير محدد' }}</td>
+                                    <td>{{ $visit->bed->bed_number ?? 'غير محدد' }}</td>
+                                    <td>{{ $visit->companion_name ?? 'غير محدد' }}</td>
+                                    <td>{{ Str::limit($visit->notes ?? 'لا توجد', 30) }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editVisit({{ $visit->id }})">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <form action="{{ route('patient_visits.destroy', $visit->id) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('هل أنت متأكد من حذف هذه الزيارة؟')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                    <p class="mt-2">لا توجد زيارات مسجلة لهذا المريض</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVisitModal">
+                        إضافة أول زيارة
+                    </button>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Add Visit Modal -->
+    <div class="modal fade" id="addVisitModal" tabindex="-1" aria-labelledby="addVisitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addVisitModalLabel">إضافة زيارة جديدة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('patients.visits.store', $patient->id) }}" method="POST" id="addVisitForm">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="visit_type">نوع الزيارة</label>
+                                    <select name="type" id="visit_type" class="form-control" required>
+                                        <option value="">اختر نوع الزيارة</option>
+                                        <option value="in">دخول</option>
+                                        <option value="out">خروج</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="visit_at">تاريخ ووقت الزيارة</label>
+                                    <input type="datetime-local" name="visit_at" id="visit_at" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="visit_department_id">القسم</label>
+                                    <select name="department_id" id="visit_department_id" class="form-control">
+                                        <option value="">اختر القسم</option>
+                                        @foreach(\App\Models\Department::all() as $department)
+                                            <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="visit_bed_id">السرير</label>
+                                    <select name="bed_id" id="visit_bed_id" class="form-control">
+                                        <option value="">اختر السرير</option>
+                                        @foreach(\App\Models\Bed::where('status', 'متاح')->get() as $bed)
+                                            <option value="{{ $bed->id }}">{{ $bed->bed_number }} - {{ $bed->room_number }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="visit_companion_name">اسم المرافق</label>
+                                    <input type="text" name="companion_name" id="visit_companion_name" class="form-control" placeholder="اسم المرافق">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="visit_companion_relation">صلة القرابة</label>
+                                    <input type="text" name="companion_relation" id="visit_companion_relation" class="form-control" placeholder="صلة القرابة">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="visit_companion_phone">هاتف المرافق</label>
+                                    <input type="text" name="companion_phone" id="visit_companion_phone" class="form-control" placeholder="هاتف المرافق">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="visit_companion_national_id">الرقم القومي للمرافق</label>
+                                    <input type="text" name="companion_national_id" id="visit_companion_national_id" class="form-control" placeholder="الرقم القومي للمرافق">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-group input-group-static mb-3">
+                            <label for="visit_notes">ملاحظات الزيارة</label>
+                            <textarea name="notes" id="visit_notes" class="form-control" rows="3" placeholder="ملاحظات إضافية..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success">حفظ الزيارة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Visit Modal -->
+    <div class="modal fade" id="editVisitModal" tabindex="-1" aria-labelledby="editVisitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editVisitModalLabel">تعديل الزيارة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editVisitForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <!-- Same form fields as add visit modal but with different IDs -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="edit_visit_type">نوع الزيارة</label>
+                                    <select name="type" id="edit_visit_type" class="form-control" required>
+                                        <option value="">اختر نوع الزيارة</option>
+                                        <option value="in">دخول</option>
+                                        <option value="out">خروج</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="edit_visit_at">تاريخ ووقت الزيارة</label>
+                                    <input type="datetime-local" name="visit_at" id="edit_visit_at" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="edit_visit_department_id">القسم</label>
+                                    <select name="department_id" id="edit_visit_department_id" class="form-control">
+                                        <option value="">اختر القسم</option>
+                                        @foreach(\App\Models\Department::all() as $department)
+                                            <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="edit_visit_bed_id">السرير</label>
+                                    <select name="bed_id" id="edit_visit_bed_id" class="form-control">
+                                        <option value="">اختر السرير</option>
+                                        @foreach(\App\Models\Bed::all() as $bed)
+                                            <option value="{{ $bed->id }}">{{ $bed->bed_number }} - {{ $bed->room_number }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="edit_visit_companion_name">اسم المرافق</label>
+                                    <input type="text" name="companion_name" id="edit_visit_companion_name" class="form-control" placeholder="اسم المرافق">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="edit_visit_companion_relation">صلة القرابة</label>
+                                    <input type="text" name="companion_relation" id="edit_visit_companion_relation" class="form-control" placeholder="صلة القرابة">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="edit_visit_companion_phone">هاتف المرافق</label>
+                                    <input type="text" name="companion_phone" id="edit_visit_companion_phone" class="form-control" placeholder="هاتف المرافق">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-static mb-3">
+                                    <label for="edit_visit_companion_national_id">الرقم القومي للمرافق</label>
+                                    <input type="text" name="companion_national_id" id="edit_visit_companion_national_id" class="form-control" placeholder="الرقم القومي للمرافق">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-group input-group-static mb-3">
+                            <label for="edit_visit_notes">ملاحظات الزيارة</label>
+                            <textarea name="notes" id="edit_visit_notes" class="form-control" rows="3" placeholder="ملاحظات إضافية..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-warning">تحديث الزيارة</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 @endsection
+
+@push('styles')
+<style>
+/* Custom styles for Bootstrap Icons in fileinput */
+.fileinput-upload .bi::before,
+.fileinput-remove .bi::before,
+.file-thumbnail-footer .bi::before,
+.file-actions .bi::before {
+    font-family: "bootstrap-icons" !important;
+    display: inline-block;
+    vertical-align: -.125em;
+    line-height: 1;
+}
+
+/* Spin animation for upload icon */
+@keyframes bi-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.bi-arrow-clockwise.bi-spin {
+    animation: bi-spin 1s linear infinite;
+}
+
+/* Ensure proper icon display */
+.kv-file-upload .bi,
+.kv-file-remove .bi,
+.file-thumbnail-footer .bi {
+    font-size: 1rem;
+    margin-right: 0.25rem;
+}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    let accumulatedFiles = [];
+    
+    // Destroy any existing fileinput instance to prevent conflicts
+    if ($('#attachments').hasClass('file-input')) {
+        $('#attachments').fileinput('destroy');
+    }
+    
+    $('#attachments').fileinput({
+        theme: 'bs5',
+        language: 'ar',
+        allowedFileExtensions: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
+        showUpload: true,
+        showRemove: true,
+        showCancel: true,
+        browseOnZoneClick: true,
+        overwriteInitial: false,
+        maxFileCount: 10,
+        validateInitialCount: true,
+        browseLabel: 'اختر الملفات',
+        uploadLabel: 'رفع',
+        removeLabel: 'إزالة الكل',
+        cancelLabel: 'إلغاء',
+        msgPlaceholder: 'اختر الملفات...',
+        dropZoneTitle: 'اسحب وأفلت الملفات هنا أو انقر للاختيار',
+        fileActionSettings: {
+            showUpload: false,
+            showZoom: true,
+            showDrag: false,
+            removeIcon: '<i class="bi bi-trash"></i>',
+            removeClass: 'btn btn-sm btn-kv btn-outline-danger',
+            zoomIcon: '<i class="bi bi-zoom-in"></i>',
+            zoomClass: 'btn btn-sm btn-kv btn-outline-secondary'
+        },
+        uploadIcon: '<i class="bi bi-arrow-clockwise bi-spin"></i>',
+        uploadClass: 'btn btn-success',
+        removeClass: 'btn btn-danger',
+        cancelClass: 'btn btn-secondary',
+        browseIcon: '<i class="bi bi-folder2-open"></i>',
+        browseClass: 'btn btn-primary',
+        removeIcon: '<i class="bi bi-trash"></i>',
+        cancelIcon: '<i class="bi bi-x-circle"></i>',
+        uploadUrl: '{{ route("patients.attachments.upload", $patient->id) }}',
+        uploadExtraData: function() {
+            return {
+                _token: '{{ csrf_token() }}',
+                description: $('input[name="description"]').val()
+            };
+        }
+    }).on('filebatchselected', function(event, files) {
+        // Add new files to accumulated array
+        for (let i = 0; i < files.length; i++) {
+            accumulatedFiles.push(files[i]);
+        }
+        
+        // Create a new DataTransfer object to hold all files
+        const dt = new DataTransfer();
+        
+        // Add all accumulated files to DataTransfer
+        accumulatedFiles.forEach(file => {
+            dt.items.add(file);
+        });
+        
+        // Update the input's files property
+        event.target.files = dt.files;
+        
+        // Refresh the file input display
+        $(this).fileinput('refresh', {
+            showUpload: true,
+            showRemove: true
+        });
+    }).on('fileclear', function(event) {
+        // Clear accumulated files when user clicks remove all
+        accumulatedFiles = [];
+    }).on('fileremoved', function(event, id, index) {
+        // Remove file from accumulated array
+        accumulatedFiles.splice(index, 1);
+        
+        // Recreate DataTransfer with remaining files
+        const dt = new DataTransfer();
+        accumulatedFiles.forEach(file => {
+            dt.items.add(file);
+        });
+        
+        event.target.files = dt.files;
+    }).on('filebatchuploadsuccess', function(event, data) {
+        // Clear accumulated files after successful upload
+        accumulatedFiles = [];
+        
+        // Show success message
+        if (data.response && data.response.success) {
+            alert('تم رفع المرفقات بنجاح!');
+            location.reload(); // Reload to show new attachments
+        }
+    }).on('filebatchuploaderror', function(event, data) {
+        console.error('Upload error:', data);
+        alert('حدث خطأ أثناء رفع المرفقات.');
+    });
+
+    // Visit management functionality
+    $('#visit_type').on('change', function() {
+        const type = $(this).val();
+        const bedSelect = $('#visit_bed_id');
+        
+        if (type === 'out') {
+            bedSelect.prop('disabled', true).val('');
+        } else {
+            bedSelect.prop('disabled', false);
+        }
+    });
+
+    $('#edit_visit_type').on('change', function() {
+        const type = $(this).val();
+        const bedSelect = $('#edit_visit_bed_id');
+        
+        if (type === 'out') {
+            bedSelect.prop('disabled', true).val('');
+        } else {
+            bedSelect.prop('disabled', false);
+        }
+    });
+});
+
+// Function to edit a visit
+function editVisit(visitId) {
+    // Fetch visit data and populate the edit modal
+    fetch(`/admin/patient-visits/${visitId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Populate the edit form fields
+            $('#edit_visit_type').val(data.type);
+            $('#edit_visit_at').val(data.visit_at.substring(0, 16)); // Format for datetime-local
+            $('#edit_visit_department_id').val(data.department_id || '');
+            $('#edit_visit_bed_id').val(data.bed_id || '');
+            $('#edit_visit_companion_name').val(data.companion_name || '');
+            $('#edit_visit_companion_relation').val(data.companion_relation || '');
+            $('#edit_visit_companion_phone').val(data.companion_phone || '');
+            $('#edit_visit_companion_national_id').val(data.companion_national_id || '');
+            $('#edit_visit_notes').val(data.notes || '');
+            
+            // Set the form action URL
+            $('#editVisitForm').attr('action', `/admin/patient-visits/${visitId}`);
+            
+            // Show the modal
+            $('#editVisitModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Error fetching visit data:', error);
+            alert('حدث خطأ في تحميل بيانات الزيارة');
+        });
+}
+
+// Handle visit form submissions
+$('#addVisitForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitButton = $(this).find('button[type="submit"]');
+    const originalText = submitButton.text();
+    
+    submitButton.prop('disabled', true).text('جارٍ الحفظ...');
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#addVisitModal').modal('hide');
+            location.reload(); // Reload to show the new visit
+        } else {
+            alert(data.message || 'حدث خطأ أثناء حفظ الزيارة');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء حفظ الزيارة');
+    })
+    .finally(() => {
+        submitButton.prop('disabled', false).text(originalText);
+    });
+});
+
+$('#editVisitForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitButton = $(this).find('button[type="submit"]');
+    const originalText = submitButton.text();
+    
+    submitButton.prop('disabled', true).text('جارٍ التحديث...');
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#editVisitModal').modal('hide');
+            location.reload(); // Reload to show the updated visit
+        } else {
+            alert(data.message || 'حدث خطأ أثناء تحديث الزيارة');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء تحديث الزيارة');
+    })
+    .finally(() => {
+        submitButton.prop('disabled', false).text(originalText);
+    });
+});
+
+// Clear form when modals are hidden
+$('#addVisitModal').on('hidden.bs.modal', function() {
+    $('#addVisitForm')[0].reset();
+    $('#visit_bed_id').prop('disabled', false);
+});
+
+$('#editVisitModal').on('hidden.bs.modal', function() {
+    $('#editVisitForm')[0].reset();
+    $('#edit_visit_bed_id').prop('disabled', false);
+});
+</script>
+@endpush
 
 @push('scripts')
 <script>

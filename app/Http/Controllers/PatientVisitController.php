@@ -81,11 +81,79 @@ class PatientVisitController extends Controller
     }
 
     /**
+     * Store a visit from patient edit page (AJAX).
+     */
+    public function storeFromPatient(Request $request, Patient $patient)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:in,out',
+            'visit_at' => 'required|date',
+            'notes' => 'nullable|string',
+            'department_id' => 'nullable|exists:departments,id',
+            'bed_id' => 'nullable|exists:beds,id',
+            'companion_name' => 'nullable|string|max:255',
+            'companion_relation' => 'nullable|string|max:255',
+            'companion_phone' => 'nullable|string|max:20',
+            'companion_national_id' => 'nullable|string|max:14',
+        ]);
+
+        $validated['patient_id'] = $patient->id;
+        $visit = PatientVisit::create($validated);
+        
+        // Update patient status based on visit type
+        if ($validated['type'] === 'in') {
+            $patient->update(['status' => 'admitted']);
+            
+            // If bed is assigned, mark it as occupied
+            if (!empty($validated['bed_id'])) {
+                Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+            }
+        } elseif ($validated['type'] === 'out') {
+            $patient->update(['status' => 'discharged']);
+            
+            // Release any assigned bed from the latest 'in' visit
+            $lastInVisit = $patient->visits()
+                ->where('type', 'in')
+                ->whereNotNull('bed_id')
+                ->latest('visit_at')
+                ->first();
+            
+            if ($lastInVisit && $lastInVisit->bed_id) {
+                Bed::where('id', $lastInVisit->bed_id)->update(['status' => 'متاح']);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تسجيل الزيارة بنجاح',
+            'visit' => $visit
+        ]);
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(PatientVisit $patientVisit)
     {
         $patientVisit->load(['patient', 'department', 'bed']);
+        
+        // Check if it's an AJAX request for JSON response
+        if (request()->wantsJson()) {
+            return response()->json([
+                'id' => $patientVisit->id,
+                'patient_id' => $patientVisit->patient_id,
+                'type' => $patientVisit->type,
+                'visit_at' => $patientVisit->visit_at->format('Y-m-d\TH:i:s'),
+                'notes' => $patientVisit->notes,
+                'department_id' => $patientVisit->department_id,
+                'bed_id' => $patientVisit->bed_id,
+                'companion_name' => $patientVisit->companion_name,
+                'companion_relation' => $patientVisit->companion_relation,
+                'companion_phone' => $patientVisit->companion_phone,
+                'companion_national_id' => $patientVisit->companion_national_id,
+            ]);
+        }
+        
         return view('admin.patient_visit.show', compact('patientVisit'));
     }
 
@@ -134,6 +202,15 @@ class PatientVisitController extends Controller
         }
 
         $patientVisit->update($validated);
+
+        // Check if it's an AJAX request for JSON response
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث الزيارة بنجاح',
+                'visit' => $patientVisit
+            ]);
+        }
 
         return redirect()->route('patient_visits.index')->with('success', 'تم تحديث الزيارة بنجاح');
     }
