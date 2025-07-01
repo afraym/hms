@@ -37,6 +37,24 @@
     padding: 20px;
     color: #6c757d;
 }
+/* Bootstrap Icons spin animation */
+.bi.spin {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/* Ensure Bootstrap Icons display properly */
+.bi {
+    font-family: "bootstrap-icons" !important;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    vertical-align: -.125em;
+}
 </style>
 @endpush
 
@@ -733,7 +751,16 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 // Initialize file input plugin for attachments
 $(document).ready(function() {
-    $("#attachments").fileinput({
+    let allFiles = []; // Store all selected files
+    let fileInput = $("#attachments");
+    let isInitialized = false;
+    
+    // Destroy any existing initialization
+    if (fileInput.hasClass('file-input')) {
+        fileInput.fileinput('destroy');
+    }
+    
+    fileInput.fileinput({
         rtl: true,
         language: "ar",
         theme: "fa5",
@@ -743,40 +770,42 @@ $(document).ready(function() {
         showBrowse: true,
         browseOnZoneClick: true,
         dropZoneEnabled: true,
-        dropZoneTitle: '<i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i><br><h5 class="text-primary">اسحب الملفات هنا أو اضغط للاختيار</h5>',
+        dropZoneTitle: '<i class="bi bi-cloud-upload fa-3x text-primary mb-3"></i><br><h5 class="text-primary">اسحب الملفات هنا أو اضغط للاختيار</h5>',
         dropZoneClickTitle: '<br><small class="text-muted">(يمكنك إضافة ملفات متعددة)</small>',
         allowedFileExtensions: ["jpg", "png", "jpeg", "gif", "pdf", "doc", "docx", "txt", "xls", "xlsx"],
         maxFileCount: 10,
         maxFileSize: 10240, // 10 MB
-        overwriteInitial: false, // Don't reset the zone when adding files
+        overwriteInitial: false,
         initialPreviewAsData: true,
-        uploadIcon: '<i class="fas fa-cloud-upload-alt"></i>',
-        removeIcon: '<i class="fas fa-trash-alt"></i>',
-        cancelIcon: '<i class="fas fa-times"></i>',
-        browseIcon: '<i class="fas fa-folder-open"></i>',
+        multiple: true,
+        autoReplace: false,
+        uploadIcon: '<i class="bi bi-cloud-upload"></i>',
+        removeIcon: '<i class="bi bi-trash"></i>',
+        cancelIcon: '<i class="bi bi-x-circle"></i>',
+        browseIcon: '<i class="bi bi-folder2-open"></i>',
         removeTitle: 'إزالة الملف',
         cancelTitle: 'إلغاء الرفع',
-        browseLabel: ' <i class="fas fa-folder-open"></i> تصفح الملفات',
-        removeLabel: ' <i class="fas fa-trash-alt"></i> إزالة الكل',
+        browseLabel: ' <i class="bi bi-folder2-open"></i> تصفح الملفات',
+        removeLabel: ' <i class="bi bi-trash"></i> إزالة الكل',
         cancelLabel: 'إلغاء',
         fileActionSettings: {
-            removeIcon: '<i class="fas fa-trash text-danger"></i>',
+            removeIcon: '<i class="bi bi-trash text-danger"></i>',
             removeClass: 'btn btn-sm btn-kv btn-outline-danger',
             removeTitle: 'إزالة الملف',
-            uploadIcon: '<i class="fas fa-upload text-info"></i>',
+            uploadIcon: '<i class="bi bi-upload text-info"></i>',
             uploadClass: 'btn btn-sm btn-kv btn-outline-info',
             uploadTitle: 'رفع الملف',
-            zoomIcon: '<i class="fas fa-search-plus text-warning"></i>',
+            zoomIcon: '<i class="bi bi-zoom-in text-warning"></i>',
             zoomClass: 'btn btn-sm btn-kv btn-outline-warning',
             zoomTitle: 'عرض تفاصيل الملف',
-            dragIcon: '<i class="fas fa-arrows-alt text-info"></i>',
+            dragIcon: '<i class="bi bi-arrows-move text-info"></i>',
             dragClass: 'btn btn-sm btn-kv btn-outline-info',
             dragTitle: 'حرك لإعادة الترتيب',
             dragSettings: {},
-            indicatorNew: '<i class="fas fa-plus-circle text-warning"></i>',
-            indicatorSuccess: '<i class="fas fa-check-circle text-success"></i>',
-            indicatorError: '<i class="fas fa-exclamation-circle text-danger"></i>',
-            indicatorLoading: '<i class="fas fa-spinner fa-spin text-muted"></i>'
+            indicatorNew: '<i class="bi bi-plus-circle text-warning"></i>',
+            indicatorSuccess: '<i class="bi bi-check-circle text-success"></i>',
+            indicatorError: '<i class="bi bi-exclamation-circle text-danger"></i>',
+            indicatorLoading: '<i class="bi bi-arrow-clockwise spin text-muted"></i>'
         },
         msgFilesTooMany: "عدد الملفات المحددة ({n}) يتجاوز الحد الأقصى المسموح به {m}.",
         msgFileNotFound: "الملف '{name}' غير موجود!",
@@ -799,24 +828,24 @@ $(document).ready(function() {
             'pdf': 'PDF',
             'object': 'كائن'
         },
-        previewFileIcon: '<i class="fas fa-file fa-2x text-info"></i>',
+        previewFileIcon: '<i class="bi bi-file-earmark fa-2x text-info"></i>',
         previewFileIconSettings: {
-            'doc': '<i class="fas fa-file-word fa-2x text-primary"></i>',
-            'docx': '<i class="fas fa-file-word fa-2x text-primary"></i>',
-            'xls': '<i class="fas fa-file-excel fa-2x text-success"></i>',
-            'xlsx': '<i class="fas fa-file-excel fa-2x text-success"></i>',
-            'ppt': '<i class="fas fa-file-powerpoint fa-2x text-danger"></i>',
-            'pptx': '<i class="fas fa-file-powerpoint fa-2x text-danger"></i>',
-            'pdf': '<i class="fas fa-file-pdf fa-2x text-danger"></i>',
-            'zip': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
-            'rar': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
-            'tar': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
-            'gz': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
-            'jpg': '<i class="fas fa-file-image fa-2x text-info"></i>',
-            'jpeg': '<i class="fas fa-file-image fa-2x text-info"></i>',
-            'png': '<i class="fas fa-file-image fa-2x text-info"></i>',
-            'gif': '<i class="fas fa-file-image fa-2x text-info"></i>',
-            'txt': '<i class="fas fa-file-alt fa-2x text-secondary"></i>'
+            'doc': '<i class="bi bi-file-earmark-word fa-2x text-primary"></i>',
+            'docx': '<i class="bi bi-file-earmark-word fa-2x text-primary"></i>',
+            'xls': '<i class="bi bi-file-earmark-excel fa-2x text-success"></i>',
+            'xlsx': '<i class="bi bi-file-earmark-excel fa-2x text-success"></i>',
+            'ppt': '<i class="bi bi-file-earmark-ppt fa-2x text-danger"></i>',
+            'pptx': '<i class="bi bi-file-earmark-ppt fa-2x text-danger"></i>',
+            'pdf': '<i class="bi bi-file-earmark-pdf fa-2x text-danger"></i>',
+            'zip': '<i class="bi bi-file-earmark-zip fa-2x text-warning"></i>',
+            'rar': '<i class="bi bi-file-earmark-zip fa-2x text-warning"></i>',
+            'tar': '<i class="bi bi-file-earmark-zip fa-2x text-warning"></i>',
+            'gz': '<i class="bi bi-file-earmark-zip fa-2x text-warning"></i>',
+            'jpg': '<i class="bi bi-file-earmark-image fa-2x text-info"></i>',
+            'jpeg': '<i class="bi bi-file-earmark-image fa-2x text-info"></i>',
+            'png': '<i class="bi bi-file-earmark-image fa-2x text-info"></i>',
+            'gif': '<i class="bi bi-file-earmark-image fa-2x text-info"></i>',
+            'txt': '<i class="bi bi-file-earmark-text fa-2x text-secondary"></i>'
         },
         previewFileIconClass: 'file-other-icon',
         layoutTemplates: {
@@ -847,17 +876,95 @@ $(document).ready(function() {
         }
     });
     
-    // Event handlers for better UX
-    $('#attachments').on('fileselect', function(event, numFiles, label) {
-        console.log('Files selected: ' + numFiles);
-    });
+    isInitialized = true;
     
-    $('#attachments').on('fileclear', function(event) {
-        console.log('Files cleared');
-    });
+    // Custom file handling to prevent reset
+    let originalInput = fileInput[0];
     
-    $('#attachments').on('filebatchselected', function(event, files) {
+    // Override the default file selection behavior
+    fileInput.on('filebatchselected', function(event, files) {
         console.log('Batch files selected: ' + files.length);
+        
+        // Prevent default behavior that clears existing files
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Add new files to our storage
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const isDuplicate = allFiles.some(f => 
+                f.name === file.name && 
+                f.size === file.size && 
+                f.lastModified === file.lastModified
+            );
+            
+            if (!isDuplicate) {
+                allFiles.push(file);
+            }
+        }
+        
+        // Update the file input with all accumulated files
+        updateFileInput();
+        
+        console.log(`Total accumulated files: ${allFiles.length}`);
+        return false;
+    });
+    
+    // Handle direct file input changes
+    originalInput.addEventListener('change', function(e) {
+        const newFiles = Array.from(e.target.files);
+        console.log('Direct change event: ' + newFiles.length);
+        
+        if (newFiles.length > 0) {
+            // Add new files to storage
+            newFiles.forEach(file => {
+                const isDuplicate = allFiles.some(f => 
+                    f.name === file.name && 
+                    f.size === file.size && 
+                    f.lastModified === file.lastModified
+                );
+                
+                if (!isDuplicate) {
+                    allFiles.push(file);
+                }
+            });
+            
+            // Update the display
+            updateFileInput();
+            console.log(`Total files: ${allFiles.length}`);
+        }
+    });
+    
+    // Function to update file input with all files
+    function updateFileInput() {
+        const dt = new DataTransfer();
+        allFiles.forEach(file => dt.items.add(file));
+        originalInput.files = dt.files;
+        
+        // Refresh the plugin display
+        setTimeout(function() {
+            fileInput.fileinput('refresh');
+        }, 50);
+    }
+    
+    // Handle individual file removal
+    fileInput.on('fileremoved', function(event, id, index) {
+        console.log('File removed at index: ' + index);
+        if (allFiles[index]) {
+            allFiles.splice(index, 1);
+            console.log(`Files remaining: ${allFiles.length}`);
+        }
+    });
+    
+    // Handle clearing all files
+    fileInput.on('fileclear', function(event) {
+        console.log('All files cleared');
+        allFiles = [];
+    });
+    
+    // Event handlers for better UX
+    fileInput.on('fileselect', function(event, numFiles, label) {
+        console.log('Files selected: ' + numFiles);
     });
     
     // Add custom styling after initialization

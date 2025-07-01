@@ -116,8 +116,9 @@ if ('serviceWorker' in navigator) {
 
 $(document).ready(function () {
  
-// initialize plugin with defaults
- $("#attachments").fileinput({
+// initialize plugin with defaults only if not already initialized
+if (!$("#attachments").hasClass('file-input')) {
+    $("#attachments").fileinput({
         rtl: true, // تمكين الاتجاه من اليمين إلى اليسار
         language: "ar", // تعيين اللغة إلى العربية
         dropZoneEnabled: true,
@@ -126,8 +127,9 @@ $(document).ready(function () {
         previewFileType: 'any',
     });
  
-// with plugin options
-$("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
+    // with plugin options
+    $("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
+}
     });
 </script>
 <!-- Control Center for Material Dashboard -->
