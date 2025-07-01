@@ -29,7 +29,13 @@
                                     <td>{{ $department->name }}</td>
                                     <td>{{ $department->beds_count }}</td>
                                     <td>{{ $department->patients_count }}</td>
-                                    <td>{{ $department->status }}</td>
+                                    <td>
+                                        @if($department->is_active)
+                                            <span class="badge badge-success">نشط</span>
+                                        @else
+                                            <span class="badge badge-secondary">غير نشط</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <a href="{{ route('departments.edit', $department->id) }}" class="btn btn-sm btn-warning">تعديل</a>
                                         <form action="{{ route('departments.destroy', $department->id) }}" method="POST" style="display:inline;">

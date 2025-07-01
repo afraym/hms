@@ -13,86 +13,113 @@ class DashboardController extends Controller
     {
         $beds_count = Bed::count();
         $empty_beds = Bed::where('status', 'متاح')->count();
-        $occupied_beds = Bed::where('status', 'مشغول')->count();
-        $patients_in_month = PatientVisit::whereMonth('visit_at', now()->month)->count();
-        $patients_out_month = PatientVisit::whereMonth('visit_at', now()->month)->where('type', 'out')->count();
+        $occupied_beds = Bed::where('status', 'محجوز')->count(); // تم تصحيح الحالة
+        $patients_in_month = PatientVisit::whereMonth('visit_at', now()->month)
+            ->whereYear('visit_at', now()->year)
+            ->where('type', 'in')
+            ->count();
+        $patients_out_month = PatientVisit::whereMonth('visit_at', now()->month)
+            ->whereYear('visit_at', now()->year)
+            ->where('type', 'out')
+            ->count();
         $new_patients = Patient::where('created_at', '>=', now()->subWeek())->count();
         $daily_visits = PatientVisit::whereDate('visit_at', now())->count();
 
-        // Generate chart data dynamically
-        $chartBarsData = [
-            'labels' => ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'],
-            'data' => $this->getWeeklyPatientData()
-        ];
-
-        $chartLineData = [
-            'labels' => ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'],
-            'data' => $this->getMonthlyBedOccupancyData()
-        ];
-
-        $chartLineTasksData = [
-            'labels' => ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'],
-            'data' => $this->getMonthlyVisitData()
-        ];
-
-        return view('admin.dashboard', compact('beds_count', 'empty_beds', 'occupied_beds', 'patients_in_month', 'patients_out_month', 'new_patients', 'daily_visits', 'chartBarsData', 'chartLineData', 'chartLineTasksData'));
+        return view('admin.dashboard', compact(
+            'beds_count', 
+            'empty_beds', 
+            'occupied_beds', 
+            'patients_in_month', 
+            'patients_out_month', 
+            'new_patients', 
+            'daily_visits'
+        ));
     }
-
-    private function getWeeklyPatientData()
+    
+    /**
+     * Get weekly new patients data for chart
+     */
+    public function getWeeklyPatientsData()
     {
-        // Get patient data for the last 7 days
-        /*
-        $weeklyData = PatientVisit::selectRaw('DAYNAME(visit_at) as day, COUNT(*) as count')
-            ->whereBetween('visit_at', [now()->startOfWeek(), now()->endOfWeek()])
-            ->groupBy('day')
-            ->orderByRaw("FIELD(day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
-            ->pluck('count', 'day');
-
-        // Ensure all days are included
-        $days = ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
-        return array_map(fn($day) => $weeklyData[$day] ?? 0, $days);
-        */
-
-        // Return dummy data for testing
-        return [12, 8, 15, 10, 7, 14, 9];
+        $weeklyData = [];
+        $days = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $count = Patient::whereDate('created_at', $date)->count();
+            $weeklyData[] = $count;
+        }
+        
+        return response()->json([
+            'labels' => $days,
+            'data' => $weeklyData
+        ]);
     }
-
-    private function getMonthlyBedOccupancyData()
+    
+    /**
+     * Get monthly bed occupancy data for chart
+     */
+    public function getMonthlyBedsData()
     {
-        // Get bed occupancy data for the last 9 months
-        /*
-        $monthlyData = Bed::selectRaw('MONTHNAME(updated_at) as month, COUNT(*) as count')
-            ->where('status', 'مشغول')
-            ->whereBetween('updated_at', [now()->subMonths(9), now()])
-            ->groupBy('month')
-            ->orderByRaw("FIELD(month, 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September')")
-            ->pluck('count', 'month');
-
-        // Ensure all months are included
-        $months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'];
-        return array_map(fn($month) => $monthlyData[$month] ?? 0, $months);
-        */
-
-        // Return dummy data for testing
-        return [20, 18, 22, 19, 25, 21, 23, 17, 20];
+        $monthlyData = [];
+        $months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
+                  'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        
+        for ($i = 11; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            // Count bed assignments in that month
+            $count = PatientVisit::whereYear('visit_at', $date->year)
+                ->whereMonth('visit_at', $date->month)
+                ->where('type', 'in')
+                ->whereNotNull('bed_id')
+                ->count();
+            $monthlyData[] = $count;
+        }
+        
+        return response()->json([
+            'labels' => $months,
+            'data' => $monthlyData
+        ]);
     }
-
-    private function getMonthlyVisitData()
+    
+    /**
+     * Get daily visits data for chart (hourly breakdown)
+     */
+    public function getDailyVisitsData()
     {
-        // Get visit data for the last 9 months
-        /*
-        $monthlyData = PatientVisit::selectRaw('MONTHNAME(visit_at) as month, COUNT(*) as count')
-            ->whereBetween('visit_at', [now()->subMonths(9), now()])
-            ->groupBy('month')
-            ->orderByRaw("FIELD(month, 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September')")
-            ->pluck('count', 'month');
-
-        // Ensure all months are included
-        $months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر'];
-        return array_map(fn($month) => $monthlyData[$month] ?? 0, $months);
-        */
-
-        // Return dummy data for testing
-        return [30, 28, 35, 32, 40, 38, 36, 29, 31];
+        $hourlyData = [];
+        $hours = ['6 ص', '9 ص', '12 ظ', '3 م', '6 م', '9 م', '12 ص'];
+        $hourRanges = [
+            [6, 9],   // 6-9 AM
+            [9, 12],  // 9-12 PM
+            [12, 15], // 12-3 PM
+            [15, 18], // 3-6 PM
+            [18, 21], // 6-9 PM
+            [21, 24], // 9-12 AM
+            [0, 6]    // 12-6 AM (next day)
+        ];
+        
+        foreach ($hourRanges as $index => $range) {
+            if ($range[0] > $range[1]) {
+                // Handle overnight range (12-6 AM)
+                $count = PatientVisit::whereDate('visit_at', now())
+                    ->where(function($query) use ($range) {
+                        $query->whereTime('visit_at', '>=', sprintf('%02d:00:00', $range[0]))
+                              ->orWhereTime('visit_at', '<', sprintf('%02d:00:00', $range[1]));
+                    })
+                    ->count();
+            } else {
+                $count = PatientVisit::whereDate('visit_at', now())
+                    ->whereTime('visit_at', '>=', sprintf('%02d:00:00', $range[0]))
+                    ->whereTime('visit_at', '<', sprintf('%02d:00:00', $range[1]))
+                    ->count();
+            }
+            $hourlyData[] = $count;
+        }
+        
+        return response()->json([
+            'labels' => $hours,
+            'data' => $hourlyData
+        ]);
     }
 }

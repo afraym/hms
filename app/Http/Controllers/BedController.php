@@ -10,9 +10,27 @@ class BedController extends Controller
     /**
      * Display a listing of the beds.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $beds = Bed::all();
+        $query = Bed::with('department');
+        
+        // Filter by department if provided
+        if ($request->has('department_id') && $request->department_id) {
+            $query->where('department_id', $request->department_id);
+        }
+        
+        // Filter by status if provided
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+        
+        $beds = $query->get();
+        
+        // Return JSON for API requests
+        if ($request->wantsJson()) {
+            return response()->json($beds);
+        }
+        
         return view('admin.beds.index', compact('beds'));
     }
 

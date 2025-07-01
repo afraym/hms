@@ -47,10 +47,12 @@ Route::view('profile', 'profile')
         Route::get('/patients/ajax-search', [PatientController::class, 'ajaxSearch'])->name('patients.ajaxSearch');
         Route::post('patients/{patient}/attachments', [PatientController::class, 'uploadAttachment'])->name('patients.attachments.upload');
         Route::post('/api/sync', [PatientController::class, 'sync'])->name('api.sync');
-        Route::post('/increment-medical-id', function () {
-            $newMedicalId = Cache::increment('medical_id_counter', 1);
-            return response()->json(['medical_id' => $newMedicalId]);
-        })->name('increment.medical.id');
+        Route::get('/generate-medical-id', [PatientController::class, 'generateNewMedicalId'])->name('generate.medical.id');
+        
+        // Chart data API routes
+        Route::get('/api/charts/weekly-patients', [DashboardController::class, 'getWeeklyPatientsData'])->name('charts.weekly.patients');
+        Route::get('/api/charts/monthly-beds', [DashboardController::class, 'getMonthlyBedsData'])->name('charts.monthly.beds');
+        Route::get('/api/charts/daily-visits', [DashboardController::class, 'getDailyVisitsData'])->name('charts.daily.visits');
         Route::get('patients/export', [PatientController::class, 'export'])->name('patients.export');
         Route::post('/patients/{patient}/restore', [PatientController::class, 'restore'])->name('patients.restore');
         Route::get('/patients/trashed', [PatientController::class, 'trashed'])->name('patients.trashed');

@@ -12,7 +12,9 @@ class DepartmentController extends Controller
      */
     public function index()
     {
-        $departments = Department::withCount(['beds', 'patients'])->get();
+        $departments = Department::withCount(['beds'])
+            ->withCount(['patientVisits as patients_count'])
+            ->get();
         return view('admin.department.index', compact('departments'));
     }
 

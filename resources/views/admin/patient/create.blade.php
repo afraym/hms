@@ -1,8 +1,12 @@
 @extends('layouts.admin')
 
 @push('styles')
+<!-- Bootstrap Icons for file input icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <!-- Additional FontAwesome for file input icons -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<!-- jQuery Toast Plugin CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css" rel="stylesheet">
 <!-- Custom styles for file upload zone -->
 <style>
 .file-drop-zone {
@@ -37,19 +41,19 @@
     padding: 20px;
     color: #6c757d;
 }
-/* Bootstrap Icons spin animation */
-.bi.spin {
-    animation: spin 1s linear infinite;
+/* FontAwesome Icons spin animation */
+.fa-spin, .fas.fa-spin {
+    animation: fa-spin 1s linear infinite;
 }
-@keyframes spin {
+@keyframes fa-spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-/* Ensure Bootstrap Icons display properly */
-.bi {
-    font-family: "bootstrap-icons" !important;
+/* Ensure FontAwesome Icons display properly */
+.fas, .far, .fab {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
     font-style: normal;
-    font-weight: normal;
+    font-weight: 900;
     font-variant: normal;
     text-transform: none;
     line-height: 1;
@@ -331,200 +335,8 @@ function detectEgyptianNationalIdInfo(nationalId) {
         governorate: governorates[governorate] || 'غير معروف'
     };
 }
-
-// document.addEventListener('DOMContentLoaded', function() {
-//     const nationalIdInput = document.getElementById('national_id');
-//     const infoDiv = document.getElementById('nationalIdInfo');
-//     const birthdateInput = document.getElementById('date_of_birth');
-//     const genderInput = document.getElementById('gender');
-//     const governorateInput = document.getElementById('governorate');
-//     const firstNameInput = document.getElementById('full_name');
-//     const secondNameInput = document.getElementById('second_name');
-//     const thirdNameInput = document.getElementById('third_name');
-//     const fourthNameInput = document.getElementById('fourth_name');
-
-//     if(nationalIdInput) {
-//         nationalIdInput.addEventListener('input', function() {
-//             const nationalId = this.value;
-//             const info = detectEgyptianNationalIdInfo(nationalId);
-//             if (info) {
-//                 if (birthdateInput) birthdateInput.value = info.birthdate;
-//                 if (genderInput) genderInput.value = info.gender;
-//                 if (governorateInput) governorateInput.value = info.governorate;
-
-//                 // Fetch name from external API
-//                 fetch(`/proxy/national-id?national_id=${nationalId}`)
-//                     .then(response => response.json())
-//                     .then(data => {
-//                         if (data && data.basicData) {
-//                             // Fill first name
-//                             if (firstNameInput && data.basicData.FisrtName) {
-//                                 firstNameInput.value = data.basicData.FisrtName;
-//                                 firstNameInput.focus();
-//                             }
-//                             // Fill second name
-//                             if (secondNameInput && data.basicData.SecondName) {
-//                                 secondNameInput.value = data.basicData.SecondName;
-//                                 secondNameInput.focus();
-//                             }
-//                             // Fill third name
-//                             if (thirdNameInput && data.basicData.ThirdName) {
-//                                 thirdNameInput.value = data.basicData.ThirdName;
-//                                 thirdNameInput.focus();
-//                             }
-//                             // Fill fourth name
-//                             if (fourthNameInput && data.basicData.FourthName) {
-//                                 fourthNameInput.value = data.basicData.FourthName;
-//                                 fourthNameInput.focus();
-//                             }
-//                             // Fill email
-//                             const emailInput = document.getElementById('email');
-//                             if (emailInput && data.basicData.Email) {
-//                                 emailInput.value = data.basicData.Email;
-//                                 emailInput.focus();
-//                             }
-//                             // Fill first phone
-//                             const phone1Input = document.getElementById('phone');
-//                             if (phone1Input && data.basicData.Mobile1) {
-//                                 phone1Input.value = data.basicData.Mobile1;
-//                                 phone1Input.focus();
-//                             }
-//                             // Fill second phone
-//                             const companion_phoneInput = document.getElementById('companion_phone');
-//                             if (companion_phoneInput && data.basicData.Mobile2) {
-//                                 companion_phoneInput.value = data.basicData.Mobile2;
-//                                 companion_phoneInput.focus();
-//                             }
-//                             // Fill address
-//                             const addressInput = document.getElementById('address');
-//                             if (addressInput && data.basicData.Address) {
-//                                 addressInput.value = data.basicData.Address;
-//                                 addressInput.focus();
-//                             }
-//                         }
-//                     })
-//                     .catch(error => {
-//                         // Handle error
-//                     });
-//             } else {
-//                 infoDiv.innerHTML = '';
-//                 if (birthdateInput) birthdateInput.value = '';
-//                 if (genderInput) genderInput.value = '';
-//                 if (governorateInput) governorateInput.value = '';
-//             }
-//         });
-//     }
-// });
 </script>
-<script type="module">
-import { saveOfflinePatient, syncOfflineData } from '/js/offlineDb.js';
 
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('patientForm');
-
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => console.log('ServiceWorker registered'))
-            .catch(err => console.error('ServiceWorker registration failed:', err));
-    }
-
-    // Online/Offline handlers
-    window.addEventListener('online', async () => {
-        $.toast({
-            heading: 'متصل',
-            text: 'جاري مزامنة البيانات المحفوظة محلياً...',
-            icon: 'info'
-        });
-        await syncOfflineData();
-    });
-
-    window.addEventListener('offline', () => {
-        $.toast({
-            heading: 'غير متصل',
-            text: 'تم التحويل للوضع المحلي',
-            icon: 'warning'
-        });
-    });
-
-    form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const formData = new FormData(form);
-
-        try {
-            if (!navigator.onLine) {
-                await saveOfflinePatient(formData);
-                $.toast({
-                    heading: 'تم الحفظ محلياً',
-                    text: 'سيتم مزامنة البيانات عند عودة الاتصال',
-                    icon: 'success',
-                    position: 'top-center'
-                });
-                form.reset();
-                return;
-            }
-
-            // Online submission
-            const response = await fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                },
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw await response.json();
-            }
-
-            // Increment medical ID after successful submission
-            const incrementResponse = await fetch('{{ route("increment.medical.id") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (incrementResponse.ok) {
-                const data = await incrementResponse.json();
-                document.getElementById('medicalId').value = data.medical_id;
-            }
-
-            $.toast({
-                heading: 'نجاح',
-                text: 'تم حفظ المريض بنجاح!',
-                icon: 'success',
-                position: 'top-center',
-                hideAfter: 6000,
-                showHideTransition: 'fade'
-            });
-            form.reset();
-
-            // Reset the medical ID input with the new value
-            const medicalIdInput = document.getElementById('medicalId');
-            if (medicalIdInput) {
-                medicalIdInput.value = (parseInt(medicalIdInput.value) + 1).toString().padStart(6, '0');
-            }
-
-        } catch (error) {
-            let errorMessage = "حدث خطأ أثناء الحفظ.";
-            if (error.errors) {
-                errorMessage = Object.values(error.errors).join("<br>");
-            }
-            $.toast({
-                heading: 'خطأ',
-                text: errorMessage,
-                icon: 'error',
-                position: 'top-center',
-                hideAfter: 6000,
-                showHideTransition: 'fade'
-            });
-        }
-    });
-});
-</script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const nationalIdInput = document.getElementById('national_id');
@@ -770,7 +582,7 @@ $(document).ready(function() {
         showBrowse: true,
         browseOnZoneClick: true,
         dropZoneEnabled: true,
-        dropZoneTitle: '<i class="bi bi-cloud-upload fa-3x text-primary mb-3"></i><br><h5 class="text-primary">اسحب الملفات هنا أو اضغط للاختيار</h5>',
+        dropZoneTitle: '<i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i><br><h5 class="text-primary">اسحب الملفات هنا أو اضغط للاختيار</h5>',
         dropZoneClickTitle: '<br><small class="text-muted">(يمكنك إضافة ملفات متعددة)</small>',
         allowedFileExtensions: ["jpg", "png", "jpeg", "gif", "pdf", "doc", "docx", "txt", "xls", "xlsx"],
         maxFileCount: 10,
@@ -778,34 +590,35 @@ $(document).ready(function() {
         overwriteInitial: false,
         initialPreviewAsData: true,
         multiple: true,
+        validateInitialCount: true,
         autoReplace: false,
-        uploadIcon: '<i class="bi bi-cloud-upload"></i>',
-        removeIcon: '<i class="bi bi-trash"></i>',
-        cancelIcon: '<i class="bi bi-x-circle"></i>',
-        browseIcon: '<i class="bi bi-folder2-open"></i>',
+        uploadIcon: '<i class="fas fa-cloud-upload-alt"></i>',
+        removeIcon: '<i class="fas fa-trash"></i>',
+        cancelIcon: '<i class="fas fa-times-circle"></i>',
+        browseIcon: '<i class="fas fa-folder-open"></i>',
         removeTitle: 'إزالة الملف',
         cancelTitle: 'إلغاء الرفع',
-        browseLabel: ' <i class="bi bi-folder2-open"></i> تصفح الملفات',
-        removeLabel: ' <i class="bi bi-trash"></i> إزالة الكل',
+        browseLabel: ' <i class="fas fa-folder-open"></i> تصفح الملفات',
+        removeLabel: ' <i class="fas fa-trash"></i> إزالة الكل',
         cancelLabel: 'إلغاء',
         fileActionSettings: {
-            removeIcon: '<i class="bi bi-trash text-danger"></i>',
+            removeIcon: '<i class="fas fa-trash text-danger"></i>',
             removeClass: 'btn btn-sm btn-kv btn-outline-danger',
             removeTitle: 'إزالة الملف',
-            uploadIcon: '<i class="bi bi-upload text-info"></i>',
+            uploadIcon: '<i class="fas fa-upload text-info"></i>',
             uploadClass: 'btn btn-sm btn-kv btn-outline-info',
             uploadTitle: 'رفع الملف',
-            zoomIcon: '<i class="bi bi-zoom-in text-warning"></i>',
+            zoomIcon: '<i class="fas fa-search-plus text-warning"></i>',
             zoomClass: 'btn btn-sm btn-kv btn-outline-warning',
             zoomTitle: 'عرض تفاصيل الملف',
-            dragIcon: '<i class="bi bi-arrows-move text-info"></i>',
+            dragIcon: '<i class="fas fa-arrows-alt text-info"></i>',
             dragClass: 'btn btn-sm btn-kv btn-outline-info',
             dragTitle: 'حرك لإعادة الترتيب',
             dragSettings: {},
-            indicatorNew: '<i class="bi bi-plus-circle text-warning"></i>',
-            indicatorSuccess: '<i class="bi bi-check-circle text-success"></i>',
-            indicatorError: '<i class="bi bi-exclamation-circle text-danger"></i>',
-            indicatorLoading: '<i class="bi bi-arrow-clockwise spin text-muted"></i>'
+            indicatorNew: '<i class="fas fa-plus-circle text-warning"></i>',
+            indicatorSuccess: '<i class="fas fa-check-circle text-success"></i>',
+            indicatorError: '<i class="fas fa-exclamation-circle text-danger"></i>',
+            indicatorLoading: '<i class="fas fa-sync-alt fa-spin text-muted"></i>'
         },
         msgFilesTooMany: "عدد الملفات المحددة ({n}) يتجاوز الحد الأقصى المسموح به {m}.",
         msgFileNotFound: "الملف '{name}' غير موجود!",
@@ -828,24 +641,24 @@ $(document).ready(function() {
             'pdf': 'PDF',
             'object': 'كائن'
         },
-        previewFileIcon: '<i class="bi bi-file-earmark fa-2x text-info"></i>',
+        previewFileIcon: '<i class="fas fa-file fa-2x text-info"></i>',
         previewFileIconSettings: {
-            'doc': '<i class="bi bi-file-earmark-word fa-2x text-primary"></i>',
-            'docx': '<i class="bi bi-file-earmark-word fa-2x text-primary"></i>',
-            'xls': '<i class="bi bi-file-earmark-excel fa-2x text-success"></i>',
-            'xlsx': '<i class="bi bi-file-earmark-excel fa-2x text-success"></i>',
-            'ppt': '<i class="bi bi-file-earmark-ppt fa-2x text-danger"></i>',
-            'pptx': '<i class="bi bi-file-earmark-ppt fa-2x text-danger"></i>',
-            'pdf': '<i class="bi bi-file-earmark-pdf fa-2x text-danger"></i>',
-            'zip': '<i class="bi bi-file-earmark-zip fa-2x text-warning"></i>',
-            'rar': '<i class="bi bi-file-earmark-zip fa-2x text-warning"></i>',
-            'tar': '<i class="bi bi-file-earmark-zip fa-2x text-warning"></i>',
-            'gz': '<i class="bi bi-file-earmark-zip fa-2x text-warning"></i>',
-            'jpg': '<i class="bi bi-file-earmark-image fa-2x text-info"></i>',
-            'jpeg': '<i class="bi bi-file-earmark-image fa-2x text-info"></i>',
-            'png': '<i class="bi bi-file-earmark-image fa-2x text-info"></i>',
-            'gif': '<i class="bi bi-file-earmark-image fa-2x text-info"></i>',
-            'txt': '<i class="bi bi-file-earmark-text fa-2x text-secondary"></i>'
+            'doc': '<i class="fas fa-file-word fa-2x text-primary"></i>',
+            'docx': '<i class="fas fa-file-word fa-2x text-primary"></i>',
+            'xls': '<i class="fas fa-file-excel fa-2x text-success"></i>',
+            'xlsx': '<i class="fas fa-file-excel fa-2x text-success"></i>',
+            'ppt': '<i class="fas fa-file-powerpoint fa-2x text-danger"></i>',
+            'pptx': '<i class="fas fa-file-powerpoint fa-2x text-danger"></i>',
+            'pdf': '<i class="fas fa-file-pdf fa-2x text-danger"></i>',
+            'zip': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
+            'rar': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
+            'tar': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
+            'gz': '<i class="fas fa-file-archive fa-2x text-warning"></i>',
+            'jpg': '<i class="fas fa-file-image fa-2x text-info"></i>',
+            'jpeg': '<i class="fas fa-file-image fa-2x text-info"></i>',
+            'png': '<i class="fas fa-file-image fa-2x text-info"></i>',
+            'gif': '<i class="fas fa-file-image fa-2x text-info"></i>',
+            'txt': '<i class="fas fa-file-alt fa-2x text-secondary"></i>'
         },
         previewFileIconClass: 'file-other-icon',
         layoutTemplates: {
@@ -875,108 +688,204 @@ $(document).ready(function() {
             }
         }
     });
-    
-    isInitialized = true;
-    
-    // Custom file handling to prevent reset
-    let originalInput = fileInput[0];
-    
-    // Override the default file selection behavior
-    fileInput.on('filebatchselected', function(event, files) {
-        console.log('Batch files selected: ' + files.length);
-        
-        // Prevent default behavior that clears existing files
-        event.preventDefault();
-        event.stopPropagation();
-        
-        // Add new files to our storage
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const isDuplicate = allFiles.some(f => 
-                f.name === file.name && 
-                f.size === file.size && 
-                f.lastModified === file.lastModified
-            );
-            
-            if (!isDuplicate) {
-                allFiles.push(file);
-            }
-        }
-        
-        // Update the file input with all accumulated files
-        updateFileInput();
-        
-        console.log(`Total accumulated files: ${allFiles.length}`);
-        return false;
-    });
-    
-    // Handle direct file input changes
-    originalInput.addEventListener('change', function(e) {
-        const newFiles = Array.from(e.target.files);
-        console.log('Direct change event: ' + newFiles.length);
-        
-        if (newFiles.length > 0) {
-            // Add new files to storage
-            newFiles.forEach(file => {
-                const isDuplicate = allFiles.some(f => 
-                    f.name === file.name && 
-                    f.size === file.size && 
-                    f.lastModified === file.lastModified
-                );
-                
-                if (!isDuplicate) {
-                    allFiles.push(file);
-                }
-            });
-            
-            // Update the display
-            updateFileInput();
-            console.log(`Total files: ${allFiles.length}`);
-        }
-    });
-    
-    // Function to update file input with all files
-    function updateFileInput() {
-        const dt = new DataTransfer();
-        allFiles.forEach(file => dt.items.add(file));
-        originalInput.files = dt.files;
-        
-        // Refresh the plugin display
-        setTimeout(function() {
-            fileInput.fileinput('refresh');
-        }, 50);
-    }
-    
-    // Handle individual file removal
-    fileInput.on('fileremoved', function(event, id, index) {
-        console.log('File removed at index: ' + index);
-        if (allFiles[index]) {
-            allFiles.splice(index, 1);
-            console.log(`Files remaining: ${allFiles.length}`);
-        }
-    });
-    
-    // Handle clearing all files
-    fileInput.on('fileclear', function(event) {
-        console.log('All files cleared');
-        allFiles = [];
-    });
-    
-    // Event handlers for better UX
+
+    // Simple approach: allow the plugin to handle files normally
+    // but track them for form submission
+    let selectedFiles = [];
+
+    // Handle file selection events
     fileInput.on('fileselect', function(event, numFiles, label) {
         console.log('Files selected: ' + numFiles);
     });
-    
+
+    // Handle file batch selection
+    fileInput.on('filebatchselected', function(event, files) {
+        console.log('Batch files selected: ' + files.length);
+        selectedFiles = Array.from(files);
+
+        // Prevent the plugin from clearing existing files
+        setTimeout(function() {
+            fileInput.fileinput('refresh');
+        }, 100);
+    });
+
+    // Handle file loading
+    fileInput.on('fileloaded', function(event, file, previewId, index, reader) {
+        console.log('File loaded: ' + file.name);
+    });
+
+    // Handle individual file removal
+    fileInput.on('fileremoved', function(event, id, index) {
+        console.log('File removed at index: ' + index);
+        if (selectedFiles[index]) {
+            selectedFiles.splice(index, 1);
+            console.log(`Files remaining: ${selectedFiles.length}`);
+        }
+    });
+
+    // Handle clearing all files
+    fileInput.on('fileclear', function(event) {
+        console.log('All files cleared');
+        selectedFiles = [];
+    });
+
+    // Handle file errors
+    fileInput.on('fileerror', function(event, data, msg) {
+        console.error('File error:', msg);
+
+        // Show user-friendly error message
+        $.toast({
+            heading: 'خطأ في الملف',
+            text: msg || 'حدث خطأ أثناء تحميل الملف',
+            icon: 'error',
+            position: 'top-center',
+            hideAfter: 5000
+        });
+    });
+
+    // Refresh the plugin display
+    setTimeout(function() {
+        fileInput.fileinput('refresh');
+    }, 50);
+
     // Add custom styling after initialization
     setTimeout(function() {
         $('.file-drop-zone').addClass('border-2 border-dashed border-primary rounded bg-light p-4');
         $('.file-drop-zone-title').addClass('text-primary fw-bold');
         $('.kv-file-content').addClass('text-center');
-        
+
         // Style the file preview thumbnails
         $('.file-preview-frame').addClass('m-2 border rounded shadow-sm');
         $('.file-actions').addClass('text-center mt-2');
-    }, 200);
+
+        // Fix drop zone icons
+        $('.file-drop-zone .file-drop-zone-title').html('<i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i><br><h5 class="text-primary">اسحب الملفات هنا أو اضغط للاختيار</h5><br><small class="text-muted">(يمكنك إضافة ملفات متعددة)</small>');
+    }, 300);
 });
 </script>
 @endsection
+
+@push('scripts')
+<!-- jQuery Toast Plugin JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('patientForm');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const medicalIdInput = document.getElementById('medicalId');
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        
+        // Disable submit button to prevent double submission
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>جاري الحفظ...';
+        
+        const formData = new FormData(form);
+
+        try {
+            // Online submission with AJAX
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                console.log('Patient saved successfully:', data);
+                
+                $.toast({
+                    heading: 'نجاح',
+                    text: data.message || 'تم حفظ المريض بنجاح!',
+                    icon: 'success',
+                    position: 'top-center',
+                    hideAfter: 6000,
+                    showHideTransition: 'fade'
+                });
+                
+                // Reset form
+                form.reset();
+                
+                // Update medical ID with new generated one
+                if (data.new_medical_id) {
+                    console.log('Setting new medical ID:', data.new_medical_id);
+                    medicalIdInput.value = data.new_medical_id;
+                } else {
+                    console.log('No new medical ID in response, generating new one...');
+                    // Fallback: generate new medical ID
+                    try {
+                        const medicalIdResponse = await fetch('{{ route("generate.medical.id") }}', {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+                        if (medicalIdResponse.ok) {
+                            const medicalIdData = await medicalIdResponse.json();
+                            console.log('Generated new medical ID:', medicalIdData.medical_id);
+                            medicalIdInput.value = medicalIdData.medical_id;
+                        }
+                    } catch (medicalIdError) {
+                        console.error('Failed to generate new medical ID:', medicalIdError);
+                    }
+                }
+                
+                // Reset datetime to current time
+                const datetimeInput = document.getElementById('created_at');
+                if (datetimeInput) {
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    datetimeInput.value = now.toISOString().slice(0, 16);
+                }
+                
+            } else {
+                console.error('Error response:', data);
+                let errorMessage = data.message || "حدث خطأ أثناء الحفظ.";
+                if (data.errors) {
+                    console.error('Validation errors:', data.errors);
+                    // Display validation errors
+                    const errorMessages = [];
+                    Object.values(data.errors).forEach(fieldErrors => {
+                        if (Array.isArray(fieldErrors)) {
+                            errorMessages.push(...fieldErrors);
+                        } else {
+                            errorMessages.push(fieldErrors);
+                        }
+                    });
+                    errorMessage = errorMessages.join('<br>');
+                }
+                
+                $.toast({
+                    heading: 'خطأ',
+                    text: errorMessage,
+                    icon: 'error',
+                    position: 'top-center',
+                    hideAfter: 8000,
+                    showHideTransition: 'fade'
+                });
+            }
+
+        } catch (error) {
+            console.error('Request failed:', error);
+            $.toast({
+                heading: 'خطأ',
+                text: 'حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.',
+                icon: 'error',
+                position: 'top-center',
+                hideAfter: 6000,
+                showHideTransition: 'fade'
+            });
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'حفظ';
+        }
+    });
+});
+</script>
+@endpush

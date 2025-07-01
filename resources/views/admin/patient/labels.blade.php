@@ -197,7 +197,9 @@
                     }
                 }
 
-                $lastVisit = optional($patient->visits()->latest('visit_at')->first())->visit_at;
+                $lastVisitRecord = $patient->visits()->with('department')->orderBy('visit_at', 'asc')->first();
+                $lastVisit = optional($lastVisitRecord)->visit_at;
+                $lastVisitDepartment = optional($lastVisitRecord->department ?? null)->name ?? '-';
         
                 // Define all labels array by combining first and additional labels
                 $allLabels = [
@@ -217,7 +219,7 @@
                 for($i = 0; $i < $additionalCount; $i++) {
                     $allLabels[] = '<div class="label-content">'
                         .'<div class="label-name">'.$patient->full_name.'</div>'
-                        .'<div class="label-age">العمر: '.formatAge($patient->date_of_birth).' - ' .($patient->department->name ?? '-').'</div>'
+                        .'<div class="label-age">العمر: '.formatAge($patient->date_of_birth).' - ' .$lastVisitDepartment.'</div>'
                         .'<div class="label-medical-id">'.$patient->medical_id.'</div>'
                         .'</div>';
                 }

@@ -102,11 +102,12 @@ class PatientVisitController extends Controller
         
         // Update patient status based on visit type
         if ($validated['type'] === 'in') {
-            $patient->update(['status' => 'admitted']);
-            
-            // If bed is assigned, mark it as occupied
+            // Only set to admitted if a bed is allocated, otherwise keep as waiting
             if (!empty($validated['bed_id'])) {
+                $patient->update(['status' => 'admitted']);
                 Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+            } else {
+                $patient->update(['status' => 'waiting']);
             }
         } elseif ($validated['type'] === 'out') {
             $patient->update(['status' => 'discharged']);
@@ -202,6 +203,19 @@ class PatientVisitController extends Controller
         }
 
         $patientVisit->update($validated);
+
+        // Update patient status based on visit type and bed allocation
+        $patient = $patientVisit->patient;
+        if ($validated['type'] === 'in') {
+            // Only set to admitted if a bed is allocated, otherwise keep as waiting
+            if (!empty($validated['bed_id'])) {
+                $patient->update(['status' => 'admitted']);
+            } else {
+                $patient->update(['status' => 'waiting']);
+            }
+        } elseif ($validated['type'] === 'out') {
+            $patient->update(['status' => 'discharged']);
+        }
 
         // Check if it's an AJAX request for JSON response
         if ($request->wantsJson()) {

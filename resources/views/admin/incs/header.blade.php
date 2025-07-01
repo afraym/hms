@@ -32,7 +32,7 @@
  <script src="{{ asset('assets/js/dexie.js') }}"></script>
 <!-- if using RTL (Right-To-Left) orientation, load the RTL CSS file after fileinput.css by uncommenting below -->
 <link rel="stylesheet" href="{{ asset('assets/css/fileinput-rtl.min.css')}}"> 
-<link rel="stylesheet" href="{{ asset('assets/font/bootstrap-icons.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/bootstrap-icons.min.css') }}">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
@@ -48,7 +48,7 @@
       content: "";
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: url('{{ asset('assets/img/background.jpg') }}') no-repeat center center fixed;
+      /* background: url('{{ asset('assets/img/background.jpg') }}') no-repeat center center fixed; */
       background-size: contain;
       opacity: 0.2; /* Adjust transparency */
       z-index: -1;

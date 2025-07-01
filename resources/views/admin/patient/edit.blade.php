@@ -39,6 +39,13 @@
                     </select>
                 </div>
                 {{-- Add companion name and phone --}}
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-3">بيانات المرافق الافتراضية</h6>
+                        <small class="text-muted">هذه البيانات تستخدم كقيم افتراضية عند إضافة زيارات جديدة</small>
+                    </div>
+                </div>
+                
                 <div class="input-group input-group-static mb-4">
                     <label for="companion_name">اسم المرافق</label>
                     <input type="text" name="companion_name" id="companion_name" class="form-control" value="{{ $patient->companion_name }}">
@@ -80,9 +87,9 @@
     <!-- Patient Visits Management Section -->
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5>إدارة زيارات المريض</h5>
+            <h5>إدارة دخول وخروج المريض</h5>
             <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVisitModal">
-                إضافة زيارة جديدة
+                إضافة جديد
             </button>
         </div>
         <div class="card-body">
@@ -91,8 +98,8 @@
                     <table class="table table-sm">
                         <thead>
                             <tr>
-                                <th>نوع الزيارة</th>
-                                <th>تاريخ الزيارة</th>
+                                <th>النوع</th>
+                                <th>التاريخ والوقت</th>
                                 <th>القسم</th>
                                 <th>السرير</th>
                                 <th>المرافق</th>
@@ -108,10 +115,49 @@
                                             {{ $visit->type == 'in' ? 'دخول' : 'خروج' }}
                                         </span>
                                     </td>
-                                    <td>{{ $visit->visit_at->format('Y-m-d H:i') }}</td>
+                                    <td>
+                                        @php
+                                            $arabicDays = [
+                                                'Sunday' => 'الأحد',
+                                                'Monday' => 'الإثنين', 
+                                                'Tuesday' => 'الثلاثاء',
+                                                'Wednesday' => 'الأربعاء',
+                                                'Thursday' => 'الخميس',
+                                                'Friday' => 'الجمعة',
+                                                'Saturday' => 'السبت'
+                                            ];
+                                            $dayName = $arabicDays[$visit->visit_at->format('l')];
+                                            $date = $visit->visit_at->format('Y-m-d');
+                                            $hour = (int)$visit->visit_at->format('H');
+                                            $minute = $visit->visit_at->format('i');
+                                            $period = $hour < 12 ? 'صباحا' : 'مساء';
+                                            $displayHour = $hour == 0 ? 12 : ($hour > 12 ? $hour - 12 : $hour);
+                                            $formattedTime = sprintf('%02d:%s %s', $displayHour, $minute, $period);
+                                        @endphp
+                                        {{ $dayName }} {{ $date }} {{ $formattedTime }}
+                                    </td>
                                     <td>{{ $visit->department->name ?? 'غير محدد' }}</td>
-                                    <td>{{ $visit->bed->bed_number ?? 'غير محدد' }}</td>
-                                    <td>{{ $visit->companion_name ?? 'غير محدد' }}</td>
+                                    <td>
+                                        @if($visit->bed)
+                                            <span class="badge bg-gradient-info">{{ $visit->bed->bed_number }}</span>
+                                            <small class="text-muted d-block">غرفة {{ $visit->bed->room_number }}</small>
+                                        @else
+                                            <span class="text-muted">غير محدد</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($visit->companion_name)
+                                            <strong>{{ $visit->companion_name }}</strong>
+                                            @if($visit->companion_relation)
+                                                <small class="text-muted d-block">({{ $visit->companion_relation }})</small>
+                                            @endif
+                                            @if($visit->companion_phone)
+                                                <small class="text-muted d-block">{{ $visit->companion_phone }}</small>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">غير محدد</span>
+                                        @endif
+                                    </td>
                                     <td>{{ Str::limit($visit->notes ?? 'لا توجد', 30) }}</td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="editVisit({{ $visit->id }})">
@@ -133,9 +179,9 @@
             @else
                 <div class="text-center text-muted py-4">
                     <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
-                    <p class="mt-2">لا توجد زيارات مسجلة لهذا المريض</p>
+                    <p class="mt-2">لا توجد سجلات مسجلة لهذا المريض</p>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVisitModal">
-                        إضافة أول زيارة
+                        إضافة أول سجل
                     </button>
                 </div>
             @endif
@@ -147,7 +193,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addVisitModalLabel">إضافة زيارة جديدة</h5>
+                    <h5 class="modal-title" id="addVisitModalLabel">إضافة جديد</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ route('patients.visits.store', $patient->id) }}" method="POST" id="addVisitForm">
@@ -156,9 +202,9 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="visit_type">نوع الزيارة</label>
+                                    <label for="visit_type">النوع</label>
                                     <select name="type" id="visit_type" class="form-control" required>
-                                        <option value="">اختر نوع الزيارة</option>
+                                        <option value="">اختر النوع</option>
                                         <option value="in">دخول</option>
                                         <option value="out">خروج</option>
                                     </select>
@@ -166,7 +212,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="visit_at">تاريخ ووقت الزيارة</label>
+                                    <label for="visit_at">التاريخ والوقت</label>
                                     <input type="datetime-local" name="visit_at" id="visit_at" class="form-control" value="{{ now()->format('Y-m-d\TH:i') }}" required>
                                 </div>
                             </div>
@@ -201,13 +247,13 @@
                             <div class="col-md-6">
                                 <div class="input-group input-group-static mb-3">
                                     <label for="visit_companion_name">اسم المرافق</label>
-                                    <input type="text" name="companion_name" id="visit_companion_name" class="form-control" placeholder="اسم المرافق">
+                                    <input type="text" name="companion_name" id="visit_companion_name" class="form-control" placeholder="اسم المرافق" value="{{ $patient->companion_name }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="input-group input-group-static mb-3">
                                     <label for="visit_companion_relation">صلة القرابة</label>
-                                    <input type="text" name="companion_relation" id="visit_companion_relation" class="form-control" placeholder="صلة القرابة">
+                                    <input type="text" name="companion_relation" id="visit_companion_relation" class="form-control" placeholder="صلة القرابة" value="{{ $patient->companion_relation }}">
                                 </div>
                             </div>
                         </div>
@@ -216,25 +262,25 @@
                             <div class="col-md-6">
                                 <div class="input-group input-group-static mb-3">
                                     <label for="visit_companion_phone">هاتف المرافق</label>
-                                    <input type="text" name="companion_phone" id="visit_companion_phone" class="form-control" placeholder="هاتف المرافق">
+                                    <input type="text" name="companion_phone" id="visit_companion_phone" class="form-control" placeholder="هاتف المرافق" value="{{ $patient->companion_phone }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="input-group input-group-static mb-3">
                                     <label for="visit_companion_national_id">الرقم القومي للمرافق</label>
-                                    <input type="text" name="companion_national_id" id="visit_companion_national_id" class="form-control" placeholder="الرقم القومي للمرافق">
+                                    <input type="text" name="companion_national_id" id="visit_companion_national_id" class="form-control" placeholder="الرقم القومي للمرافق" value="{{ $patient->companion_national_id }}">
                                 </div>
                             </div>
                         </div>
 
                         <div class="input-group input-group-static mb-3">
-                            <label for="visit_notes">ملاحظات الزيارة</label>
+                            <label for="visit_notes">الملاحظات</label>
                             <textarea name="notes" id="visit_notes" class="form-control" rows="3" placeholder="ملاحظات إضافية..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-success">حفظ الزيارة</button>
+                        <button type="submit" class="btn btn-success">حفظ</button>
                     </div>
                 </form>
             </div>
@@ -246,7 +292,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editVisitModalLabel">تعديل الزيارة</h5>
+                    <h5 class="modal-title" id="editVisitModalLabel">تعديل</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editVisitForm" method="POST">
@@ -257,9 +303,9 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="edit_visit_type">نوع الزيارة</label>
+                                    <label for="edit_visit_type">النوع</label>
                                     <select name="type" id="edit_visit_type" class="form-control" required>
-                                        <option value="">اختر نوع الزيارة</option>
+                                        <option value="">اختر النوع</option>
                                         <option value="in">دخول</option>
                                         <option value="out">خروج</option>
                                     </select>
@@ -267,7 +313,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="edit_visit_at">تاريخ ووقت الزيارة</label>
+                                    <label for="edit_visit_at">التاريخ والوقت</label>
                                     <input type="datetime-local" name="visit_at" id="edit_visit_at" class="form-control" required>
                                 </div>
                             </div>
@@ -329,13 +375,13 @@
                         </div>
 
                         <div class="input-group input-group-static mb-3">
-                            <label for="edit_visit_notes">ملاحظات الزيارة</label>
+                            <label for="edit_visit_notes">الملاحظات</label>
                             <textarea name="notes" id="edit_visit_notes" class="form-control" rows="3" placeholder="ملاحظات إضافية..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-warning">تحديث الزيارة</button>
+                        <button type="submit" class="btn btn-warning">تحديث</button>
                     </div>
                 </form>
             </div>
@@ -501,12 +547,98 @@ $(document).ready(function() {
             bedSelect.prop('disabled', false);
         }
     });
+
+    // Filter beds by department
+    $('#visit_department_id').on('change', function() {
+        const departmentId = $(this).val();
+        const bedSelect = $('#visit_bed_id');
+        
+        if (departmentId) {
+            filterBedsByDepartment(departmentId, bedSelect);
+        } else {
+            loadAllAvailableBeds(bedSelect);
+        }
+    });
+
+    $('#edit_visit_department_id').on('change', function() {
+        const departmentId = $(this).val();
+        const bedSelect = $('#edit_visit_bed_id');
+        
+        if (departmentId) {
+            filterBedsByDepartment(departmentId, bedSelect);
+        } else {
+            loadAllBeds(bedSelect);
+        }
+    });
 });
+
+// Helper functions for bed filtering
+function filterBedsByDepartment(departmentId, bedSelect) {
+    fetch(`{{ url('admin/beds') }}?department_id=${departmentId}&status=متاح`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(beds => {
+        bedSelect.empty().append('<option value="">اختر السرير</option>');
+        beds.forEach(bed => {
+            bedSelect.append(`<option value="${bed.id}">${bed.bed_number} - ${bed.room_number}</option>`);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching beds:', error);
+    });
+}
+
+function loadAllAvailableBeds(bedSelect) {
+    fetch(`{{ url('admin/beds') }}?status=متاح`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(beds => {
+        bedSelect.empty().append('<option value="">اختر السرير</option>');
+        beds.forEach(bed => {
+            bedSelect.append(`<option value="${bed.id}">${bed.bed_number} - ${bed.room_number}</option>`);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching beds:', error);
+    });
+}
+
+function loadAllBeds(bedSelect) {
+    fetch(`{{ url('admin/beds') }}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(beds => {
+        bedSelect.empty().append('<option value="">اختر السرير</option>');
+        beds.forEach(bed => {
+            bedSelect.append(`<option value="${bed.id}">${bed.bed_number} - ${bed.room_number}</option>`);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching beds:', error);
+    });
+}
 
 // Function to edit a visit
 function editVisit(visitId) {
     // Fetch visit data and populate the edit modal
-    fetch(`/admin/patient-visits/${visitId}`)
+    fetch(`{{ url('admin/patient-visits') }}/${visitId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
         .then(response => response.json())
         .then(data => {
             // Populate the edit form fields
@@ -521,7 +653,7 @@ function editVisit(visitId) {
             $('#edit_visit_notes').val(data.notes || '');
             
             // Set the form action URL
-            $('#editVisitForm').attr('action', `/admin/patient-visits/${visitId}`);
+            $('#editVisitForm').attr('action', `{{ url('admin/patient-visits') }}/${visitId}`);
             
             // Show the modal
             $('#editVisitModal').modal('show');
@@ -605,6 +737,13 @@ $('#editVisitForm').on('submit', function(e) {
 $('#addVisitModal').on('hidden.bs.modal', function() {
     $('#addVisitForm')[0].reset();
     $('#visit_bed_id').prop('disabled', false);
+    
+    // Reset to default companion values
+    $('#visit_companion_name').val('{{ $patient->companion_name }}');
+    $('#visit_companion_relation').val('{{ $patient->companion_relation }}');
+    $('#visit_companion_phone').val('{{ $patient->companion_phone }}');
+    $('#visit_companion_national_id').val('{{ $patient->companion_national_id }}');
+    $('#visit_at').val('{{ now()->format('Y-m-d\TH:i') }}');
 });
 
 $('#editVisitModal').on('hidden.bs.modal', function() {

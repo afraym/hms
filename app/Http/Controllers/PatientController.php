@@ -21,7 +21,7 @@ class PatientController extends Controller
      */
     public function index()
     {
-        $patients = Patient::orderBy('created_at', 'desc')->paginate(50);
+        $patients = Patient::latest()->paginate(100);
         return view('admin.patient.index', compact('patients'));
     }
 
@@ -33,10 +33,16 @@ class PatientController extends Controller
         $day = now()->format('d'); // اليوم
 
         // البحث عن آخر رقم طبي تم إنشاؤه اليوم
-        $lastPatient = Patient::whereDate('created_at', $today)->orderBy('medical_id', 'desc')->first();
+        $lastPatient = Patient::whereDate('created_at', $today)
+            ->where('medical_id', 'LIKE', "11803{$year}{$month}{$day}%")
+            ->orderBy('medical_id', 'desc')
+            ->first();
 
         // تحديد الرقم الجديد
-        $lastId = $lastPatient ? intval(substr($lastPatient->medical_id, -3)) : 0;
+        $lastId = 0;
+        if ($lastPatient) {
+            $lastId = intval(substr($lastPatient->medical_id, -3));
+        }
         $newId = str_pad($lastId + 1, 3, '0', STR_PAD_LEFT);
 
         // توليد الرقم الطبي النهائي
@@ -113,12 +119,24 @@ class PatientController extends Controller
                 $patientData['created_at'] ?? null
             );
             
+            // Check if it's an AJAX request
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم تسجيل زيارة جديدة للمريض الموجود بنجاح.',
+                    'patient' => $existingPatient,
+                    'visit' => $visit,
+                    'new_medical_id' => $this->generateMedicalId()
+                ]);
+            }
+            
             return redirect()->route('patients.show', $existingPatient->id)
                 ->with('success', 'تم تسجيل زيارة جديدة للمريض الموجود بنجاح.');
         } else {
             // Create new patient
             $patientData['created_by'] = auth()->id();
-            $patientData['status'] = 'waiting';
+            // Status should only change when a bed is allocated
+            $patientData['status'] = !empty($visitData['bed_id']) ? 'admitted' : 'waiting';
             
             // Handle created_at if provided
             if (isset($patientData['created_at'])) {
@@ -134,7 +152,23 @@ class PatientController extends Controller
             $visitData['notes'] = $visitData['visit_notes'] ?? 'أول زيارة - تسجيل دخول';
             unset($visitData['visit_notes']);
             
+            // Create the visit with department_id
             PatientVisit::create($visitData);
+            
+            // Handle bed assignment
+            if (!empty($visitData['bed_id'])) {
+                Bed::where('id', $visitData['bed_id'])->update(['status' => 'محجوز']);
+            }
+
+            // Check if it's an AJAX request
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم إضافة المريض وتسجيل دخوله بنجاح.',
+                    'patient' => $patient,
+                    'new_medical_id' => $this->generateMedicalId()
+                ]);
+            }
 
             return redirect()->route('patients.show', $patient->id)
                 ->with('success', 'تم إضافة المريض وتسجيل دخوله بنجاح.');
@@ -287,18 +321,19 @@ class PatientController extends Controller
 
         $visit = $patient->visits()->create($validated);
 
-        // Update patient status based on visit type
+        // Update patient status based on visit type and bed allocation
         if ($validated['type'] === 'in') {
-            $patient->update(['status' => 'admitted']);
-            
-            // If bed is assigned, mark it as occupied
+            // Status should only change to admitted when a bed is allocated
             if (!empty($validated['bed_id'])) {
+                $patient->update(['status' => 'admitted']);
                 Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+            } else {
+                $patient->update(['status' => 'waiting']);
             }
         } elseif ($validated['type'] === 'out') {
             $patient->update(['status' => 'discharged']);
             
-            // Release any assigned bed
+            // Release any assigned bed from the latest 'in' visit
             $lastInVisit = $patient->visits()
                 ->where('type', 'in')
                 ->whereNotNull('bed_id')
@@ -609,15 +644,15 @@ class PatientController extends Controller
         $visitData['notes'] = $visitData['visit_notes'] ?? 'زيارة جديدة';
         unset($visitData['visit_notes']);
         
-        // Create the visit
+        // Create the visit with department_id
         $visit = PatientVisit::create($visitData);
         
-        // Update patient status
-        $patient->update(['status' => 'admitted']);
-        
-        // Handle bed assignment
+        // Update patient status only when a bed is allocated
         if (!empty($visitData['bed_id'])) {
+            $patient->update(['status' => 'admitted']);
             Bed::where('id', $visitData['bed_id'])->update(['status' => 'محجوز']);
+        } else {
+            $patient->update(['status' => 'waiting']);
         }
         
         return $visit;
@@ -677,5 +712,14 @@ class PatientController extends Controller
         $patient->save();
 
         return redirect()->route('patients.index')->with('success', 'تم تسجيل وفاة المريض. رحمه الله وأسكنه فسيح جناته.');
+    }
+
+    /**
+     * Generate a new medical ID for AJAX requests.
+     */
+    public function generateNewMedicalId()
+    {
+        $newMedicalId = $this->generateMedicalId();
+        return response()->json(['medical_id' => $newMedicalId]);
     }
 }
