@@ -106,7 +106,11 @@ class PatientController extends Controller
             'visit_notes' => 'nullable|string',
         ]);
 
-      
+        // Validate attachments
+        $request->validate([
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:10240|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,txt'
+        ]);
 
         // Check if patient already exists
         $existingPatient = $this->findExistingPatient($patientData);
@@ -118,6 +122,23 @@ class PatientController extends Controller
                 $visitData, 
                 $patientData['created_at'] ?? null
             );
+            
+            // Handle file attachments for existing patient
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    if ($file->isValid()) {
+                        $originalName = $file->getClientOriginalName();
+                        $path = $file->store('patient_attachments/' . $existingPatient->id, 'public');
+                        
+                        $existingPatient->attachments()->create([
+                            'file' => $path,
+                            'original_name' => $originalName,
+                            'type' => $file->getClientMimeType(),
+                            'description' => 'مرفق مع زيارة جديدة'
+                        ]);
+                    }
+                }
+            }
             
             // Check if it's an AJAX request
             if ($request->wantsJson()) {
@@ -158,6 +179,23 @@ class PatientController extends Controller
             // Handle bed assignment
             if (!empty($visitData['bed_id'])) {
                 Bed::where('id', $visitData['bed_id'])->update(['status' => 'محجوز']);
+            }
+
+            // Handle file attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    if ($file->isValid()) {
+                        $originalName = $file->getClientOriginalName();
+                        $path = $file->store('patient_attachments/' . $patient->id, 'public');
+                        
+                        $patient->attachments()->create([
+                            'file' => $path,
+                            'original_name' => $originalName,
+                            'type' => $file->getClientMimeType(),
+                            'description' => 'مرفق مع تسجيل المريض'
+                        ]);
+                    }
+                }
             }
 
             // Check if it's an AJAX request

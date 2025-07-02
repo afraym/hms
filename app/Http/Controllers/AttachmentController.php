@@ -29,19 +29,23 @@ class AttachmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-        'file' => 'required|file|max:10240', // 10MB
-        'description' => 'nullable|string|max:255',
-    ]);
+            'patient_id' => 'required|exists:patients,id',
+            'file' => 'required|file|max:10240', // 10MB
+            'description' => 'nullable|string|max:255',
+        ]);
 
-    $path = $request->file('file')->store('attachments', 'public');
+        $patient = \App\Models\Patient::findOrFail($request->patient_id);
+        $file = $request->file('file');
+        $path = $file->store('patient_attachments/' . $patient->id, 'public');
 
-    $patient->attachments()->create([
-        'file' => $path,
-        'type' => $request->file('file')->getClientMimeType(),
-        'description' => $request->description,
-    ]);
+        $attachment = $patient->attachments()->create([
+            'file' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'type' => $file->getClientMimeType(),
+            'description' => $request->description,
+        ]);
 
-    return back()->with('success', 'تم رفع المرفق بنجاح.');
+        return back()->with('success', 'تم رفع المرفق بنجاح.');
     }
 
     /**
