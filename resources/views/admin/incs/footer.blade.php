@@ -172,6 +172,7 @@ function editVisit(visitId) {
         @if (Route::is('admin.patients.edit') || Route::is('admin.patients.show'))
             editForm.action = `{{ url('admin/patients') }}/{{ $patient->id }}/visits/${visitId}`;
         @endif
+        
         // Show the modal - try multiple methods for compatibility
         const modalElement = document.getElementById('editVisitModal');
         if (modalElement) {
