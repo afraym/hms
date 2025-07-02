@@ -633,13 +633,18 @@ function loadAllBeds(bedSelect) {
 // Function to edit a visit
 function editVisit(visitId) {
     // Fetch visit data and populate the edit modal
-    fetch(`{{ url('admin/patient-visits') }}/${visitId}`, {
+    fetch(`{{ url('admin/patients') }}/{{ $patient->id }}/visits/${visitId}/edit`, {
         headers: {
             'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             // Populate the edit form fields
             $('#edit_visit_type').val(data.type);
@@ -653,14 +658,20 @@ function editVisit(visitId) {
             $('#edit_visit_notes').val(data.notes || '');
             
             // Set the form action URL
-            $('#editVisitForm').attr('action', `{{ url('admin/patient-visits') }}/${visitId}`);
+            $('#editVisitForm').attr('action', `{{ url('admin/patients') }}/{{ $patient->id }}/visits/${visitId}`);
             
             // Show the modal
             $('#editVisitModal').modal('show');
         })
         .catch(error => {
             console.error('Error fetching visit data:', error);
-            alert('حدث خطأ في تحميل بيانات الزيارة');
+            $.toast({
+                heading: 'خطأ في تحميل البيانات',
+                text: 'حدث خطأ في تحميل بيانات الزيارة: ' + error.message,
+                icon: 'error',
+                position: 'top-right',
+                showHideTransition: 'slide'
+            });
         });
 }
 
@@ -678,21 +689,46 @@ $('#addVisitForm').on('submit', function(e) {
         method: 'POST',
         body: formData,
         headers: {
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             $('#addVisitModal').modal('hide');
-            location.reload(); // Reload to show the new visit
+            $.toast({
+                heading: 'نجح الحفظ',
+                text: data.message || 'تم حفظ الزيارة بنجاح',
+                icon: 'success',
+                position: 'top-right',
+                showHideTransition: 'slide'
+            });
+            setTimeout(() => location.reload(), 1500); // Reload after showing toast
         } else {
-            alert(data.message || 'حدث خطأ أثناء حفظ الزيارة');
+            $.toast({
+                heading: 'خطأ في الحفظ',
+                text: data.message || 'حدث خطأ أثناء حفظ الزيارة',
+                icon: 'error',
+                position: 'top-right',
+                showHideTransition: 'slide'
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('حدث خطأ أثناء حفظ الزيارة');
+        $.toast({
+            heading: 'خطأ في الحفظ',
+            text: 'حدث خطأ أثناء حفظ الزيارة: ' + error.message,
+            icon: 'error',
+            position: 'top-right',
+            showHideTransition: 'slide'
+        });
     })
     .finally(() => {
         submitButton.prop('disabled', false).text(originalText);
@@ -712,20 +748,47 @@ $('#editVisitForm').on('submit', function(e) {
         method: 'POST',
         body: formData,
         headers: {
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             $('#editVisitModal').modal('hide');
-            location.reload(); // Reload to show the updated visit
+            $.toast({
+                heading: 'نجح التحديث',
+                text: data.message || 'تم تحديث الزيارة بنجاح',
+                icon: 'success',
+                position: 'top-right',
+                showHideTransition: 'slide'
+            });
+            setTimeout(() => location.reload(), 1500); // Reload after showing toast
         } else {
-            alert(data.message || 'حدث خطأ أثناء تحديث الزيارة');
+            $.toast({
+                heading: 'خطأ في التحديث',
+                text: data.message || 'حدث خطأ أثناء تحديث الزيارة',
+                icon: 'error',
+                position: 'top-right',
+                showHideTransition: 'slide'
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
+        $.toast({
+            heading: 'خطأ في التحديث',
+            text: 'حدث خطأ أثناء تحديث الزيارة: ' + error.message,
+            icon: 'error',
+            position: 'top-right',
+            showHideTransition: 'slide'
+        });
+    })
         alert('حدث خطأ أثناء تحديث الزيارة');
     })
     .finally(() => {

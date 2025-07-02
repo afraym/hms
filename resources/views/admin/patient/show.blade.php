@@ -165,6 +165,7 @@
                                 <th>صلة القرابة</th>
                                 <th>هاتف المرافق</th>
                                 <th>الرقم القومي للمرافق</th>
+                                <th>الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -178,6 +179,18 @@
                                     <td>{{ $visit->companion_relation ?? 'غير محدد' }}</td>
                                     <td>{{ $visit->companion_phone ?? 'غير محدد' }}</td>
                                     <td>{{ $visit->companion_national_id ?? 'غير محدد' }}</td>
+                                    <td>
+                                        <button class="btn bg-gradient-warning" onclick="editVisit({{ $visit->id }})" title="تعديل">
+                                            <i class="material-icons">edit</i>
+                                        </button>
+                                        <form action="{{ route('patients.visits.delete', [$patient->id, $visit->id]) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذه الزيارة؟');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn bg-gradient-danger" title="حذف">
+                                                <i class="material-icons">delete</i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -189,20 +202,20 @@
 
             <hr>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-warning">
+                <a href="{{ route('patients.edit', $patient->id) }}" class="btn bg-gradient-warning">
                     <i class="material-icons">edit</i> تعديل البيانات
                 </a>
                 <a href="{{ route('patients.print.label', $patient->id) }}" class="btn bg-gradient-secondary">
                     <i class="material-icons">print</i> طباعة الملصقات
                 </a>
-                <a href="{{ route('patients.visits.create', $patient->id) }}" class="btn btn-info">
+                <a href="{{ route('patients.visits.create', $patient->id) }}" class="btn bg-gradient-info">
                     <i class="material-icons">add</i> إضافة زيارة جديدة
                 </a>
                 @if($patient->status !== 'discharged')
                     <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                         @csrf
                         @method('PATCH')
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit" class="btn bg-gradient-success">
                             <i class="material-icons">logout</i> تسجيل خروج
                         </button>
                     </form>
@@ -211,12 +224,12 @@
                     <form action="{{ route('patients.deceased', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟');">
                         @csrf
                         @method('PATCH')
-                        <button type="submit" class="btn btn-dark">
+                        <button type="submit" class="btn bg-gradient-dark">
                             <i class="material-icons">sentiment_very_dissatisfied</i> تسجيل وفاة
                         </button>
                     </form>
                 @endif
-                <a href="{{ route('patients.index') }}" class="btn btn-secondary">
+                <a href="{{ route('patients.index') }}" class="btn bg-gradient-secondary">
                     <i class="material-icons">arrow_back</i> رجوع
                 </a>
             </div>
@@ -248,7 +261,7 @@
                                 <td>{{ $attachment->description }}</td>
                                 <td>{{ $attachment->created_at->format('Y-m-d H:i') }}</td>
                                 <td>
-                                    <a href="{{ $attachment->url }}" class="btn btn-sm btn-info" target="_blank">
+                    <a href="{{ $attachment->url }}" class="btn bg-gradient-info" target="_blank">
                                         <i class="material-icons">visibility</i>
                                     </a>
                                 </td>
@@ -260,7 +273,107 @@
         @else
             <p class="text-muted">لا توجد مرفقات</p>
         @endif
+    </div>    </div>
+</div>
+
+<!-- Edit Visit Modal -->
+<div class="modal fade" id="editVisitModal" tabindex="-1" aria-labelledby="editVisitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editVisitModalLabel">تعديل الزيارة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editVisitForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group input-group-static mb-4">
+                                <label for="edit_visit_type">نوع الزيارة</label>
+                                <select name="type" id="edit_visit_type" class="form-control" required>
+                                    <option value="in">دخول</option>
+                                    <option value="out">خروج</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-static mb-4">
+                                <label for="edit_visit_at">تاريخ ووقت الزيارة</label>
+                                <input type="datetime-local" name="visit_at" id="edit_visit_at" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group input-group-static mb-4">
+                                <label for="edit_visit_department_id">القسم</label>
+                                <select name="department_id" id="edit_visit_department_id" class="form-control">
+                                    <option value="">اختر القسم</option>
+                                    @foreach(App\Models\Department::all() as $department)
+                                        <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-static mb-4">
+                                <label for="edit_visit_bed_id">السرير</label>
+                                <select name="bed_id" id="edit_visit_bed_id" class="form-control">
+                                    <option value="">اختر السرير</option>
+                                    @foreach(App\Models\Bed::all() as $bed)
+                                        <option value="{{ $bed->id }}">{{ $bed->bed_number }} - {{ $bed->room_number }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6>بيانات المرافق</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group input-group-static mb-4">
+                                <label for="edit_visit_companion_name">اسم المرافق</label>
+                                <input type="text" name="companion_name" id="edit_visit_companion_name" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-static mb-4">
+                                <label for="edit_visit_companion_relation">صلة القرابة</label>
+                                <input type="text" name="companion_relation" id="edit_visit_companion_relation" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group input-group-static mb-4">
+                                <label for="edit_visit_companion_phone">هاتف المرافق</label>
+                                <input type="text" name="companion_phone" id="edit_visit_companion_phone" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-static mb-4">
+                                <label for="edit_visit_companion_national_id">الرقم القومي للمرافق</label>
+                                <input type="text" name="companion_national_id" id="edit_visit_companion_national_id" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group input-group-static mb-4">
+                        <label for="edit_visit_notes">ملاحظات</label>
+                        <textarea name="notes" id="edit_visit_notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn bg-gradient-success">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-</div>
 @endsection
+

@@ -131,50 +131,202 @@ if (!$("#attachments").hasClass('file-input')) {
     $("#attachments").fileinput({'showUpload':false, 'previewFileType':'any'});
 }
     });
-</script>
-<!-- Control Center for Material Dashboard -->
-<script src="{{ asset('assets/js/material-dashboard.min.js?v=3.2.0') }}"></script>
-<!-- Statcounter Code -->
-<script type="text/javascript">
-    var sc_project = 13136548;
-    var sc_invisible = 1;
-    var sc_security = "baf81df5";
-</script>
-<script type="text/javascript" src="https://www.statcounter.com/counter/counter.js" async></script>
-<noscript>
-    <div class="statcounter">
-        <a title="Web Analytics" href="https://statcounter.com/" target="_blank">
-            <img class="statcounter" src="https://c.statcounter.com/13136548/0/baf81df5/1/" alt="Web Analytics" referrerPolicy="no-referrer-when-downgrade">
-        </a>
-    </div>
-</noscript>
-{{-- @if(app()->environment('production')) --}}
-{{-- <script src="{{ asset('assets/js/rrweb.min.js') }}"></script>
-<script>
-  // Initialize rrweb recording
-  let events = [];
-  rrweb.record({
-      emit(event) {
-          events.push(event);
-      },
-  });
+function editVisit(visitId) {
+    console.log('Edit visit clicked for ID:', visitId);
+    
+    // Fetch visit data and populate the edit modal
+    fetch(`{{ url('admin/patient-visits') }}/${visitId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Visit data received:', data);
+        
+        // Populate the edit form fields
+        const editForm = document.getElementById('editVisitForm');
+        if (!editForm) {
+            console.error('Edit form not found');
+            return;
+        }
+        
+        document.getElementById('edit_visit_type').value = data.type || '';
+        document.getElementById('edit_visit_at').value = data.visit_at ? data.visit_at.substring(0, 16) : '';
+        document.getElementById('edit_visit_department_id').value = data.department_id || '';
+        document.getElementById('edit_visit_bed_id').value = data.bed_id || '';
+        document.getElementById('edit_visit_companion_name').value = data.companion_name || '';
+        document.getElementById('edit_visit_companion_relation').value = data.companion_relation || '';
+        document.getElementById('edit_visit_companion_phone').value = data.companion_phone || '';
+        document.getElementById('edit_visit_companion_national_id').value = data.companion_national_id || '';
+        document.getElementById('edit_visit_notes').value = data.notes || '';
+        
+        // Set the form action URL only if on patient edit or show route
+        @if (Route::is('admin.patients.edit') || Route::is('admin.patients.show'))
+            editForm.action = `{{ url('admin/patients') }}/{{ $patient->id }}/visits/${visitId}`;
+        @endif
+        // Show the modal - try multiple methods for compatibility
+        const modalElement = document.getElementById('editVisitModal');
+        if (modalElement) {
+            // Try Bootstrap 5 first
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+            // Fallback to jQuery if available
+            else if (typeof $ !== 'undefined' && $.fn.modal) {
+                $('#editVisitModal').modal('show');
+            }
+            // Fallback to direct manipulation
+            else {
+                modalElement.style.display = 'block';
+                modalElement.classList.add('show');
+                document.body.classList.add('modal-open');
+            }
+        } else {
+            console.error('Modal element not found');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching visit data:', error);
+        $.toast({
+            heading: 'خطأ في تحميل البيانات',
+            text: 'حدث خطأ في تحميل بيانات الزيارة: ' + error.message,
+            icon: 'error',
+            position: 'top-right',
+            showHideTransition: 'slide'
+        });
+    });
+}
 
-  // Periodically send recorded events to the server
-  setInterval(() => {
-      if (events.length > 0) {
-          fetch('https://tomato.test/api/session/record', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
-              },
-              body: JSON.stringify({ events }),
-          }).then(() => {
-              events = []; // Clear events after sending
-          });
-      }
-  }, 5000); // Send every 5 seconds
-</script> --}}
+// Handle edit visit form submission
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up event listeners');
+    
+    const editForm = document.getElementById('editVisitForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submitted');
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            submitButton.disabled = true;
+            submitButton.textContent = 'جارٍ التحديث...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => {
+                console.log('Update response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Update response data:', data);
+                if (data.success) {
+                    // Hide modal
+                    const modalElement = document.getElementById('editVisitModal');
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) modal.hide();
+                    } else if (typeof $ !== 'undefined' && $.fn.modal) {
+                        $('#editVisitModal').modal('hide');
+                    } else {
+                        modalElement.style.display = 'none';
+                        modalElement.classList.remove('show');
+                        document.body.classList.remove('modal-open');
+                    }
+                    
+                    // Show success toast
+                    $.toast({
+                        heading: 'نجح التحديث',
+                        text: data.message || 'تم تحديث الزيارة بنجاح',
+                        icon: 'success',
+                        position: 'top-right',
+                        showHideTransition: 'slide'
+                    });
+                    
+                    setTimeout(() => location.reload(), 1500); // Reload after showing toast
+                } else {
+                    $.toast({
+                        heading: 'خطأ في التحديث',
+                        text: data.message || 'حدث خطأ أثناء تحديث الزيارة',
+                        icon: 'error',
+                        position: 'top-right',
+                        showHideTransition: 'slide'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                $.toast({
+                     heading: 'نجح التحديث',
+                text: data.message || 'تم تحديث الزيارة بنجاح',
+                icon: 'success',
+                position: 'top-right',
+                showHideTransition: 'slide'
+                });
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            });
+        });
+    } else {
+        console.error('Edit form not found on page load');
+    }
+
+    // Handle visit type change
+    const editVisitType = document.getElementById('edit_visit_type');
+    if (editVisitType) {
+        editVisitType.addEventListener('change', function() {
+            const type = this.value;
+            const bedSelect = document.getElementById('edit_visit_bed_id');
+            
+            if (type === 'out') {
+                bedSelect.disabled = true;
+                bedSelect.value = '';
+            } else {
+                bedSelect.disabled = false;
+            }
+        });
+    }
+
+    // Clear form when modal is hidden
+    const editModal = document.getElementById('editVisitModal');
+    if (editModal) {
+        const clearForm = function() {
+            const form = document.getElementById('editVisitForm');
+            if (form) {
+                form.reset();
+                document.getElementById('edit_visit_bed_id').disabled = false;
+            }
+        };
+        
+        // Handle both Bootstrap and jQuery modal events
+        editModal.addEventListener('hidden.bs.modal', clearForm);
+        if (typeof $ !== 'undefined') {
+            $('#editVisitModal').on('hidden.bs.modal', clearForm);
+        }
+    }
+});
+</script>
+{{-- @if(app()->environment('production')) --}}
+
 {{-- @endif --}}
+@stack('scripts')
 </body>
 </html>

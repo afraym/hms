@@ -208,7 +208,7 @@
                                         <img src="{{ asset('assets/img/uhi.png') }}" alt="UHI Icon" style="width: 20px; height: 25px; vertical-align: middle;">
                                         :
                                     </label>
-                                    <input type="text" name="uhi_number" id="uhi_number" class="form-control" value="{{ old('uhi_number', $patient->uhi_number ?? '') }}">
+                                    <input type="text" name="uhi_number" id="uhi_number" class="form-control" value="{{ old('uhi_number') }}">
                                 </div>
                             </div>
 
@@ -255,11 +255,11 @@
                                 <label class="form-label d-block mb-2">الجنس</label>
                                 <div class="d-flex align-items-center">
                                     <div class="form-check me-4">
-                                        <input class="form-check-input" type="radio" name="gender" id="maleRadio" value="male" {{ old('gender', $patient->gender ?? '') == 'ذكر' ? 'checked' : '' }}>
+                                        <input class="form-check-input" type="radio" name="gender" id="maleRadio" value="male" {{ old('gender') == 'male' ? 'checked' : '' }}>
                                         <label class="form-check-label" for="maleRadio">ذكر</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="gender" id="femaleRadio" value="female" {{ old('gender', $patient->gender ?? '') == 'أنثى' ? 'checked' : '' }}>
+                                        <input class="form-check-input" type="radio" name="gender" id="femaleRadio" value="female" {{ old('gender') == 'female' ? 'checked' : '' }}>
                                         <label class="form-check-label" for="femaleRadio">أنثى</label>
                                     </div>
                                 </div>
@@ -292,8 +292,8 @@
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-dark">حفظ</button>
-                        <a href="{{ route('patients.index') }}" class="btn btn-outline-secondary">إلغاء</a>
+                        <button type="submit" class="btn bg-gradient-dark">حفظ</button>
+                        <a href="{{ route('patients.index') }}" class="btn bg-gradient-secondary">إلغاء</a>
                     </form>
                 </div>
             </div>

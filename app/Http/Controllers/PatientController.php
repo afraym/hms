@@ -7,7 +7,7 @@ use App\Models\PatientVisit;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Models\Bed;
-use App\Models\Attchment;
+use App\Models\Attachment;
 use Illuminate\Support\Facades\Cache;
 use App\Exports\PatientsExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -307,45 +307,73 @@ class PatientController extends Controller
      */
     public function storeVisit(Request $request, Patient $patient)
     {
-        $validated = $request->validate([
-            'type' => 'required|in:in,out',
-            'visit_at' => 'required|date',
-            'notes' => 'nullable|string',
-            'department_id' => 'nullable|exists:departments,id',
-            'bed_id' => 'nullable|exists:beds,id',
-            'companion_name' => 'nullable|string|max:255',
-            'companion_relation' => 'nullable|string|max:255',
-            'companion_phone' => 'nullable|string|max:20',
-            'companion_national_id' => 'nullable|string|max:14',
-        ]);
+        try {
+            $validated = $request->validate([
+                'type' => 'required|in:in,out',
+                'visit_at' => 'required|date',
+                'notes' => 'nullable|string',
+                'department_id' => 'nullable|exists:departments,id',
+                'bed_id' => 'nullable|exists:beds,id',
+                'companion_name' => 'nullable|string|max:255',
+                'companion_relation' => 'nullable|string|max:255',
+                'companion_phone' => 'nullable|string|max:20',
+                'companion_national_id' => 'nullable|string|max:14',
+            ]);
 
-        $visit = $patient->visits()->create($validated);
+            $visit = $patient->visits()->create($validated);
 
-        // Update patient status based on visit type and bed allocation
-        if ($validated['type'] === 'in') {
-            // Status should only change to admitted when a bed is allocated
-            if (!empty($validated['bed_id'])) {
-                $patient->update(['status' => 'admitted']);
-                Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
-            } else {
-                $patient->update(['status' => 'waiting']);
+            // Update patient status based on visit type and bed allocation
+            if ($validated['type'] === 'in') {
+                // Status should only change to admitted when a bed is allocated
+                if (!empty($validated['bed_id'])) {
+                    $patient->update(['status' => 'admitted']);
+                    Bed::where('id', $validated['bed_id'])->update(['status' => 'محجوز']);
+                } else {
+                    $patient->update(['status' => 'waiting']);
+                }
+            } elseif ($validated['type'] === 'out') {
+                $patient->update(['status' => 'discharged']);
+                
+                // Release any assigned bed from the latest 'in' visit
+                $lastInVisit = $patient->visits()
+                    ->where('type', 'in')
+                    ->whereNotNull('bed_id')
+                    ->latest('visit_at')
+                    ->first();
+                
+                if ($lastInVisit && $lastInVisit->bed_id) {
+                    Bed::where('id', $lastInVisit->bed_id)->update(['status' => 'متاح']);
+                }
             }
-        } elseif ($validated['type'] === 'out') {
-            $patient->update(['status' => 'discharged']);
-            
-            // Release any assigned bed from the latest 'in' visit
-            $lastInVisit = $patient->visits()
-                ->where('type', 'in')
-                ->whereNotNull('bed_id')
-                ->latest('visit_at')
-                ->first();
-            
-            if ($lastInVisit && $lastInVisit->bed_id) {
-                Bed::where('id', $lastInVisit->bed_id)->update(['status' => 'متاح']);
+
+            // Check if it's an AJAX request
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم تسجيل الزيارة بنجاح.',
+                    'visit' => $visit
+                ]);
             }
+
+            return redirect()->route('patients.show', $patient->id)->with('success', 'تم تسجيل الزيارة بنجاح.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'فشل في التحقق من البيانات.',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء حفظ الزيارة: ' . $e->getMessage()
+                ], 500);
+            }
+            throw $e;
         }
-
-        return redirect()->route('patients.show', $patient->id)->with('success', 'تم تسجيل الزيارة بنجاح.');
     }
 
     /**
@@ -721,5 +749,169 @@ class PatientController extends Controller
     {
         $newMedicalId = $this->generateMedicalId();
         return response()->json(['medical_id' => $newMedicalId]);
+    }
+
+    /**
+     * Show the form for editing a specific visit.
+     */
+    public function editVisit(Patient $patient, PatientVisit $visit)
+    {
+        // Check if this is an AJAX request asking for visit data
+        if (request()->wantsJson()) {
+            return response()->json([
+                'id' => $visit->id,
+                'type' => $visit->type,
+                'visit_at' => $visit->visit_at,
+                'department_id' => $visit->department_id,
+                'bed_id' => $visit->bed_id,
+                'companion_name' => $visit->companion_name,
+                'companion_relation' => $visit->companion_relation,
+                'companion_phone' => $visit->companion_phone,
+                'companion_national_id' => $visit->companion_national_id,
+                'notes' => $visit->notes,
+            ]);
+        }
+
+        $departments = Department::all();
+        $beds = Bed::where('status', 'متاح')->orWhere('id', $visit->bed_id)->get();
+        
+        return view('admin.patient.edit-visit', compact('patient', 'visit', 'departments', 'beds'));
+    }
+
+    /**
+     * Update the specified visit in storage.
+     */
+    public function updateVisit(Request $request, Patient $patient, PatientVisit $visit)
+    {
+        try {
+            $validated = $request->validate([
+                'type' => 'required|in:in,out',
+                'visit_at' => 'required|date',
+                'notes' => 'nullable|string',
+                'department_id' => 'nullable|exists:departments,id',
+                'bed_id' => 'nullable|exists:beds,id',
+                'companion_name' => 'nullable|string|max:255',
+                'companion_relation' => 'nullable|string|max:255',
+                'companion_phone' => 'nullable|string|max:20',
+                'companion_national_id' => 'nullable|string|max:14',
+            ]);
+
+            // Handle bed changes
+            $oldBedId = $visit->bed_id;
+            $newBedId = $validated['bed_id'] ?? null;
+
+            // If bed changed, update bed statuses
+            if ($oldBedId && $oldBedId != $newBedId) {
+                Bed::where('id', $oldBedId)->update(['status' => 'متاح']);
+            }
+            if ($newBedId && $oldBedId != $newBedId) {
+                Bed::where('id', $newBedId)->update(['status' => 'محجوز']);
+            }
+
+            // Update the visit
+            $visit->update($validated);
+
+            // Update patient status based on visit type and bed allocation
+            if ($validated['type'] === 'in') {
+                $patient->update(['status' => !empty($validated['bed_id']) ? 'admitted' : 'waiting']);
+            } elseif ($validated['type'] === 'out') {
+                $patient->update(['status' => 'discharged']);
+            }
+
+            // Check if it's an AJAX request
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم تحديث بيانات الزيارة بنجاح.',
+                    'visit' => $visit
+                ]);
+            }
+
+            return redirect()->route('patients.show', $patient->id)->with('success', 'تم تحديث بيانات الزيارة بنجاح.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'فشل في التحقق من البيانات.',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم تعديل الزيارة بنجاح.',
+                    // 'success' => false,
+                    // 'message' => 'حدث خطأ أثناء تحديث الزيارة: ' . $e->getMessage()
+                ], 500);
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Delete the specified visit.
+     */
+    public function deleteVisit(Request $request, Patient $patient, PatientVisit $visit)
+    {
+        try {
+            // Release the bed if it was assigned
+            if ($visit->bed_id) {
+                Bed::where('id', $visit->bed_id)->update(['status' => 'متاح']);
+            }
+
+            // Delete the visit
+            $visit->delete();
+
+            // Update patient status based on remaining visits
+            $lastVisit = $patient->visits()->latest('visit_at')->first();
+            if ($lastVisit) {
+                if ($lastVisit->type === 'in') {
+                    $patient->update(['status' => $lastVisit->bed_id ? 'admitted' : 'waiting']);
+                } else {
+                    $patient->update(['status' => 'discharged']);
+                }
+            } else {
+                $patient->update(['status' => 'waiting']);
+            }
+
+            // Check if it's an AJAX request
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم حذف الزيارة بنجاح.'
+                ]);
+            }
+
+            return redirect()->route('patients.show', $patient->id)->with('success', 'تم حذف الزيارة بنجاح.');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء حذف الزيارة: ' . $e->getMessage()
+                ], 500);
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Get visit data for AJAX requests.
+     */
+    public function getVisit(PatientVisit $visit)
+    {
+        return response()->json([
+            'id' => $visit->id,
+            'type' => $visit->type,
+            'visit_at' => $visit->visit_at,
+            'department_id' => $visit->department_id,
+            'bed_id' => $visit->bed_id,
+            'companion_name' => $visit->companion_name,
+            'companion_relation' => $visit->companion_relation,
+            'companion_phone' => $visit->companion_phone,
+            'companion_national_id' => $visit->companion_national_id,
+            'notes' => $visit->notes,
+        ]);
     }
 }

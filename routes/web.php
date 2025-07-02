@@ -27,7 +27,11 @@ Route::view('profile', 'profile')
 
             // Patient visit routes
             Route::get('patients/{patient}/visits/create', [PatientController::class, 'createVisit'])->name('patients.visits.create');
-            Route::post('patients/{patient}/visits', [PatientVisitController::class, 'storeFromPatient'])->name('patients.visits.store');
+            Route::post('patients/{patient}/visits', [PatientController::class, 'storeVisit'])->name('patients.visits.store');
+            Route::get('patients/{patient}/visits/{visit}/edit', [PatientController::class, 'editVisit'])->name('patients.visits.edit');
+            Route::put('patients/{patient}/visits/{visit}', [PatientController::class, 'updateVisit'])->name('patients.visits.update');
+            Route::delete('patients/{patient}/visits/{visit}', [PatientController::class, 'deleteVisit'])->name('patients.visits.delete');
+            Route::get('patient-visits/{visit}', [PatientController::class, 'getVisit'])->name('patient-visits.show');
 
             // Route to print a single patient label
             Route::get('patients/{patient}/label', [PatientController::class, 'printLabels'])->name('patients.print.label');
