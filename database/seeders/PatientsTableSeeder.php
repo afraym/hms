@@ -39,6 +39,40 @@ class PatientsTableSeeder extends Seeder
             'وقت الخروج' => 'discharge_time',
         ];
 
+        // First pass: collect all rows and find first visit date for each medical ID
+        $allRows = [];
+        $medicalIdFirstVisit = [];
+        
+        while (($row = fgetcsv($file)) !== false) {
+            $rowAssoc = array_combine($header, $row);
+            $allRows[] = $rowAssoc;
+            
+            $medicalId = $rowAssoc['رقم مسلسل المريض'] ?? null;
+            
+            // Extract date from medical ID if it follows the format "11803{yy}{mm}{dd}xxx"
+            $firstVisitDate = $this->extractDateFromMedicalId($medicalId);
+            
+            // Debug: Log the medical ID and extracted date for first few records
+            static $debugCount = 0;
+            if ($debugCount < 5) {
+                $this->command->info("Medical ID: '$medicalId' -> Extracted Date: " . ($firstVisitDate ? $firstVisitDate->format('Y-m-d H:i:s') : 'NULL'));
+                $debugCount++;
+            }
+            
+            if ($medicalId && $firstVisitDate) {
+                if (!isset($medicalIdFirstVisit[$medicalId])) {
+                    $medicalIdFirstVisit[$medicalId] = $firstVisitDate;
+                } else {
+                    // Keep the earliest visit date using Carbon comparison
+                    if ($firstVisitDate->lt($medicalIdFirstVisit[$medicalId])) {
+                        $medicalIdFirstVisit[$medicalId] = $firstVisitDate;
+                    }
+                }
+            }
+        }
+        
+        fclose($file);
+
         $insertedPatientsCount = 0;
         $insertedVisitsCount = 0;
 
@@ -46,13 +80,15 @@ class PatientsTableSeeder extends Seeder
         $repeatedEntries = [];
         $processedNationalIds = [];
         $duplicateEntries = [];
+        $processedMedicalIds = []; // Track which medical IDs have been processed as patients
 
-        while (($row = fgetcsv($file)) !== false) {
-            $rowAssoc = array_combine($header, $row); // Create associative array for easier access
-
-            // Extract patient data
+        // Second pass: process all rows with correct first visit dates
+        foreach ($allRows as $rowAssoc) {
+            $currentMedicalId = $rowAssoc['رقم مسلسل المريض'] ?? null;
+            
+            // Extract patient data using the first visit date for this medical ID
             $patientData = [
-                'medical_id' => $rowAssoc['رقم مسلسل المريض'] ?? null,
+                'medical_id' => $currentMedicalId,
                 'full_name' => $rowAssoc['الاسم رباعي'] ?? null,
                 'gender' => $this->verifyGenderFromNationalId($rowAssoc['الرقم القومي'] ?? null),
                 'national_id' => $this->cleanNationalId($rowAssoc['الرقم القومي'] ?? null),
@@ -60,12 +96,20 @@ class PatientsTableSeeder extends Seeder
                 'phone' => $this->cleanPhoneNumber($rowAssoc['رقم التليفون'] ?? null),
                 'date_of_birth' => $this->extractBirthdateFromNationalId($rowAssoc['الرقم القومي'] ?? null),
                 'governorate' => $this->extractGovernorateFromNationalId($rowAssoc['الرقم القومي'] ?? null),
-                'created_at' => now(),
+                'created_at' => $medicalIdFirstVisit[$currentMedicalId] ?? now(), // Use first visit date as patient creation date
                 'updated_at' => now(),
             ];
 
-            // Check if the patient already exists by `national_id`
-            $existingPatient = Patient::where('national_id', $patientData['national_id'])->first();
+            // Check if the patient already exists by `national_id` (only if national_id is not null)
+            $existingPatient = null;
+            if (!empty($patientData['national_id'])) {
+                $existingPatient = Patient::where('national_id', $patientData['national_id'])->first();
+            }
+            
+            // Also check if we already processed this medical_id as a patient
+            if (!$existingPatient && !empty($currentMedicalId)) {
+                $existingPatient = Patient::where('medical_id', $currentMedicalId)->first();
+            }
 
             if ($existingPatient) {
                 // Use the first medical_id for repeated national_id
@@ -82,27 +126,43 @@ class PatientsTableSeeder extends Seeder
                 $insertedVisitsCount++;
             } else {
                 // If the patient does not exist, create the patient and the initial visit
-                // If the medical_id already exists, generate a unique one
-                if (Patient::where('medical_id', $patientData['medical_id'])->exists()) {
-                    $patientData['medical_id'] = 'MED-' . uniqid() . '-'. $patientData['medical_id'];
+                // But only if we haven't already processed this medical_id
+                if (!in_array($currentMedicalId, $processedMedicalIds)) {
+                    // If the medical_id already exists in database, generate a unique one
+                    if (Patient::where('medical_id', $patientData['medical_id'])->exists()) {
+                        $patientData['medical_id'] = 'MED-' . uniqid() . '-'. $patientData['medical_id'];
+                    }
+                    
+                    // Save the patient even if national_id is null
+                    try {
+                        $newPatient = Patient::create($patientData);
+                        $visitData = $this->extractVisitData($rowAssoc, $newPatient->id);
+                        PatientVisit::create($visitData);
+                        $insertedPatientsCount++;
+                        $insertedVisitsCount++;
+                        
+                        // Mark this medical_id as processed
+                        $processedMedicalIds[] = $currentMedicalId;
+                    } catch (\Exception $e) {
+                        $this->command->error("Failed to create patient with medical_id: {$patientData['medical_id']}. Error: " . $e->getMessage());
+                        continue; // Skip this record and continue with the next
+                    }
+                } else {
+                    // Patient with this medical_id already exists, just add a visit
+                    $existingPatientByMedicalId = Patient::where('medical_id', $currentMedicalId)->first();
+                    if ($existingPatientByMedicalId) {
+                        $visitData = $this->extractVisitData($rowAssoc, $existingPatientByMedicalId->id);
+                        PatientVisit::create($visitData);
+                        $insertedVisitsCount++;
+                    }
                 }
-                $newPatient = Patient::create($patientData);
-                $visitData = $this->extractVisitData($rowAssoc, $newPatient->id);
-                PatientVisit::create($visitData);
-                $insertedPatientsCount++;
-                $insertedVisitsCount++;
             }
 
-            // Check for duplicate medical_id
-            if (Patient::where('medical_id', $patientData['medical_id'])->exists()) {
-                $duplicateEntries[] = $rowAssoc; // Store duplicate entry for review
+            // Mark the national_id as processed (only if it's not null)
+            if (!empty($patientData['national_id'])) {
+                $processedNationalIds[] = $patientData['national_id'];
             }
-
-            // Mark the national_id as processed
-            $processedNationalIds[] = $patientData['national_id'];
         }
-
-        fclose($file);
 
         // Save repeated entries to a separate CSV file
         $this->saveRepeatedEntries($header, $repeatedEntries);
@@ -193,7 +253,7 @@ class PatientsTableSeeder extends Seeder
             'companion_relation' => $rowAssoc['صلة القرابة'] ?? null,
             'companion_phone' => $this->cleanPhoneNumber($rowAssoc['رقم تليفون المرافق'] ?? null),
             'companion_national_id' => $this->cleanNationalId($rowAssoc['الرقم القومي للمرافق'] ?? null),
-            'visit_at' => $this->transformDate($rowAssoc['وقت الدخول'] ?? null),
+            'visit_at' => $this->transformDate($rowAssoc['وقت الدخول'] ?? null), // Now returns Carbon instance
             'notes' => null,
             'created_at' => now(),
             'updated_at' => now(),
@@ -202,8 +262,49 @@ class PatientsTableSeeder extends Seeder
 
     private function getDepartmentId($departmentName)
     {
+        if (empty($departmentName)) {
+            return null;
+        }
+
+        // First, try to find the department as is
         $department = DB::table('departments')->where('name', 'LIKE', "%{$departmentName}%")->first();
-        return $department ? $department->id : null;
+        
+        if ($department) {
+            return $department->id;
+        }
+
+        // If not found, clean the department name by removing unwanted text and numbers
+        $cleanedName = $departmentName;
+        
+        // Remove "قسم" and "دخول مشترك" from the name
+        $cleanedName = str_replace(['قسم', 'دخول مشترك'], '', $cleanedName);
+        
+        // Remove numbers from the name
+        $cleanedName = preg_replace('/\d+/', '', $cleanedName);
+        
+        // Trim whitespace
+        $cleanedName = trim($cleanedName);
+        
+        if (!empty($cleanedName)) {
+            // Check if the cleaned name exists
+            $department = DB::table('departments')->where('name', 'LIKE', "%{$cleanedName}%")->first();
+            
+            if ($department) {
+                return $department->id;
+            }
+
+            // If still not found, create a new department with the cleaned name
+            $newDepartmentId = DB::table('departments')->insertGetId([
+                'name' => $cleanedName,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $this->command->info("Created new department: {$cleanedName} with ID: {$newDepartmentId}");
+            return $newDepartmentId;
+        }
+
+        return null;
     }
 
     private function transformDate($value)
@@ -213,7 +314,8 @@ class PatientsTableSeeder extends Seeder
         }
 
         try {
-            return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
+            // Parse the date and return as Carbon instance (Laravel timestamp)
+            return \Carbon\Carbon::parse($value);
         } catch (\Exception $e) {
             return now();
         }
@@ -222,13 +324,27 @@ class PatientsTableSeeder extends Seeder
     private function extractBirthdateFromNationalId($nationalId)
     {
         if (strlen($nationalId) === 14) {
-            $yearPrefix = substr($nationalId, 0, 1) === '2' ? '19' : '20';
-            $year = $yearPrefix . substr($nationalId, 1, 2);
-            $month = substr($nationalId, 3, 2);
-            $day = substr($nationalId, 5, 2);
+            // Extract year from positions 6-7 (index 5-6)
+            $year = substr($nationalId, 5, 2);
+            // Extract month from positions 8-9 (index 7-8)
+            $month = substr($nationalId, 7, 2);
+            // Extract day from positions 10-11 (index 9-10)
+            $day = substr($nationalId, 9, 2);
+            
+            // Determine century based on first digit
+            $century = substr($nationalId, 0, 1);
+            $fullYear = '';
+            if ($century === '2') {
+                $fullYear = '19' . $year;
+            } elseif ($century === '3') {
+                $fullYear = '20' . $year;
+            } else {
+                $fullYear = '20' . $year; // Default to 20xx for other cases
+            }
 
             try {
-                return \Carbon\Carbon::createFromFormat('Y-m-d', "$year-$month-$day")->format('Y-m-d');
+                // Return as Carbon date instance
+                return \Carbon\Carbon::createFromFormat('Y-m-d', "$fullYear-$month-$day");
             } catch (\Exception $e) {
                 return null;
             }
@@ -269,7 +385,8 @@ class PatientsTableSeeder extends Seeder
             '35' => 'جنوب سيناء',
         ];
 
-        $governorateCode = substr($nationalId, 7, 2);
+        // Extract governorate code from positions 12-13 (index 11-12)
+        $governorateCode = substr($nationalId, 11, 2);
 
         return $governorateCodes[$governorateCode] ?? 'غير معروف';
     }
@@ -279,6 +396,49 @@ class PatientsTableSeeder extends Seeder
         if (strlen($nationalId) === 14) {
             $genderDigit = substr($nationalId, 12, 1);
             return $genderDigit % 2 === 0 ? 'female' : 'male';
+        }
+
+        return null;
+    }
+
+    private function extractDateFromMedicalId($medicalId)
+    {
+        if (!$medicalId || strlen($medicalId) < 11) {
+            return null;
+        }
+
+        try {
+            // Check if medical ID follows the format "11803{yy}{mm}{dd}xxx"
+            if (substr($medicalId, 0, 5) === '11803') {
+                // Extract date parts from positions 5-10 (yy mm dd)
+                $year = substr($medicalId, 5, 2);
+                $month = substr($medicalId, 7, 2);
+                $day = substr($medicalId, 9, 2);
+                
+                // Validate extracted values
+                if (!is_numeric($year) || !is_numeric($month) || !is_numeric($day)) {
+                    return null;
+                }
+                
+                // Convert 2-digit year to 4-digit year
+                // Assume years 70-99 are 1970-1999, years 00-69 are 2000-2069
+                $fullYear = $year >= 70 ? '19' . $year : '20' . $year;
+                
+                // Validate date values
+                if ($month < 1 || $month > 12 || $day < 1 || $day > 31) {
+                    return null;
+                }
+                
+                // Validate year range
+                if ($fullYear < 1970 || $fullYear > date('Y')) {
+                    return null;
+                }
+
+                // Return as Carbon date instance (set time to beginning of day)
+                return \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', "$fullYear-$month-$day 00:00:00");
+            }
+        } catch (\Exception $e) {
+            return null;
         }
 
         return null;

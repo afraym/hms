@@ -7,6 +7,53 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <!-- jQuery Toast Plugin CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css" rel="stylesheet">
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Custom styling for Select2 with Arabic */
+    .select2-container--default .select2-selection--single {
+        height: 40px;
+        border: 1px solid #d2d6da;
+        border-radius: 0.375rem;
+        padding: 6px 12px;
+        direction: rtl;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #495057;
+        line-height: 28px;
+        padding-right: 0;
+        padding-left: 20px;
+        text-align: right;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px;
+        right: auto;
+        left: 1px;
+    }
+    
+    .select2-dropdown {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    .select2-container--default .select2-results__option {
+        text-align: right;
+        padding: 6px 12px;
+    }
+    
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        text-align: right;
+        direction: rtl;
+    }
+    
+    /* Focus styling */
+    .select2-container--default.select2-container--focus .select2-selection--single {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
 <!-- Custom styles for file upload zone -->
 <style>
 .file-drop-zone {
@@ -127,7 +174,8 @@
 
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="department_id">القسم </label>
+                                    <label for="department_id"> القسم </label> <span style="padding-right: 1%;" class="material-icons-round">domain
+</span> 
                                     <select name="department_id" id="department_id" class="form-control @error('department_id') is-invalid @enderror" >
                                         <option value="">اختر القسم</option>
                                         @foreach($departments as $department)
@@ -142,7 +190,9 @@
                             
                             <div class="col-md-6 mb-3">
                                 <div class="input-group input-group-static mb-3">
-                                    <label for="bed_id" class="ms-0">اختر السرير</label>
+                                    <label for="bed_id" class="ms-0">اختر السرير</label> <span style="padding-right: 1%;" class="material-icons-round">
+hotel
+</span>
                                     <select class="form-control @error('bed_id') is-invalid @enderror" id="bed_id" name="bed_id">
                                         <option value="">اختر السرير</option>
                                         @foreach(\App\Models\Bed::where('status', 'متاح')->get() as $bed)
@@ -411,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             fillAndMark(document.getElementById('phone'), patient.phone);
                             fillAndMark(document.getElementById('address'), patient.address);
                             fillAndMark(document.getElementById('governorate'), patient.governorate);
-                            fillAndMark(document.getElementById('medical_id'), patient.medical_id);
+                            fillAndMark(document.getElementById('medicalId'), patient.medical_id);
                             fillAndMark(document.getElementById('uhi_number'), patient.uhi_number);
 
                             // Handle birth date properly

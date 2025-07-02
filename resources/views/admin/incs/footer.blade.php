@@ -87,7 +87,7 @@
 <script src="{{ asset('assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/chartjs.min.js') }}"></script>
 <script src="{{ asset('assets/js/jquery-3.6.0.min.js') }}"></script>
-
+<script src="{{ asset('assets/js/material-dashboard.min.js') }}"></script>
 <script src="{{ asset('assets/js/fileinput.min.js') }}"></script>
 <script src="{{ asset('assets/js/locales/ar.js') }}"></script>
 <!-- jQuery Toast Plugin -->
@@ -325,6 +325,71 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Custom styling for Select2 with Arabic */
+    .select2-container--default .select2-selection--single {
+        height: 40px;
+        border: 1px solid #d2d6da;
+        border-radius: 0.375rem;
+        padding: 6px 12px;
+        direction: rtl;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #495057;
+        line-height: 28px;
+        padding-right: 0;
+        padding-left: 20px;
+        text-align: right;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px;
+        right: auto;
+        left: 1px;
+    }
+    
+    .select2-dropdown {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    .select2-container--default .select2-results__option {
+        text-align: right;
+        padding: 6px 12px;
+    }
+    
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        text-align: right;
+        direction: rtl;
+    }
+    
+    /* Focus styling */
+    .select2-container--default.select2-container--focus .select2-selection--single {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+
+<!-- Select2 JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for department select if it exists
+    if ($('#department_id').length) {
+        $('#department_id').select2({
+            placeholder: 'اختر القسم',
+            allowClear: true,
+            width: '100%',
+            dir: 'rtl' // Right-to-left for Arabic
+        });
+    }
+});
+</script>
+
 {{-- @if(app()->environment('production')) --}}
 
 {{-- @endif --}}
