@@ -232,16 +232,16 @@
                                             </small>
                                         </td>
                                         <td>
-                                            <a href="{{ $attachment->url }}" class="btn btn-sm btn-outline-primary" target="_blank" title="عرض">
+                                            <a href="{{ $attachment->url }}" class="btn  btn-outline-primary" target="_blank" title="عرض">
                                                 <i class="material-icons">visibility</i>
                                             </a>
-                                            <a href="{{ $attachment->url }}" class="btn btn-sm btn-outline-success" download="{{ $attachment->original_name }}" title="تحميل">
+                                            <a href="{{ $attachment->url }}" class="btn  btn-outline-success" download="{{ $attachment->original_name }}" title="تحميل">
                                                 <i class="material-icons">download</i>
                                             </a>
                                             <form action="{{ route('patients.attachments.delete', [$patient->id, $attachment->id]) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('هل أنت متأكد من حذف هذا المرفق؟')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">
+                                                <button type="submit" class="btn  btn-outline-danger" title="حذف">
                                                     <i class="material-icons">delete</i>
                                                 </button>
                                             </form>
@@ -261,7 +261,7 @@
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5>إدارة دخول وخروج المريض</h5>
-            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVisitModal">
+            <button type="button" class="btn btn-primary " data-bs-toggle="modal" data-bs-target="#addVisitModal">
                 <i class="material-icons">add</i> إضافة جديد
             </button>
         </div>
@@ -333,13 +333,13 @@
                                     </td>
                                     <td>{{ Str::limit($visit->notes ?? 'لا توجد', 30) }}</td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editVisit({{ $visit->id }})">
+                                        <button type="button" class="btn  btn-outline-primary" onclick="editVisit({{ $visit->id }})">
                                             <i class="material-icons">edit</i>
                                         </button>
                                         <form action="{{ route('patient_visits.destroy', $visit->id) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('هل أنت متأكد من حذف هذا السجل؟')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <button type="submit" class="btn  btn-outline-danger">
                                                 <i class="material-icons">delete</i>
                                             </button>
                                         </form>
