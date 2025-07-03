@@ -16,7 +16,7 @@ class Patient extends Model
         'full_name',  // Replace individual name fields
         'email', 'phone', 'national_id', 'date_of_birth', 'gender',
         'status', 'medical_id', 'uhi_number', 'address', 'governorate', 'created_by','created_at',
-        'notes', 'blood_type', 'marital_status', 'occupation', 'is_active',
+        'notes','visit_notes', 'blood_type', 'marital_status', 'occupation', 'is_active',
     ];
 
     // أضف هذا لتحويل الحقل تلقائياً إلى كائن DateTime

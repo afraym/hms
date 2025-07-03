@@ -95,7 +95,7 @@
 <script src="{{ asset('assets/js/jquery.toast.min.js') }}"></script>
 
 
-{{-- Before closing body --}}
+
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

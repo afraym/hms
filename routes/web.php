@@ -7,6 +7,7 @@ use App\Http\Controllers\PatientVisitController;
 use App\Http\Controllers\ProxyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\AttachmentController; 
 
 Route::redirect('/', '/admin/patients/create');
 
@@ -49,7 +50,7 @@ Route::view('profile', 'profile')
         Route::patch('/patients/{patient}/deceased', [PatientController::class, 'markDeceased'])->name('patients.deceased');
         Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
         Route::get('/patients/ajax-search', [PatientController::class, 'ajaxSearch'])->name('patients.ajaxSearch');
-        Route::post('patients/{patient}/attachments', [PatientController::class, 'uploadAttachment'])->name('patients.attachments.upload');
+        Route::post('patients/{patient}/attachments', [AttachmentController::class, 'store'])->name('patients.attachments.upload');
         Route::delete('patients/{patient}/attachments/{attachment}', [PatientController::class, 'deleteAttachment'])->name('patients.attachments.delete');
         Route::post('/api/sync', [PatientController::class, 'sync'])->name('api.sync');
         Route::get('/generate-medical-id', [PatientController::class, 'generateNewMedicalId'])->name('generate.medical.id');

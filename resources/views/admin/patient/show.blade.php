@@ -165,7 +165,8 @@
                                 <th>صلة القرابة</th>
                                 <th>هاتف المرافق</th>
                                 <th>الرقم القومي للمرافق</th>
-                                <th>الإجراءات</th>
+                                <th>ملاحظات</th>
+                                <!-- <th>الإجراءات</th> -->
                             </tr>
                         </thead>
                         <tbody>
@@ -179,7 +180,8 @@
                                     <td>{{ $visit->companion_relation ?? 'غير محدد' }}</td>
                                     <td>{{ $visit->companion_phone ?? 'غير محدد' }}</td>
                                     <td>{{ $visit->companion_national_id ?? 'غير محدد' }}</td>
-                                    <td>
+                                    <td>{{ Str::limit($visit->notes ?? 'لا توجد', 30) }}</td>
+                                    <!-- <td>
                                         <button class="btn bg-gradient-warning" onclick="editVisit({{ $visit->id }})" title="تعديل">
                                             <i class="material-icons">edit</i>
                                         </button>
@@ -190,8 +192,9 @@
                                                 <i class="material-icons">delete</i>
                                             </button>
                                         </form>
-                                    </td>
+                                    </td> -->
                                 </tr>
+                                
                             @endforeach
                         </tbody>
                     </table>

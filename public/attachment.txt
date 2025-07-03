@@ -1,0 +1,49 @@
+<div class="card">
+                    <div class="card-header">
+                        <h6>رفع مرفقات المريض</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- File Upload -->
+                        <div class="input-group input-group-static mb-4">
+                            <label for="attachments">اختر الملفات</label>
+                            <input id="attachments" name="attachments[]" type="file" 
+                                   class="form-control @error('attachments') is-invalid @enderror @error('attachments.*') is-invalid @enderror" 
+                                   multiple 
+                                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.PDF,.DOC,.DOCX,.JPG,.JPEG,.PNG,.GIF"
+                                   required>
+                            @error('attachments')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @error('attachments.*')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="input-group input-group-static mb-4">
+                            <label for="description">وصف المرفق (اختياري)</label>
+                            <input type="text" name="description" id="description" 
+                                   class="form-control @error('description') is-invalid @enderror" 
+                                   placeholder="وصف المرفق" value="{{ old('description') }}">
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <!-- File Info -->
+                        <div class="alert alert-info" role="alert">
+                            <i class="material-icons opacity-10">info</i>
+                            <strong>ملاحظة:</strong> الحد الأقصى لحجم الملف 10 ميجابايت. الأنواع المسموحة: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF
+                        </div>
+                        
+                        <!-- Selected Files Preview -->
+                        <div id="filePreview" class="mb-3" style="display: none;">
+                            <h6>الملفات المختارة:</h6>
+                            <div id="fileList"></div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success" id="uploadBtn">
+                            <i class="material-icons">cloud_upload</i> رفع المرفقات
+                        </button>
+                    </div>
+                </div>

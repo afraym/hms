@@ -13,6 +13,8 @@ use App\Exports\PatientsExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\PatientsImport;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
 
 class PatientController extends Controller
 {
@@ -86,26 +88,32 @@ class PatientController extends Controller
 
     private function generateMedicalId()
     {
-        $today = now()->format('Y-m-d'); // تاريخ اليوم
-        $year = now()->format('y'); // آخر رقمين من السنة
-        $month = now()->format('m'); // الشهر
-        $day = now()->format('d'); // اليوم
+        $today = now()->format('Y-m-d');
+        $year = now()->format('y');
+        $month = now()->format('m');
+        $day = now()->format('d');
 
-        // البحث عن آخر رقم طبي تم إنشاؤه اليوم
-        $lastPatient = Patient::whereDate('created_at', $today)
-            ->where('medical_id', 'LIKE', "11803{$year}{$month}{$day}%")
-            ->orderBy('medical_id', 'desc')
-            ->first();
+        $prefix = "11803{$year}{$month}{$day}";
 
-        // تحديد الرقم الجديد
-        $lastId = 0;
-        if ($lastPatient) {
-            $lastId = intval(substr($lastPatient->medical_id, -3));
+        // Get all medical IDs for today
+        $existingIds = Patient::whereDate('created_at', $today)
+            ->where('medical_id', 'LIKE', "{$prefix}%")
+            ->pluck('medical_id')
+            ->map(function ($id) use ($prefix) {
+                return intval(substr($id, strlen($prefix), 3));
+            })
+            ->toArray();
+
+        $next = 1;
+        if (!empty($existingIds)) {
+            $max = max($existingIds);
+            $next = $max + 1;
         }
-        $newId = str_pad($lastId + 1, 3, '0', STR_PAD_LEFT);
-
-        // توليد الرقم الطبي النهائي
-        return "11803{$year}{$month}{$day}{$newId}";
+        if ($next > 999) {
+            $next = 999;
+        }
+        $newId = str_pad($next, 3, '0', STR_PAD_LEFT);
+        return "{$prefix}{$newId}";
     }
 
     /**
@@ -451,11 +459,18 @@ class PatientController extends Controller
         }
         
         // Store a discharge visit before soft deleting
-        $patient->visits()->create([
-            'type' => 'out',
-            'visit_at' => now(),
-            'notes' => 'تم حذف المريض من النظام'
-        ]);
+        // $patient->visits()->create([
+        //     'type' => 'out',
+        //     'visit_at' => now(),
+        //     'notes' => 'تم حذف المريض من النظام'
+        // ]);
+
+        // Empty the medical_id before soft delete
+        // Only clear medical_id if the patient was created today
+        if ($patient->created_at && $patient->created_at->isToday()) {
+            $patient->medical_id = null;
+        }
+        $patient->save();
 
         $patient->delete(); // This will now soft delete
         
@@ -868,9 +883,15 @@ class PatientController extends Controller
     public function restore($id)
     {
         $patient = Patient::withTrashed()->findOrFail($id);
+
+        // Generate a new medical_id
+        // Only generate a new medical_id if the patient was created today
+        if ($patient->created_at && $patient->created_at->isToday()) {
+            $patient->medical_id = $this->generateMedicalId();
+        }
         $patient->restore();
 
-        return redirect()->route('patients.trashed')->with('success', 'تم استعادة المريض بنجاح.');
+        return redirect()->route('patients.trashed')->with('success', 'تم استعادة المريض بنجاح. تم تعيين رقم ملف طبي جديد: ' . $patient->medical_id);
     }
 
     /**
@@ -1377,9 +1398,11 @@ class PatientController extends Controller
         try {
             $attachment = $patient->attachments()->findOrFail($attachmentId);
             
-            // Delete the actual file
-            if (Storage::disk('public')->exists($attachment->file_path)) {
-                Storage::disk('public')->delete($attachment->file_path);
+            // Check if file_path exists and is not null before trying to delete
+            $filePath = $attachment->file_path ?? $attachment->file ?? null;
+            
+            if ($filePath && Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
             }
             
             // Delete the database record

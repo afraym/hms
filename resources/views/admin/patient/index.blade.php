@@ -161,7 +161,7 @@
                                                     {{ \Carbon\Carbon::parse($patient->latest_visit_date)->format('Y-m-d H:i') }}
                                                 </small>
                                                 <br>
-                                                <span class="badge {{ $patient->latest_visit_type == 'in' ? 'bg-gradient-success' : 'bg-gradient-info' }}">
+                                                <span class="badge {{ $patient->latest_visit_type == 'in' ? 'bg-gradient-info' : 'bg-gradient-success' }}">
                                                     {{ $patient->latest_visit_type == 'in' ? 'دخول' : 'خروج' }}
                                                 </span>
                                             </div>
@@ -306,22 +306,27 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </td>
                                     <td>${patient.full_name}</td>
                                     <td>${patient.medical_id}</td>
-                                    <td>${patient.national_id}</td>
+
+                                    <td>${patient.national_id || 'غير محدد'}</td>
                                     <td>${gender}</td>
                                     <td>
-                                           @if($patient->latest_visit_date)
+                                        ${patient.latest_visit_date ? `
                                             <div>
                                                 <small class="text-muted">
-                                                    {{ \Carbon\Carbon::parse($patient->latest_visit_date)->format('Y-m-d H:i') }}
+                                                    ${new Date(patient.latest_visit_date).toLocaleString('ar-EG', {
+                                                        year: 'numeric',
+                                                        month: '2-digit',
+                                                        day: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
                                                 </small>
                                                 <br>
-                                                <span class="badge {{ $patient->latest_visit_type == 'in' ? 'bg-gradient-success' : 'bg-gradient-info' }}">
-                                                    {{ $patient->latest_visit_type == 'in' ? 'دخول' : 'خروج' }}
+                                                <span class="badge ${patient.latest_visit_type === 'in' ? 'bg-gradient-success' : 'bg-gradient-info'}">
+                                                    ${patient.latest_visit_type === 'in' ? 'دخول' : 'خروج'}
                                                 </span>
                                             </div>
-                                        @else
-                                            <span class="text-muted">لا يوجد </span>
-                                        @endif
+                                        ` : '<span class="text-muted">لا يوجد</span>'}
                                     </td>
                                     <td>
                                         ${
@@ -351,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <form action="/admin/patients/${patient.id}/deceased" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟ لا يمكن التراجع عن هذا الإجراء.');">
                                             <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
                                             <input type="hidden" name="_method" value="PATCH">
-                                            <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة"> تسجيل وفاة</button>
+                                            <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة">تسجيل وفاة</button>
                                         </form>
                                         ` : ''}
                                         <form action="/admin/patients/${patient.id}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">

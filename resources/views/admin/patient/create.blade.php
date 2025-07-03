@@ -112,7 +112,7 @@
 @section('content')
 <div class="container-fluid py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10">
+        <div class="col-lg-10 col-md-10">
             <div class="card">
                 <div class="card-header pb-0">
                     <h6>إضافة مريض جديد</h6>
@@ -328,6 +328,12 @@ hotel
     </div>
     @error('created_at') <span class="text-danger">{{ $message }}</span> @enderror
 </div>
+<div class="col-md-12 mb-3">
+ <div class="input-group input-group-static mb-3">
+                            <label for="visit_notes">الملاحظات</label>
+                            <textarea name="visit_notes" id="visit_notes" class="form-control" rows="3" placeholder="يمكنك هنا كتابة اي ملاحظات اضافية مثل نوع المعالمة .."></textarea>
+                        </div>
+                            </div>
                             <div class="col-md-12 mb-3">
                                 <div class="card">
                                     <div class="card-header">
@@ -337,7 +343,7 @@ hotel
                                         <div class="file-loading">
                                             <input id="attachments" name="attachments[]" type="file" multiple>
                                         </div>
-                                        <small class="text-muted">يمكنك رفع ملفات PDF, الصور, المستندات (الحد الأقصى: 10 ملفات، 10 ميجابايت لكل ملف)</small>
+                                        <small class="text-muted">يمكنك رفع ملفات PDF, الصور, المستندات (الحد الأقصى: 100 ملف، 50 ميجابايت لكل ملف)</small>
                                     </div>
                                 </div>
                             </div>
@@ -391,15 +397,14 @@ function detectEgyptianNationalIdInfo(nationalId) {
 document.addEventListener('DOMContentLoaded', function () {
     const nationalIdInput = document.getElementById('national_id');
     const firstNameInput = document.getElementById('full_name');
-    // const secondNameInput = document.getElementById('second_name');
-    // const thirdNameInput = document.getElementById('third_name');
-    // const fourthNameInput = document.getElementById('fourth_name');
     const emailInput = document.getElementById('email');
     const phoneInput = document.getElementById('phone');
     const companion_phoneInput = document.getElementById('companion_phone');
     const birthdateInput = document.getElementById('date_of_birth');
     const addressInput = document.getElementById('address');
     const governorateInput = document.getElementById('governorate');
+    const departmentSelect = document.getElementById('department_id');
+    const bedSelect = document.getElementById('bed_id');
     const genderMaleRadio = document.getElementById('maleRadio');
     const genderFemaleRadio = document.getElementById('femaleRadio');
 
@@ -420,6 +425,21 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!input) return;
         input.value = value || '';
         markFilled(input);
+    }
+
+    // Helper function to update Select2 dropdown
+    function updateSelect2(selectElement, value) {
+        if (!selectElement) return;
+        
+        // Check if Select2 is initialized
+        if ($(selectElement).hasClass('select2-hidden-accessible')) {
+            // Update Select2 value and trigger change
+            $(selectElement).val(value).trigger('change');
+        } else {
+            // Fallback for regular select
+            selectElement.value = value;
+        }
+        markFilled(selectElement);
     }
 
     if (nationalIdInput) {
@@ -485,17 +505,29 @@ document.addEventListener('DOMContentLoaded', function () {
                                 }
                             }
 
-                            // Department and Bed
+                            // Department and Bed - Updated to handle Select2
                             if (patient.department_id) {
-                                const departmentSelect = document.getElementById('department_id');
-                                departmentSelect.value = patient.department_id;
-                                markFilled(departmentSelect);
+                                updateSelect2(departmentSelect, patient.department_id);
+                                
+                                // Add visual feedback for Select2
+                                setTimeout(() => {
+                                    const select2Container = $(departmentSelect).next('.select2-container');
+                                    if (select2Container.length) {
+                                        select2Container.addClass('is-filled');
+                                    }
+                                }, 100);
                             }
 
                             if (patient.bed_id) {
-                                const bedSelect = document.getElementById('bed_id');
-                                bedSelect.value = patient.bed_id;
-                                markFilled(bedSelect);
+                                updateSelect2(bedSelect, patient.bed_id);
+                                
+                                // Add visual feedback for Select2
+                                setTimeout(() => {
+                                    const select2Container = $(bedSelect).next('.select2-container');
+                                    if (select2Container.length) {
+                                        select2Container.addClass('is-filled');
+                                    }
+                                }, 100);
                             }
 
                             // Companion Information
@@ -505,12 +537,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             fillAndMark(document.getElementById('companion_relation'), patient.companion_relation);
 
                             // Gender Selection
-                            if (patient.gender === 'ذكر' && genderMaleRadio) {
+                            if (patient.gender === 'male' && genderMaleRadio) {
                                 genderMaleRadio.checked = true;
                                 genderMaleRadio.closest('.form-check').classList.add('is-filled');
                                 if (genderFemaleRadio) genderFemaleRadio.closest('.form-check').classList.remove('is-filled');
                             }
-                            if (patient.gender === 'أنثى' && genderFemaleRadio) {
+                            if (patient.gender === 'female' && genderFemaleRadio) {
                                 genderFemaleRadio.checked = true;
                                 genderFemaleRadio.closest('.form-check').classList.add('is-filled');
                                 if (genderMaleRadio) genderMaleRadio.closest('.form-check').classList.remove('is-filled');
@@ -541,11 +573,21 @@ document.addEventListener('DOMContentLoaded', function () {
                             });
 
                             // Add visual indicator that form is pre-filled
+                            const form = document.getElementById('patientForm');
                             form.classList.add('is-prefilled');
                         } else {
                             // Reset form if no patient found
+                            const form = document.getElementById('patientForm');
                             form.reset();
                             form.classList.remove('is-prefilled');
+                            
+                            // Reset Select2 dropdowns
+                            if ($(departmentSelect).hasClass('select2-hidden-accessible')) {
+                                $(departmentSelect).val(null).trigger('change');
+                            }
+                            if ($(bedSelect).hasClass('select2-hidden-accessible')) {
+                                $(bedSelect).val(null).trigger('change');
+                            }
                             
                             $.toast({
                                 heading: 'مريض جديد',
@@ -565,6 +607,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const nationalIdInput = document.getElementById('national_id');
@@ -635,8 +678,8 @@ $(document).ready(function() {
         dropZoneTitle: '<i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i><br><h5 class="text-primary">اسحب الملفات هنا أو اضغط للاختيار</h5>',
         dropZoneClickTitle: '<br><small class="text-muted">(يمكنك إضافة ملفات متعددة)</small>',
         allowedFileExtensions: ["jpg", "png", "jpeg", "gif", "pdf", "doc", "docx", "txt", "xls", "xlsx"],
-        maxFileCount: 10,
-        maxFileSize: 10240, // 10 MB
+        maxFileCount: 100,
+        maxFileSize: 51200, // 50 MB
         overwriteInitial: false,
         initialPreviewAsData: true,
         multiple: true,
@@ -816,8 +859,6 @@ $(document).ready(function() {
 @endsection
 
 @push('scripts')
-<!-- jQuery Toast Plugin JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('patientForm');
