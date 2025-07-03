@@ -19,10 +19,69 @@ class PatientController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $patients = Patient::latest()->paginate(100);
-        return view('admin.patient.index', compact('patients'));
+        $sortBy = $request->get('sort_by', 'latest_visit'); // Default to latest visit
+        
+        $query = Patient::with(['visits' => function($query) {
+            $query->latest('visit_at');
+        }]);
+        
+        switch ($sortBy) {
+            case 'latest_visit':
+                // Sort by latest visit date (patients with recent visits first)
+                $patients = $query->leftJoin('patient_visits', 'patients.id', '=', 'patient_visits.patient_id')
+                                 ->select('patients.*')
+                                 ->selectRaw('MAX(patient_visits.visit_at) as latest_visit_date')
+                                 ->groupBy('patients.id')
+                                 ->orderByDesc('latest_visit_date')
+                                 ->orderByDesc('patients.created_at') // Secondary sort by registration date
+                                 ->paginate(100);
+                break;
+                
+            case 'oldest_visit':
+                // Sort by oldest visit date (patients who haven't visited recently)
+                $patients = $query->leftJoin('patient_visits', 'patients.id', '=', 'patient_visits.patient_id')
+                                 ->select('patients.*')
+                                 ->selectRaw('MAX(patient_visits.visit_at) as latest_visit_date')
+                                 ->groupBy('patients.id')
+                                 ->orderBy('latest_visit_date')
+                                 ->orderBy('patients.created_at')
+                                 ->paginate(100);
+                break;
+                
+            case 'no_visits':
+                // Patients with no visits
+                $patients = $query->whereDoesntHave('visits')
+                                 ->orderByDesc('patients.created_at')
+                                 ->paginate(100);
+                break;
+                
+            case 'registration_date':
+                // Sort by registration date (newest first)
+                $patients = $query->orderByDesc('patients.created_at')
+                                 ->paginate(100);
+                break;
+                
+            case 'name':
+                // Sort by patient name
+                $patients = $query->orderBy('patients.full_name')
+                                 ->paginate(100);
+                break;
+                
+            default:
+                $patients = $query->latest()->paginate(100);
+        }
+        
+        // Add latest visit information to each patient
+        $patients->getCollection()->transform(function ($patient) {
+            $latestVisit = $patient->visits->first();
+            $patient->latest_visit_date = $latestVisit ? $latestVisit->visit_at : null;
+            $patient->latest_visit_type = $latestVisit ? $latestVisit->type : null;
+            return $patient;
+        });
+        
+        return view('admin.patient.index', compact('patients', 'sortBy'));
     }
 
     private function generateMedicalId()
@@ -71,26 +130,81 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate patient data
-        $patientData = $request->validate([
-            'full_name' => 'nullable|max:255',
+        $messages = [
+            'full_name.required' => 'الاسم الكامل مطلوب',
+            'full_name.string' => 'الاسم الكامل يجب أن يكون نص',
+            'full_name.max' => 'الاسم الكامل يجب ألا يتجاوز 255 حرف',
+            'email.email' => 'البريد الإلكتروني غير صحيح',
+            'email.max' => 'البريد الإلكتروني يجب ألا يتجاوز 255 حرف',
+            'phone.string' => 'رقم الهاتف يجب أن يكون نص',
+            'phone.max' => 'رقم الهاتف يجب ألا يتجاوز 20 حرف',
+            'national_id.string' => 'الرقم القومي يجب أن يكون نص',
+            'national_id.max' => 'الرقم القومي يجب ألا يتجاوز 14 حرف',
+            'national_id.unique' => 'الرقم القومي موجود مسبقاً',
+            'date_of_birth.date' => 'تاريخ الميلاد غير صحيح',
+            'gender.in' => 'الجنس غير صحيح',
+            'uhi_number.string' => 'رقم التأمين الصحي يجب أن يكون نص',
+            'uhi_number.unique' => 'رقم التأمين الصحي موجود مسبقاً',
+            'medical_id.required' => 'رقم الملف الطبي مطلوب',
+            'medical_id.string' => 'رقم الملف الطبي يجب أن يكون نص',
+            'medical_id.unique' => 'رقم الملف الطبي موجود مسبقاً',
+            'address.string' => 'العنوان يجب أن يكون نص',
+            'governorate.string' => 'المحافظة يجب أن تكون نص',
+            'notes.string' => 'الملاحظات يجب أن تكون نص',
+            'blood_type.string' => 'فصيلة الدم يجب أن تكون نص',
+            'marital_status.string' => 'الحالة الاجتماعية يجب أن تكون نص',
+            'occupation.string' => 'المهنة يجب أن تكون نص',
+            'is_active.boolean' => 'حالة النشاط يجب أن تكون صحيح أو خطأ',
+            'companion_name.string' => 'اسم المرافق يجب أن يكون نص',
+            'companion_name.max' => 'اسم المرافق يجب ألا يتجاوز 255 حرف',
+            'companion_phone.string' => 'هاتف المرافق يجب أن يكون نص',
+            'companion_phone.max' => 'هاتف المرافق يجب ألا يتجاوز 20 حرف',
+            'companion_relation.string' => 'صلة القرابة يجب أن تكون نص',
+            'companion_relation.max' => 'صلة القرابة يجب ألا تتجاوز 255 حرف',
+            'companion_national_id.string' => 'الرقم القومي للمرافق يجب أن يكون نص',
+            'companion_national_id.max' => 'الرقم القومي للمرافق يجب ألا يتجاوز 14 حرف',
+            'type.required' => 'نوع الزيارة مطلوب',
+            'type.in' => 'نوع الزيارة غير صحيح',
+            'visit_at.required' => 'تاريخ ووقت الزيارة مطلوب',
+            'visit_at.date' => 'تاريخ ووقت الزيارة غير صحيح',
+            'department_id.exists' => 'القسم المحدد غير موجود',
+            'bed_id.exists' => 'السرير المحدد غير موجود',
+            'attachments.*.file' => 'المرفق يجب أن يكون ملف',
+            'attachments.*.max' => 'حجم المرفق يجب ألا يتجاوز 10 ميجابايت',
+            'attachments.*.mimes' => 'نوع المرفق غير مدعوم',
+        ];
+
+        $validated = $request->validate([
+            'full_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'national_id' => 'nullable|string|max:14',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|in:male,female,ذكر,أنثى',
-            'medical_id' => 'required|string',
             'uhi_number' => 'nullable|string',
+            'medical_id' => 'required|string',
             'address' => 'nullable|string',
             'governorate' => 'nullable|string',
             'notes' => 'nullable|string',
             'blood_type' => 'nullable|string',
             'marital_status' => 'nullable|string',
             'occupation' => 'nullable|string',
-            'created_at' => 'nullable|date',
-        ]);
+            'is_active' => 'boolean',
+            'companion_name' => 'nullable|string|max:255',
+            'companion_phone' => 'nullable|string|max:20',
+            'companion_relation' => 'nullable|string|max:255',
+            'companion_national_id' => 'nullable|string|max:14',
+            // 'type' => 'required|in:in,out',
+            // 'visit_at' => 'required|date',
+            'department_id' => 'nullable|exists:departments,id',
+            'bed_id' => 'nullable|exists:beds,id',
+            'attachments.*' => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,gif',
+        ], $messages);
 
         // Convert created_at from datetime-local format to Y-m-d H:i:s format
+        // Prepare patient data for existence check and created_at conversion
+        $patientData = $validated;
+
         if (!empty($patientData['created_at'])) {
             $patientData['created_at'] = \Carbon\Carbon::parse($patientData['created_at'])->format('Y-m-d H:i:s');
         }
@@ -257,6 +371,40 @@ class PatientController extends Controller
      */
     public function update(Request $request, Patient $patient)
     {
+        $messages = [
+        'full_name.required' => 'الاسم الكامل مطلوب',
+        'full_name.string' => 'الاسم الكامل يجب أن يكون نص',
+        'full_name.max' => 'الاسم الكامل يجب ألا يتجاوز 255 حرف',
+        'email.email' => 'البريد الإلكتروني غير صحيح',
+        'email.max' => 'البريد الإلكتروني يجب ألا يتجاوز 255 حرف',
+        'phone.string' => 'رقم الهاتف يجب أن يكون نص',
+        'phone.max' => 'رقم الهاتف يجب ألا يتجاوز 20 حرف',
+        'national_id.string' => 'الرقم القومي يجب أن يكون نص',
+        'national_id.max' => 'الرقم القومي يجب ألا يتجاوز 14 حرف',
+        'national_id.unique' => 'الرقم القومي موجود مسبقاً',
+        'date_of_birth.date' => 'تاريخ الميلاد غير صحيح',
+        'gender.in' => 'الجنس غير صحيح',
+        'uhi_number.string' => 'رقم التأمين الصحي يجب أن يكون نص',
+        'uhi_number.unique' => 'رقم التأمين الصحي موجود مسبقاً',
+        'medical_id.required' => 'رقم الملف الطبي مطلوب',
+        'medical_id.string' => 'رقم الملف الطبي يجب أن يكون نص',
+        'medical_id.unique' => 'رقم الملف الطبي موجود مسبقاً',
+        'address.string' => 'العنوان يجب أن يكون نص',
+        'governorate.string' => 'المحافظة يجب أن تكون نص',
+        'notes.string' => 'الملاحظات يجب أن تكون نص',
+        'blood_type.string' => 'فصيلة الدم يجب أن تكون نص',
+        'marital_status.string' => 'الحالة الاجتماعية يجب أن تكون نص',
+        'occupation.string' => 'المهنة يجب أن تكون نص',
+        'is_active.boolean' => 'حالة النشاط يجب أن تكون صحيح أو خطأ',
+        'companion_name.string' => 'اسم المرافق يجب أن يكون نص',
+        'companion_name.max' => 'اسم المرافق يجب ألا يتجاوز 255 حرف',
+        'companion_phone.string' => 'هاتف المرافق يجب أن يكون نص',
+        'companion_phone.max' => 'هاتف المرافق يجب ألا يتجاوز 20 حرف',
+        'companion_relation.string' => 'صلة القرابة يجب أن تكون نص',
+        'companion_relation.max' => 'صلة القرابة يجب ألا تتجاوز 255 حرف',
+        'companion_national_id.string' => 'الرقم القومي للمرافق يجب أن يكون نص',
+        'companion_national_id.max' => 'الرقم القومي للمرافق يجب ألا يتجاوز 14 حرف',
+    ];
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -265,6 +413,7 @@ class PatientController extends Controller
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|in:male,female,ذكر,أنثى',
             'uhi_number' => 'nullable|string|unique:patients,uhi_number,' . $patient->id,
+            'medical_id' => 'required|string|unique:patients,medical_id,' . $patient->id,
             'address' => 'nullable|string',
             'governorate' => 'nullable|string',
             'notes' => 'nullable|string',
@@ -272,6 +421,11 @@ class PatientController extends Controller
             'marital_status' => 'nullable|string',
             'occupation' => 'nullable|string',
             'is_active' => 'boolean',
+            // Add companion fields to validation
+            // 'companion_name' => 'nullable|string|max:255',
+            // 'companion_phone' => 'nullable|string|max:20',
+            // 'companion_relation' => 'nullable|string|max:255',
+            // 'companion_national_id' => 'nullable|string|max:14',
         ]);
 
         // Update the patient's data
@@ -639,11 +793,63 @@ class PatientController extends Controller
     /**
      * Export patients data to Excel.
      */
-    public function export() 
+    public function export(Request $request) 
     {
+        $dateFilter = $request->get('date_filter');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Validate custom date range
+        if ($dateFilter === 'custom') {
+            $request->validate([
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+            ], [
+                'start_date.required' => 'تاريخ البداية مطلوب',
+                'start_date.date' => 'تاريخ البداية غير صحيح',
+                'end_date.required' => 'تاريخ النهاية مطلوب',
+                'end_date.date' => 'تاريخ النهاية غير صحيح',
+                'end_date.after_or_equal' => 'تاريخ النهاية يجب أن يكون بعد أو مساوٍ لتاريخ البداية',
+            ]);
+        }
+        
+        // Generate filename based on filter
+        $filename = 'patients-';
+        
+        switch ($dateFilter) {
+            case 'today':
+                $filename .= 'today-' . now()->format('Y-m-d');
+                break;
+            case 'yesterday':
+                $filename .= 'yesterday-' . now()->subDay()->format('Y-m-d');
+                break;
+            case 'this_week':
+                $filename .= 'this-week-' . now()->format('Y-m-d');
+                break;
+            case 'this_month':
+                $filename .= 'this-month-' . now()->format('Y-m');
+                break;
+            case 'last_month':
+                $filename .= 'last-month-' . now()->subMonth()->format('Y-m');
+                break;
+            case 'this_year':
+                $filename .= 'this-year-' . now()->format('Y');
+                break;
+            case 'last_year':
+                $filename .= 'last-year-' . now()->subYear()->format('Y');
+                break;
+            case 'custom':
+                $filename .= 'custom-' . $startDate . '-to-' . $endDate;
+                break;
+            default:
+                $filename .= 'all-' . now()->format('Y-m-d');
+        }
+        
+        $filename .= '.xlsx';
+        
         return Excel::download(
-            new PatientsExport, 
-            'patients-' . now()->format('Y-m-d') . '.xlsx'
+            new PatientsExport($dateFilter, $startDate, $endDate), 
+            $filename
         );
     }
 
@@ -951,5 +1157,256 @@ class PatientController extends Controller
             'companion_national_id' => $visit->companion_national_id,
             'notes' => $visit->notes,
         ]);
+    }
+
+    /**
+     * Permanently delete the specified patient.
+     */
+    public function forceDelete($id)
+    {
+        $patient = Patient::withTrashed()->findOrFail($id);
+        
+        // Delete all related visits
+        $patient->visits()->delete();
+        
+        // Delete all related attachments
+        foreach ($patient->attachments as $attachment) {
+            // Delete the actual file
+            if (file_exists(storage_path('app/public/' . $attachment->file))) {
+                unlink(storage_path('app/public/' . $attachment->file));
+            }
+            $attachment->delete();
+        }
+        
+        // Permanently delete the patient
+        $patient->forceDelete();
+        
+        return redirect()->route('patients.trashed')->with('success', 'تم حذف المريض نهائياً من النظام.');
+    }
+
+    /**
+     * Show the form for editing a trashed patient.
+     */
+    public function editTrashed($id)
+    {
+        $patient = Patient::withTrashed()->findOrFail($id);
+        
+        if (!$patient->trashed()) {
+            return redirect()->route('patients.edit', $patient->id);
+        }
+        
+        return view('admin.patient.edit-trashed', compact('patient'));
+    }
+
+    /**
+     * Update a trashed patient.
+     */
+    public function updateTrashed(Request $request, $id)
+    {
+        $patient = Patient::withTrashed()->findOrFail($id);
+        
+        $messages = [
+            'full_name.required' => 'الاسم الكامل مطلوب',
+            'full_name.string' => 'الاسم الكامل يجب أن يكون نص',
+            'full_name.max' => 'الاسم الكامل يجب ألا يتجاوز 255 حرف',
+            'email.email' => 'البريد الإلكتروني غير صحيح',
+            'email.max' => 'البريد الإلكتروني يجب ألا يتجاوز 255 حرف',
+            'phone.string' => 'رقم الهاتف يجب أن يكون نص',
+            'phone.max' => 'رقم الهاتف يجب ألا يتجاوز 20 حرف',
+            'national_id.string' => 'الرقم القومي يجب أن يكون نص',
+            'national_id.max' => 'الرقم القومي يجب ألا يتجاوز 14 حرف',
+            'national_id.unique' => 'الرقم القومي موجود مسبقاً',
+            'date_of_birth.date' => 'تاريخ الميلاد غير صحيح',
+            'gender.in' => 'الجنس غير صحيح',
+            'uhi_number.string' => 'رقم التأمين الصحي يجب أن يكون نص',
+            'uhi_number.unique' => 'رقم التأمين الصحي موجود مسبقاً',
+            'medical_id.required' => 'رقم الملف الطبي مطلوب',
+            'medical_id.string' => 'رقم الملف الطبي يجب أن يكون نص',
+            'medical_id.unique' => 'رقم الملف الطبي موجود مسبقاً',
+            'address.string' => 'العنوان يجب أن يكون نص',
+            'governorate.string' => 'المحافظة يجب أن تكون نص',
+            'notes.string' => 'الملاحظات يجب أن تكون نص',
+            'blood_type.string' => 'فصيلة الدم يجب أن تكون نص',
+            'marital_status.string' => 'الحالة الاجتماعية يجب أن تكون نص',
+            'occupation.string' => 'المهنة يجب أن تكون نص',
+            'companion_name.string' => 'اسم المرافق يجب أن يكون نص',
+            'companion_name.max' => 'اسم المرافق يجب ألا يتجاوز 255 حرف',
+            'companion_phone.string' => 'هاتف المرافق يجب أن يكون نص',
+            'companion_phone.max' => 'هاتف المرافق يجب ألا يتجاوز 20 حرف',
+            'companion_relation.string' => 'صلة القرابة يجب أن تكون نص',
+            'companion_relation.max' => 'صلة القرابة يجب ألا تتجاوز 255 حرف',
+            'companion_national_id.string' => 'الرقم القومي للمرافق يجب أن يكون نص',
+            'companion_national_id.max' => 'الرقم القومي للمرافق يجب ألا يتجاوز 14 حرف',
+        ];
+
+        $validated = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'national_id' => 'nullable|string|max:14|unique:patients,national_id,' . $patient->id,
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|in:male,female,ذكر,أنثى',
+            'uhi_number' => 'nullable|string|unique:patients,uhi_number,' . $patient->id,
+            'medical_id' => 'required|string|unique:patients,medical_id,' . $patient->id,
+            'address' => 'nullable|string',
+            'governorate' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'blood_type' => 'nullable|string',
+            'marital_status' => 'nullable|string',
+            'occupation' => 'nullable|string',
+            'companion_name' => 'nullable|string|max:255',
+            'companion_phone' => 'nullable|string|max:20',
+            'companion_relation' => 'nullable|string|max:255',
+            'companion_national_id' => 'nullable|string|max:14',
+        ], $messages);
+
+        // Update the patient's data
+        $patient->update($validated);
+
+        return redirect()->route('patients.trashed')->with('success', 'تم تحديث بيانات المريض المحذوف بنجاح.');
+    }
+
+    /**
+     * Upload attachments for a patient.
+     */
+    public function uploadAttachments(Request $request, Patient $patient)
+    {
+        try {
+            // Debug: Log what we're receiving
+            \Log::info('Upload request data:', [
+                'files' => $request->hasFile('attachments'),
+                'file_count' => $request->hasFile('attachments') ? count($request->file('attachments')) : 0,
+                'all_files' => $request->allFiles(),
+                'request_data' => $request->all()
+            ]);
+
+            $messages = [
+                'attachments.required' => 'يرجى اختيار ملف واحد على الأقل',
+                'attachments.*.file' => 'الملف المرفوع غير صحيح',
+                'attachments.*.max' => 'حجم الملف يجب ألا يتجاوز 10 ميجابايت',
+                'attachments.*.mimes' => 'نوع الملف غير مسموح. الأنواع المسموحة: pdf, doc, docx, jpg, jpeg, png, gif',
+            ];
+
+            // Check if files exist first
+            if (!$request->hasFile('attachments')) {
+                return redirect()->back()->withErrors(['attachments' => 'يرجى اختيار ملف واحد على الأقل'])->withInput();
+            }
+
+            $validated = $request->validate([
+                'attachments' => 'required|array|min:1',
+                'attachments.*' => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,gif',
+                'description' => 'nullable|string|max:255',
+            ], $messages);
+
+            $uploadedFiles = [];
+            $errors = [];
+
+            foreach ($request->file('attachments') as $index => $file) {
+                try {
+                    // Check if file is valid
+                    if (!$file->isValid()) {
+                        $errors[] = "الملف رقم " . ($index + 1) . " غير صالح";
+                        continue;
+                    }
+
+                    // Generate unique filename
+                    $originalName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    $filename = pathinfo($originalName, PATHINFO_FILENAME);
+                    $uniqueName = $filename . '_' . time() . '_' . uniqid() . '.' . $extension;
+                    
+                    // Store the file
+                    $path = $file->storeAs('patient_attachments', $uniqueName, 'public');
+                    
+                    if (!$path) {
+                        $errors[] = "فشل في حفظ الملف: " . $originalName;
+                        continue;
+                    }
+
+                    // Create attachment record
+                    $attachment = $patient->attachments()->create([
+                        'original_name' => $originalName,
+                        'filename' => $uniqueName,
+                        'file_path' => $path,
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'type' => $this->getAttachmentType($extension),
+                        'description' => $validated['description'] ?? null,
+                        'uploaded_by' => auth()->id(),
+                    ]);
+
+                    $uploadedFiles[] = $attachment;
+
+                } catch (\Exception $e) {
+                    \Log::error('Error uploading individual file: ' . $e->getMessage());
+                    $errors[] = "خطأ في رفع الملف: " . ($file->getClientOriginalName() ?? 'غير معروف');
+                }
+            }
+
+            if (empty($uploadedFiles)) {
+                $errorMessage = 'فشل في رفع جميع الملفات.';
+                if (!empty($errors)) {
+                    $errorMessage .= ' الأخطاء: ' . implode(', ', $errors);
+                }
+                return redirect()->back()->with('error', $errorMessage);
+            }
+
+            $message = count($uploadedFiles) === 1 
+                ? 'تم رفع الملف بنجاح' 
+                : 'تم رفع ' . count($uploadedFiles) . ' ملف بنجاح';
+
+            if (!empty($errors)) {
+                $message .= '. أخطاء: ' . implode(', ', $errors);
+            }
+
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Error in uploadAttachments: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'حدث خطأ أثناء رفع الملفات: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a patient attachment.
+     */
+    public function deleteAttachment(Patient $patient, $attachmentId)
+    {
+        try {
+            $attachment = $patient->attachments()->findOrFail($attachmentId);
+            
+            // Delete the actual file
+            if (Storage::disk('public')->exists($attachment->file_path)) {
+                Storage::disk('public')->delete($attachment->file_path);
+            }
+            
+            // Delete the database record
+            $attachment->delete();
+            
+            return redirect()->back()->with('success', 'تم حذف المرفق بنجاح');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error deleting attachment: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'حدث خطأ أثناء حذف المرفق');
+        }
+    }
+
+    /**
+     * Determine attachment type based on file extension.
+     */
+    private function getAttachmentType($extension)
+    {
+        $imageTypes = ['jpg', 'jpeg', 'png', 'gif'];
+        $documentTypes = ['pdf', 'doc', 'docx'];
+        
+        if (in_array(strtolower($extension), $imageTypes)) {
+            return 'image';
+        } elseif (in_array(strtolower($extension), $documentTypes)) {
+            return 'document';
+        }
+        
+        return 'other';
     }
 }

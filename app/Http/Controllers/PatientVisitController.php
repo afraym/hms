@@ -38,18 +38,35 @@ class PatientVisitController extends Controller
      */
     public function store(Request $request)
     {
+        $messages = [
+            'type.required' => 'نوع الزيارة مطلوب',
+            'type.in' => 'نوع الزيارة يجب أن يكون دخول أو خروج',
+            'visit_at.required' => 'تاريخ ووقت الزيارة مطلوب',
+            'visit_at.date' => 'تاريخ ووقت الزيارة غير صحيح',
+            'department_id.exists' => 'القسم المحدد غير موجود',
+            'bed_id.exists' => 'السرير المحدد غير موجود',
+            'companion_name.string' => 'اسم المرافق يجب أن يكون نص',
+            'companion_name.max' => 'اسم المرافق يجب ألا يتجاوز 255 حرف',
+            'companion_phone.string' => 'هاتف المرافق يجب أن يكون نص',
+            'companion_phone.max' => 'هاتف المرافق يجب ألا يتجاوز 20 حرف',
+            'companion_relation.string' => 'صلة القرابة يجب أن تكون نص',
+            'companion_relation.max' => 'صلة القرابة يجب ألا تتجاوز 255 حرف',
+            'companion_national_id.string' => 'الرقم القومي للمرافق يجب أن يكون نص',
+            'companion_national_id.max' => 'الرقم القومي للمرافق يجب ألا يتجاوز 14 حرف',
+            'notes.string' => 'الملاحظات يجب أن تكون نص',
+        ];
+
         $validated = $request->validate([
-            'patient_id' => 'required|exists:patients,id',
             'type' => 'required|in:in,out',
             'visit_at' => 'required|date',
-            'notes' => 'nullable|string',
             'department_id' => 'nullable|exists:departments,id',
             'bed_id' => 'nullable|exists:beds,id',
             'companion_name' => 'nullable|string|max:255',
-            'companion_relation' => 'nullable|string|max:255',
             'companion_phone' => 'nullable|string|max:20',
+            'companion_relation' => 'nullable|string|max:255',
             'companion_national_id' => 'nullable|string|max:14',
-        ]);
+            'notes' => 'nullable|string',
+        ], $messages);
 
         $visit = PatientVisit::create($validated);
         
@@ -175,6 +192,24 @@ class PatientVisitController extends Controller
      */
     public function update(Request $request, PatientVisit $patientVisit)
     {
+        $messages = [
+            'type.required' => 'نوع الزيارة مطلوب',
+            'type.in' => 'نوع الزيارة يجب أن يكون دخول أو خروج',
+            'visit_at.required' => 'تاريخ ووقت الزيارة مطلوب',
+            'visit_at.date' => 'تاريخ ووقت الزيارة غير صحيح',
+            'department_id.exists' => 'القسم المحدد غير موجود',
+            'bed_id.exists' => 'السرير المحدد غير موجود',
+            'companion_name.string' => 'اسم المرافق يجب أن يكون نص',
+            'companion_name.max' => 'اسم المرافق يجب ألا يتجاوز 255 حرف',
+            'companion_phone.string' => 'هاتف المرافق يجب أن يكون نص',
+            'companion_phone.max' => 'هاتف المرافق يجب ألا يتجاوز 20 حرف',
+            'companion_relation.string' => 'صلة القرابة يجب أن تكون نص',
+            'companion_relation.max' => 'صلة القرابة يجب ألا تتجاوز 255 حرف',
+            'companion_national_id.string' => 'الرقم القومي للمرافق يجب أن يكون نص',
+            'companion_national_id.max' => 'الرقم القومي للمرافق يجب ألا يتجاوز 14 حرف',
+            'notes.string' => 'الملاحظات يجب أن تكون نص',
+        ];
+
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'type' => 'required|in:in,out',
@@ -183,10 +218,10 @@ class PatientVisitController extends Controller
             'department_id' => 'nullable|exists:departments,id',
             'bed_id' => 'nullable|exists:beds,id',
             'companion_name' => 'nullable|string|max:255',
-            'companion_relation' => 'nullable|string|max:255',
             'companion_phone' => 'nullable|string|max:20',
+            'companion_relation' => 'nullable|string|max:255',
             'companion_national_id' => 'nullable|string|max:14',
-        ]);
+        ], $messages);
 
         // Handle bed status changes
         $oldBedId = $patientVisit->bed_id;

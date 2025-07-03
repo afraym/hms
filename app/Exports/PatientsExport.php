@@ -12,14 +12,75 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+use Carbon\Carbon;
 
 class PatientsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithProperties, ShouldAutoSize, WithEvents
 {
+    protected $dateFilter;
+    protected $startDate;
+    protected $endDate;
+
+    public function __construct($dateFilter = null, $startDate = null, $endDate = null)
+    {
+        $this->dateFilter = $dateFilter;
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
+    }
+
     public function collection()
     {
-        return Patient::with(['department', 'creator', 'visits'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Patient::with(['department', 'creator', 'visits'])
+            ->orderBy('created_at', 'desc');
+
+        // Apply date filters
+        if ($this->dateFilter) {
+            switch ($this->dateFilter) {
+                case 'today':
+                    $query->whereDate('created_at', Carbon::today());
+                    break;
+                    
+                case 'yesterday':
+                    $query->whereDate('created_at', Carbon::yesterday());
+                    break;
+                    
+                case 'this_week':
+                    $query->whereBetween('created_at', [
+                        Carbon::now()->startOfWeek(),
+                        Carbon::now()->endOfWeek()
+                    ]);
+                    break;
+                    
+                case 'this_month':
+                    $query->whereMonth('created_at', Carbon::now()->month)
+                          ->whereYear('created_at', Carbon::now()->year);
+                    break;
+                    
+                case 'last_month':
+                    $lastMonth = Carbon::now()->subMonth();
+                    $query->whereMonth('created_at', $lastMonth->month)
+                          ->whereYear('created_at', $lastMonth->year);
+                    break;
+                    
+                case 'this_year':
+                    $query->whereYear('created_at', Carbon::now()->year);
+                    break;
+                    
+                case 'last_year':
+                    $query->whereYear('created_at', Carbon::now()->subYear()->year);
+                    break;
+                    
+                case 'custom':
+                    if ($this->startDate && $this->endDate) {
+                        $query->whereBetween('created_at', [
+                            Carbon::parse($this->startDate)->startOfDay(),
+                            Carbon::parse($this->endDate)->endOfDay()
+                        ]);
+                    }
+                    break;
+            }
+        }
+
+        return $query->get();
     }
 
     public function headings(): array
@@ -96,7 +157,8 @@ class PatientsExport implements FromCollection, WithHeadings, WithMapping, WithS
         $translations = [
             'waiting' => 'في الانتظار',
             'admitted' => 'تم الدخول',
-            'discharged' => 'تم الخروج'
+            'discharged' => 'تم الخروج',
+            'deceased' => 'متوفى'
         ];
 
         return $translations[$status] ?? $status;
@@ -116,12 +178,33 @@ class PatientsExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function properties(): array
     {
+        $title = 'تقرير المرضى';
+        
+        if ($this->dateFilter) {
+            $filterNames = [
+                'today' => 'اليوم',
+                'yesterday' => 'أمس',
+                'this_week' => 'هذا الأسبوع',
+                'this_month' => 'هذا الشهر',
+                'last_month' => 'الشهر الماضي',
+                'this_year' => 'هذا العام',
+                'last_year' => 'العام الماضي',
+                'custom' => 'فترة مخصصة'
+            ];
+            
+            $title .= ' - ' . ($filterNames[$this->dateFilter] ?? 'مخصص');
+            
+            if ($this->dateFilter === 'custom' && $this->startDate && $this->endDate) {
+                $title .= ' (' . Carbon::parse($this->startDate)->format('Y-m-d') . ' إلى ' . Carbon::parse($this->endDate)->format('Y-m-d') . ')';
+            }
+        }
+
         return [
-            'creator'        => auth()->user()->name,
-            'title'          => 'تقرير المرضى',
-            'description'    => 'قائمة بيانات المرضى',
+            'creator'        => auth()->user()->name ?? 'النظام',
+            'title'          => $title,
+            'description'    => 'قائمة بيانات المرضى مع فلترة حسب التاريخ',
             'subject'        => 'المرضى',
-            'keywords'       => 'مرضى,تقرير,إحصائيات',
+            'keywords'       => 'مرضى,تقرير,إحصائيات,تاريخ',
             'category'       => 'تقارير المرضى',
             'company'        => config('app.name'),
         ];

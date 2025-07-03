@@ -324,12 +324,12 @@ class PatientsTableSeeder extends Seeder
     private function extractBirthdateFromNationalId($nationalId)
     {
         if (strlen($nationalId) === 14) {
-            // Extract year from positions 6-7 (index 5-6)
-            $year = substr($nationalId, 5, 2);
-            // Extract month from positions 8-9 (index 7-8)
-            $month = substr($nationalId, 7, 2);
-            // Extract day from positions 10-11 (index 9-10)
-            $day = substr($nationalId, 9, 2);
+            // Extract year from positions 2-3 (index 1-2)
+            $year = substr($nationalId, 1, 2);
+            // Extract month from positions 4-5 (index 3-4)
+            $month = substr($nationalId, 3, 2);
+            // Extract day from positions 6-7 (index 5-6)
+            $day = substr($nationalId, 5, 2);
             
             // Determine century based on first digit
             $century = substr($nationalId, 0, 1);

@@ -10,7 +10,7 @@
     <ul class="navbar-nav">
       {{-- @canany(['admin', 'manager']) --}}
         <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+          <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active bg-gradient-info' : '' }}" href="{{ route('admin.dashboard') }}">
             <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
           <i class="material-icons-round opacity-10">dashboard</i>
             </div>
@@ -19,7 +19,7 @@
         </li>
       {{-- @endcanany --}}
       <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('patients.index') ? 'active' : '' }}" href="{{ route('patients.index') }}">
+        <a class="nav-link {{ request()->routeIs('patients.index') ? 'active bg-gradient-info' : '' }}" href="{{ route('patients.index') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
             <i class="material-icons-round opacity-10">groups</i>
           </div>
@@ -27,7 +27,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('patients.create') ? 'active' : '' }}" href="{{ route('patients.create') }}">
+        <a class="nav-link {{ request()->routeIs('patients.create') ? 'active bg-gradient-info' : '' }}" href="{{ route('patients.create') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
             <i class="material-icons-round opacity-10">group_add</i>
           </div>
@@ -35,7 +35,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('beds.index') ? 'active' : '' }}" href="{{ route('beds.index') }}">
+        <a class="nav-link {{ request()->routeIs('beds.index') ? 'active bg-gradient-info' : '' }}" href="{{ route('beds.index') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
             <i class="material-icons-round opacity-10">bed</i>
           </div>
@@ -43,7 +43,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('beds.create') ? 'active' : '' }}" href="{{ route('beds.create') }}">
+        <a class="nav-link {{ request()->routeIs('beds.create') ? 'active bg-gradient-info' : '' }}" href="{{ route('beds.create') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
             <i class="material-icons-round opacity-10">add</i>
           </div>
@@ -51,7 +51,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('departments.index') ? 'active' : '' }}" href="{{ route('departments.index') }}">
+        <a class="nav-link {{ request()->routeIs('departments.index') ? 'active bg-gradient-info' : '' }}" href="{{ route('departments.index') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
             <i class="material-icons-round opacity-10">business</i>
           </div>
@@ -59,7 +59,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('departments.create') ? 'active' : '' }}" href="{{ route('departments.create') }}">
+        <a class="nav-link {{ request()->routeIs('departments.create') ? 'active bg-gradient-info' : '' }}" href="{{ route('departments.create') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
             <i class="material-icons-round opacity-10">add_business</i>
           </div>

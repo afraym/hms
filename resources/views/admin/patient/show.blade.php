@@ -157,8 +157,8 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>نوع التردد</th>
-                                <th>تاريخ التردد</th>
+                                <th>نوع </th>
+                                <th>تاريخ </th>
                                 <th>القسم</th>
                                 <th>السرير</th>
                                 <th>اسم المرافق</th>
@@ -208,9 +208,9 @@
                 <a href="{{ route('patients.print.label', $patient->id) }}" class="btn bg-gradient-secondary">
                     <i class="material-icons">print</i> طباعة الملصقات
                 </a>
-                <a href="{{ route('patients.visits.create', $patient->id) }}" class="btn bg-gradient-info">
+                {{-- <a href="{{ route('patients.visits.create', $patient->id) }}" class="btn bg-gradient-info">
                     <i class="material-icons">add</i> إضافة زيارة جديدة
-                </a>
+                </a> --}}
                 @if($patient->status !== 'discharged')
                     <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
                         @csrf

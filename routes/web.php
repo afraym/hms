@@ -50,6 +50,7 @@ Route::view('profile', 'profile')
         Route::get('/patients/search', [PatientController::class, 'search'])->name('patients.search');
         Route::get('/patients/ajax-search', [PatientController::class, 'ajaxSearch'])->name('patients.ajaxSearch');
         Route::post('patients/{patient}/attachments', [PatientController::class, 'uploadAttachment'])->name('patients.attachments.upload');
+        Route::delete('patients/{patient}/attachments/{attachment}', [PatientController::class, 'deleteAttachment'])->name('patients.attachments.delete');
         Route::post('/api/sync', [PatientController::class, 'sync'])->name('api.sync');
         Route::get('/generate-medical-id', [PatientController::class, 'generateNewMedicalId'])->name('generate.medical.id');
         
@@ -58,10 +59,17 @@ Route::view('profile', 'profile')
         Route::get('/api/charts/monthly-beds', [DashboardController::class, 'getMonthlyBedsData'])->name('charts.monthly.beds');
         Route::get('/api/charts/daily-visits', [DashboardController::class, 'getDailyVisitsData'])->name('charts.daily.visits');
         Route::get('patients/export', [PatientController::class, 'export'])->name('patients.export');
-        Route::post('/patients/{patient}/restore', [PatientController::class, 'restore'])->name('patients.restore');
+        // Route::post('/patients/{patient}/restore', [PatientController::class, 'restore'])->name('patients.restore');
         Route::get('/patients/trashed', [PatientController::class, 'trashed'])->name('patients.trashed');
         Route::get('/patients/import', [PatientController::class, 'importForm'])->name('patients.importForm');
         Route::post('/patients/import', [PatientController::class, 'import'])->name('patients.import');
+
+        // Trashed patients routes
+        Route::get('/patients/trashed', [PatientController::class, 'trashed'])->name('patients.trashed');
+        Route::post('/patients/{id}/restore', [PatientController::class, 'restore'])->name('patients.restore');
+        Route::delete('/patients/{id}/force-delete', [PatientController::class, 'forceDelete'])->name('patients.force-delete');
+        Route::get('/patients/{id}/edit-trashed', [PatientController::class, 'editTrashed'])->name('patients.edit-trashed');
+        Route::put('/patients/{id}/update-trashed', [PatientController::class, 'updateTrashed'])->name('patients.update-trashed');
     });
 
     // Route::middleware(['auth', 'checkrole:admin|manager'])->group(function () {
