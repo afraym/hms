@@ -134,7 +134,6 @@
                                     <th>رقم الملف</th>
                                     <th>الرقم القومي</th>
                                     <th>الجنس</th>
-                                    <th>آخر زيارة</th>
                                     <th>الحالة</th>
                                     <th>الإجراءات</th>
                                 </tr>
@@ -154,7 +153,7 @@
                                     </td>
                                     <td>{{ $patient->national_id }}</td>
                                     <td>{{ $patient->gender == 'male' ? 'ذكر' : ($patient->gender == 'female' ? 'أنثى' : 'غير محدد') }}</td>
-                                    <td>
+                                    {{-- <td>
                                         @if($patient->latest_visit_date)
                                             <div>
                                                 <small class="text-muted">
@@ -168,7 +167,7 @@
                                         @else
                                             <span class="text-muted">لا يوجد </span>
                                         @endif
-                                    </td>
+                                    </td> --}}
                                     <td>
                                         @switch($patient->status)
                                             @case('admitted')

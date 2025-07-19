@@ -68,7 +68,7 @@
                                         <div class="btn-group" role="group">
                                             <!-- Edit Button -->
                                             <a href="{{ route('patients.edit-trashed', $patient->id) }}" 
-                                               class="btn btn-sm btn-outline-warning" 
+                                               class="btn  btn-outline-warning" 
                                                title="تعديل">
                                                 <i class="material-icons">edit</i>
                                             </a>
@@ -80,7 +80,7 @@
                                                   onsubmit="return confirm('هل أنت متأكد من استعادة هذا المريض؟')">
                                                 @csrf
                                                 <button type="submit" 
-                                                        class="btn btn-sm btn-outline-success" 
+                                                        class="btn  btn-outline-success" 
                                                         title="استعادة">
                                                     <i class="material-icons">restore</i>
                                                 </button>
@@ -94,7 +94,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                        class="btn btn-sm btn-outline-danger" 
+                                                        class="btn  btn-outline-danger" 
                                                         title="حذف نهائي">
                                                     <i class="material-icons">delete_forever</i>
                                                 </button>
