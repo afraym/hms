@@ -3,54 +3,168 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
-
     use AuthenticatesUsers;
 
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/dashboard';
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
-        $this->middleware('auth')->only('logout');
     }
 
-    protected function redirectTo()
+    /**
+     * Handle a login request to the application.
+     */
+    public function login(Request $request)
     {
-        switch(auth()->user()->role) {
+        $this->validateLogin($request);
+
+        // Check if the login attempts have been exceeded
+        if ($this->hasTooManyLoginAttempts($request)) {
+            $this->fireLockoutEvent($request);
+            return $this->sendLockoutResponse($request);
+        }
+
+        $result = $this->attemptLogin($request);
+        
+        if ($result === true) {
+            if ($request->hasSession()) {
+                $request->session()->put('auth.password_confirmed_at', time());
+            }
+            return $this->sendLoginResponse($request);
+        }
+
+        // Increment login attempts
+        $this->incrementLoginAttempts($request);
+
+        return $this->sendSpecificFailedLoginResponse($request, $result);
+    }
+
+    /**
+     * Validate the user login request.
+     */
+    protected function validateLogin(Request $request)
+    {
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ], [
+            'login.required' => 'البريد الإلكتروني أو رقم الهاتف مطلوب.',
+            'login.string' => 'البريد الإلكتروني أو رقم الهاتف يجب أن يكون نص.',
+            'password.required' => 'كلمة المرور مطلوبة.',
+            'password.string' => 'كلمة المرور يجب أن تكون نص.',
+        ]);
+    }
+
+    /**
+     * Attempt to log the user into the application.
+     * Returns: true for success, 'user_not_found' if user doesn't exist, 'wrong_password' if password is wrong
+     */
+    protected function attemptLogin(Request $request)
+    {
+        $login = $request->input('login');
+        $password = $request->input('password');
+        $remember = $request->filled('remember');
+
+        // Find user by email or phone
+        $user = User::findByEmailOrPhone($login);
+
+        // Check if user exists
+        if (!$user) {
+            return 'user_not_found';
+        }
+
+        // Check if password is correct
+        if (!Hash::check($password, $user->password)) {
+            return 'wrong_password';
+        }
+
+        // Check if user account is active (if you have status field)
+        if (isset($user->status) && $user->status !== 'active') {
+            return 'account_inactive';
+        }
+
+        // Login successful
+        Auth::login($user, $remember);
+        return true;
+    }
+
+    /**
+     * Send specific failed login response based on failure reason.
+     */
+    protected function sendSpecificFailedLoginResponse(Request $request, $reason)
+    {
+        $messages = [
+            'user_not_found' => 'البريد الإلكتروني أو رقم الهاتف غير مسجل في النظام.',
+            'wrong_password' => 'كلمة المرور غير صحيحة.',
+            'account_inactive' => 'حسابك غير مفعل. يرجى التواصل مع الإدارة.',
+        ];
+
+        $message = $messages[$reason] ?? 'حدث خطأ أثناء تسجيل الدخول.';
+
+        throw ValidationException::withMessages([
+            'login' => [$message],
+        ]);
+    }
+
+    /**
+     * Get the failed login response instance (fallback).
+     */
+    protected function sendFailedLoginResponse(Request $request)
+    {
+        throw ValidationException::withMessages([
+            'login' => ['البريد الإلكتروني أو رقم الهاتف أو كلمة المرور غير صحيحة.'],
+        ]);
+    }
+
+    /**
+     * Get the lockout response instance.
+     */
+    protected function sendLockoutResponse(Request $request)
+    {
+        $seconds = $this->limiter()->availableIn(
+            $this->throttleKey($request)
+        );
+
+        $minutes = ceil($seconds / 60);
+
+        throw ValidationException::withMessages([
+            'login' => ["تم تجاوز عدد محاولات تسجيل الدخول المسموحة. حاول مرة أخرى بعد {$minutes} دقيقة."],
+        ])->status(429);
+    }
+
+    /**
+     * The user has been authenticated.
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        // Add success message
+        session()->flash('success', 'مرحباً بك، ' . $user->name);
+        
+        // Log the login activity (optional)
+        activity()
+            ->causedBy($user)
+            ->log('تسجيل دخول المستخدم');
+
+        // Redirect based on user role
+        switch ($user->role) {
             case 'admin':
-                return '/admin/patients/create';
+                return redirect()->intended('/admin/dashboard');
             case 'manager':
-                return '/manager/dashboard';
+                return redirect()->intended('/manager/dashboard');
             case 'reception':
-                return '/admin/patients/create';
-            case 'kitchen':
-                return '/kitchen/dashboard';
+                return redirect()->intended('/reception/dashboard');
             default:
-                return '/home';
+                return redirect()->intended($this->redirectPath());
         }
     }
 }

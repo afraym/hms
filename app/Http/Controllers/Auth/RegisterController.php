@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 
 class RegisterController extends Controller
 {
@@ -28,7 +29,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/admin/patients/create';
+    protected $redirectTo = '/dashboard';
 
     /**
      * Create a new controller instance.
@@ -50,9 +51,30 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['string', 'email', 'max:255', 'unique:users'],
+            'phone' => ['required', 'string', 'max:15', 'unique:users', 'regex:/^[0-9+\-\s()]+$/'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', 'in:reception,manager,kitchen'], // Validate role
+        ], [
+            'name.required' => 'الاسم مطلوب.',
+            'name.string' => 'الاسم يجب أن يكون نص.',
+            'name.max' => 'الاسم يجب ألا يتجاوز 255 حرف.',
+            
+            'email.required' => 'البريد الإلكتروني مطلوب.',
+            'email.string' => 'البريد الإلكتروني يجب أن يكون نص.',
+            'email.email' => 'البريد الإلكتروني غير صحيح.',
+            'email.max' => 'البريد الإلكتروني يجب ألا يتجاوز 255 حرف.',
+            'email.unique' => 'هذا البريد الإلكتروني مستخدم من قبل.',
+            
+            'phone.required' => 'رقم الهاتف مطلوب.',
+            'phone.string' => 'رقم الهاتف يجب أن يكون نص.',
+            'phone.max' => 'رقم الهاتف يجب ألا يتجاوز 15 رقم.',
+            'phone.unique' => 'رقم الهاتف مستخدم من قبل.',
+            'phone.regex' => 'رقم الهاتف غير صحيح.',
+            
+            'password.required' => 'كلمة المرور مطلوبة.',
+            'password.string' => 'كلمة المرور يجب أن تكون نص.',
+            'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
+            'password.confirmed' => 'تأكيد كلمة المرور غير متطابق.',
         ]);
     }
 
@@ -67,8 +89,22 @@ class RegisterController extends Controller
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
-            'role' => $data['role'], // Use the selected role
+            'role' => 'user', // Default role
         ]);
+    }
+
+    /**
+     * The user has been registered.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    protected function registered(Request $request, $user)
+    {
+        session()->flash('success', 'تم إنشاء الحساب بنجاح. مرحباً بك، ' . $user->name);
+        return redirect($this->redirectPath());
     }
 }
