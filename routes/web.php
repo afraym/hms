@@ -81,7 +81,7 @@ Route::view('profile', 'profile')
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::redirect('/home', '/admin/patients/create')->name('home');
 Route::get('/offline', function () {
     return view('offline');
 })->name('offline');

@@ -150,10 +150,16 @@ class LoginController extends Controller
         // Add success message
         session()->flash('success', 'مرحباً بك، ' . $user->name);
         
-        // Log the login activity (optional)
-        activity()
-            ->causedBy($user)
-            ->log('تسجيل دخول المستخدم');
+        // Log the login activity using Laravel's logger
+        \Log::info('User logged in', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'user_email' => $user->email,
+            'user_phone' => $user->phone,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'timestamp' => now(),
+        ]);
 
         // Redirect based on user role
         switch ($user->role) {

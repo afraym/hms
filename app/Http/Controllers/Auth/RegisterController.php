@@ -29,7 +29,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/dashboard';
+    protected $redirectTo = '/admin/dashboard';
 
     /**
      * Create a new controller instance.
@@ -51,7 +51,7 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['string', 'email', 'max:255', 'unique:users'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users'],
             'phone' => ['required', 'string', 'max:15', 'unique:users', 'regex:/^[0-9+\-\s()]+$/'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
@@ -59,7 +59,6 @@ class RegisterController extends Controller
             'name.string' => 'الاسم يجب أن يكون نص.',
             'name.max' => 'الاسم يجب ألا يتجاوز 255 حرف.',
             
-            'email.required' => 'البريد الإلكتروني مطلوب.',
             'email.string' => 'البريد الإلكتروني يجب أن يكون نص.',
             'email.email' => 'البريد الإلكتروني غير صحيح.',
             'email.max' => 'البريد الإلكتروني يجب ألا يتجاوز 255 حرف.',
@@ -69,7 +68,7 @@ class RegisterController extends Controller
             'phone.string' => 'رقم الهاتف يجب أن يكون نص.',
             'phone.max' => 'رقم الهاتف يجب ألا يتجاوز 15 رقم.',
             'phone.unique' => 'رقم الهاتف مستخدم من قبل.',
-            'phone.regex' => 'رقم الهاتف غير صحيح.',
+            'phone.regex' => 'رقم الهاتف غير صحيح. يرجى إدخال رقم هاتف مصري صحيح (مثال: 01234567890).',
             
             'password.required' => 'كلمة المرور مطلوبة.',
             'password.string' => 'كلمة المرور يجب أن تكون نص.',
@@ -86,12 +85,15 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        // Clean phone number - remove spaces, hyphens, parentheses
+        $phone = preg_replace('/[^0-9+]/', '', $data['phone']);
+        
         return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
+            'name' => trim($data['name']),
+            'email' => !empty($data['email']) ? strtolower(trim($data['email'])) : null,
+            'phone' => $phone,
             'password' => Hash::make($data['password']),
-            'role' => 'user', // Default role
+            'role' => 'reception', // Default role is reception
         ]);
     }
 
