@@ -168,7 +168,7 @@ class LoginController extends Controller
             case 'manager':
                 return redirect()->intended('/manager/dashboard');
             case 'reception':
-                return redirect()->intended('/reception/dashboard');
+                return redirect()->intended('/admin/dashboard');
             default:
                 return redirect()->intended($this->redirectPath());
         }
