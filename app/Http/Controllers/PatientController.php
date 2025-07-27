@@ -49,7 +49,7 @@ class PatientController extends Controller
                                  ->groupBy('patients.id')
                                  ->orderBy('latest_visit_date')
                                  ->orderBy('patients.created_at')
-                                 ->paginate(100);
+                                 ->paginate(100); 
                 break;
                 
             case 'no_visits':
@@ -667,14 +667,71 @@ class PatientController extends Controller
     public function search(Request $request)
     {
         $query = $request->input('query');
+        
+        if (empty($query)) {
+            return redirect()->route('patients.index');
+        }
 
-        // Search patients by first name, second name, phone, or national ID
-        $patients = Patient::where('full_name', 'LIKE', "%{$query}%")
-            ->orWhere('phone', 'LIKE', "%{$query}%")
-            ->orWhere('national_id', 'LIKE', "%{$query}%")
-            ->orWhere('medical_id', 'LIKE', "%{$query}%")
-            ->orWhere('uhi_number', 'LIKE', "%{$query}%")
-            ->get();
+        // Clean search term
+        $searchTerm = trim($query);
+        $searchWords = explode(' ', $searchTerm);
+        $firstWord = $searchWords[0] ?? '';
+
+        // Use MySQL's case-insensitive collation for better performance
+        $patients = Patient::whereRaw("
+            (
+                full_name COLLATE utf8mb4_unicode_ci = ? OR
+                full_name COLLATE utf8mb4_unicode_ci LIKE ? OR
+                full_name COLLATE utf8mb4_unicode_ci LIKE ? OR
+                full_name COLLATE utf8mb4_unicode_ci LIKE ? OR
+                phone LIKE ? OR
+                national_id LIKE ? OR
+                medical_id LIKE ? OR
+                uhi_number LIKE ?
+            )
+        ", [
+            $searchTerm,                    // Exact match
+            $searchTerm . '%',              // Starts with search term
+            $firstWord . '%',               // First name starts with first word
+            '%' . $searchTerm . '%',        // Contains search term
+            '%' . $searchTerm . '%',        // Phone
+            '%' . $searchTerm . '%',        // National ID
+            '%' . $searchTerm . '%',        // Medical ID
+            '%' . $searchTerm . '%'         // UHI number
+        ])
+        ->orderByRaw("
+            CASE 
+                WHEN full_name COLLATE utf8mb4_unicode_ci = ? THEN 1
+                WHEN full_name COLLATE utf8mb4_unicode_ci LIKE ? THEN 2
+                WHEN full_name COLLATE utf8mb4_unicode_ci LIKE ? THEN 3
+                WHEN full_name COLLATE utf8mb4_unicode_ci LIKE ? THEN 4
+                WHEN medical_id LIKE ? THEN 5
+                WHEN national_id LIKE ? THEN 6
+                WHEN phone LIKE ? THEN 7
+                ELSE 8
+            END,
+            full_name ASC
+        ", [
+            $searchTerm,                    // Exact match
+            $searchTerm . '%',              // Starts with
+            $firstWord . '%',               // First name starts with
+            '%' . $searchTerm . '%',        // Contains
+            '%' . $searchTerm . '%',        // Medical ID
+            '%' . $searchTerm . '%',        // National ID  
+            '%' . $searchTerm . '%'         // Phone
+        ])
+        ->with(['visits' => function($query) {
+            $query->latest('visit_at');
+        }])
+        ->paginate(50);
+
+        // Add latest visit information
+        $patients->getCollection()->transform(function ($patient) {
+            $latestVisit = $patient->visits->first();
+            $patient->latest_visit_date = $latestVisit ? $latestVisit->visit_at : null;
+            $patient->latest_visit_type = $latestVisit ? $latestVisit->type : null;
+            return $patient;
+        });
 
         return view('admin.patient.index', compact('patients'))->with('query', $query);
     }

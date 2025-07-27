@@ -578,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else {
                             // Reset form if no patient found
                             const form = document.getElementById('patientForm');
-                            form.reset();
+                            // form.reset();
                             form.classList.remove('is-prefilled');
                             
                             // Reset Select2 dropdowns
