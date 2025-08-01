@@ -331,7 +331,7 @@ hotel
 <div class="col-md-12 mb-3">
  <div class="input-group input-group-static mb-3">
                             <label for="visit_notes">الملاحظات</label>
-                            <textarea name="visit_notes" id="visit_notes" class="form-control" rows="3" placeholder="يمكنك هنا كتابة اي ملاحظات اضافية مثل نوع المعالمة .."></textarea>
+                            <textarea name="visit_notes" id="visit_notes" class="form-control" rows="3" placeholder="يمكنك هنا كتابة اي ملاحظات اضافية مثل نوع المعاملة .."></textarea>
                         </div>
                             </div>
                             <div class="col-md-12 mb-3">

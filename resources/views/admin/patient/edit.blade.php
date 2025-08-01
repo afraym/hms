@@ -178,13 +178,69 @@
                         <i class="material-icons">arrow_back</i> العودة
                     </a>
                 </div>
+                <input type="hidden" name="patient_id" value="{{ $patient->id }}">
             </form>
+        </div>
 
+        
             <!-- Form to upload attachments -->
-        <form action="{{ route('patients.attachments.upload', $patient->id) }}" method="POST" enctype="multipart/form-data" class="mb-3 mt-4" id="attachmentForm">                @csrf
-                <!-- attachments card here -->
+    <div class="col-md-12 mt-4">
+        <form id="attachmentForm" enctype="multipart/form-data">
+        {{-- <form action="{{ route('patients.attachments.upload', $patient->id) }}" method="POST" enctype="multipart/form-data" class="mb-3 mt-4" id="attachmentForm">  --}}
+                           @csrf
+                <div class="card">
+                    <div class="card-header">
+                        <h6>رفع مرفقات المريض</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- File Upload -->
+                        <div class="input-group input-group-static mb-4">
+                            <label for="attachments">اختر الملفات</label>
+                            <input id="attachments" name="attachments[]" type="file" 
+                                   class="form-control @error('attachments') is-invalid @enderror @error('attachments.*') is-invalid @enderror" 
+                                   multiple 
+                                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.PDF,.DOC,.DOCX,.JPG,.JPEG,.PNG,.GIF"
+                                   required>
+                            @error('attachments')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @error('attachments.*')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <input type="hidden" name="patient_id" value="{{ $patient->id }}">
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="input-group input-group-static mb-4">
+                            <label for="description">وصف المرفق (اختياري)</label>
+                            <input type="text" name="description" id="description" 
+                                   class="form-control @error('description') is-invalid @enderror" 
+                                   placeholder="وصف المرفق" value="{{ old('description') }}">
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <!-- File Info -->
+                        <div class="alert alert-info" role="alert">
+                            <i class="material-icons opacity-10">info</i>
+                            <strong>ملاحظة:</strong> الحد الأقصى لحجم الملف 10 ميجابايت. الأنواع المسموحة: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF
+                        </div>
+                        
+                        <!-- Selected Files Preview -->
+                        <div id="filePreview" class="mb-3" style="display: none;">
+                            <h6>الملفات المختارة:</h6>
+                            <div id="fileList"></div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success" id="uploadBtn">
+                            <i class="material-icons">cloud_upload</i> رفع المرفقات
+                        </button>
+                    </div>
+                </div>
             </form>
-
+</div>
+        
             <!-- Display Existing Attachments -->
             @if($patient->attachments->count() > 0)
             <div class="card mt-4">
@@ -612,6 +668,167 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // File input change handler for preview
+    const fileInput = document.getElementById('attachments');
+    const filePreview = document.getElementById('filePreview');
+    const fileList = document.getElementById('fileList');
+    
+    fileInput.addEventListener('change', function() {
+        const files = this.files;
+        
+        if (files.length > 0) {
+            fileList.innerHTML = '';
+            filePreview.style.display = 'block';
+            
+            Array.from(files).forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'alert alert-light d-flex justify-content-between align-items-center mb-2';
+                
+                const fileInfo = document.createElement('div');
+                fileInfo.innerHTML = `
+                    <i class="material-icons opacity-10 me-2">${getFileIcon(file.type)}</i>
+                    <strong>${file.name}</strong> 
+                    <small class="text-muted">(${formatFileSize(file.size)})</small>
+                `;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-sm btn-outline-danger';
+                removeBtn.innerHTML = '<i class="material-icons">close</i>';
+                removeBtn.onclick = () => removeFile(index);
+                
+                fileItem.appendChild(fileInfo);
+                fileItem.appendChild(removeBtn);
+                fileList.appendChild(fileItem);
+            });
+        } else {
+            filePreview.style.display = 'none';
+        }
+    });
+
+    // AJAX File Upload Form Handler
+    const attachmentForm = document.getElementById('attachmentForm');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressBar = uploadProgress.querySelector('.progress-bar');
+    const progressText = document.getElementById('progressText');
+
+    attachmentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const files = fileInput.files;
+        const description = document.getElementById('description').value;
+        
+        if (files.length === 0) {
+            showToast('يرجى اختيار ملف واحد على الأقل', 'warning');
+            return;
+        }
+        
+        // Validate file sizes
+        for (let file of files) {
+            if (file.size > 50 * 1024 * 1024) { // 50MB
+                showToast(`حجم الملف ${file.name} كبير جداً. الحد الأقصى 50 ميجابايت`, 'danger');
+                return;
+            }
+        }
+        
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        formData.append('patient_id', '{{ $patient->id }}');
+        formData.append('description', description);
+        
+        // Add all files
+        Array.from(files).forEach(file => {
+            formData.append('attachments[]', file);
+        });
+        
+        // Show progress and disable button
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="material-icons">hourglass_empty</i> جاري الرفع...';
+        uploadProgress.style.display = 'block';
+        
+        // Create AJAX request with progress tracking
+        const xhr = new XMLHttpRequest();
+        
+        // Track upload progress
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percentComplete + '%';
+                progressBar.setAttribute('aria-valuenow', percentComplete);
+                progressText.textContent = percentComplete + '%';
+            }
+        });
+        
+        xhr.addEventListener('load', function() {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    
+                    if (response.success) {
+                        showToast(response.message || 'تم رفع الملفات بنجاح', 'success');
+                        
+                        // Clear form
+                        attachmentForm.reset();
+                        filePreview.style.display = 'none';
+                        document.getElementById('description').value = '';
+                        
+                        // Refresh attachments table
+                        refreshAttachmentsTable();
+                        
+                    } else {
+                        showToast(response.message || 'حدث خطأ أثناء رفع الملفات', 'danger');
+                    }
+                } catch (error) {
+                    showToast('خطأ في معالجة الاستجابة من الخادم', 'danger');
+                }
+            } else {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    let errorMessage = 'حدث خطأ أثناء رفع الملفات';
+                    
+                    if (response.message) {
+                        errorMessage = response.message;
+                    } else if (response.errors) {
+                        const errors = Object.values(response.errors).flat();
+                        errorMessage = errors.join('<br>');
+                    }
+                    
+                    showToast(errorMessage, 'danger');
+                } catch (error) {
+                    showToast('حدث خطأ أثناء رفع الملفات', 'danger');
+                }
+            }
+        });
+        
+        xhr.addEventListener('error', function() {
+            showToast('خطأ في الاتصال بالخادم', 'danger');
+        });
+        
+        xhr.addEventListener('loadend', function() {
+            // Reset UI
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="material-icons">cloud_upload</i> رفع المرفقات';
+            uploadProgress.style.display = 'none';
+            progressBar.style.width = '0%';
+            progressBar.setAttribute('aria-valuenow', '0');
+            progressText.textContent = '0%';
+        });
+        
+        // Send request
+        xhr.open('POST', '{{ route("attachments.store") }}');
+        xhr.send(formData);
+    });
+
+    // Clear button handler
+    clearBtn.addEventListener('click', function() {
+        attachmentForm.reset();
+        filePreview.style.display = 'none';
+        document.getElementById('description').value = '';
+        showToast('تم مسح جميع الملفات المختارة', 'info');
+    });
+
     // Form validation feedback
     const form = document.getElementById('patientEditForm');
     if (form) {
@@ -650,30 +867,139 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+// Helper functions
+function getFileIcon(mimeType) {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.includes('pdf')) return 'picture_as_pdf';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'description';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'table_chart';
+    if (mimeType.includes('text')) return 'text_snippet';
+    return 'attach_file';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function removeFile(index) {
+    const fileInput = document.getElementById('attachments');
+    const dt = new DataTransfer();
+    const files = fileInput.files;
+    
+    for (let i = 0; i < files.length; i++) {
+        if (i !== index) {
+            dt.items.add(files[i]);
+        }
+    }
+    
+    fileInput.files = dt.files;
+    fileInput.dispatchEvent(new Event('change'));
+}
+
+// Refresh attachments table after upload
+function refreshAttachmentsTable() {
+    fetch(`{{ route('patients.show', $patient->id) }}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Parse response and update attachments section
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newAttachmentsSection = doc.querySelector('#existingAttachments');
+        
+        if (newAttachmentsSection) {
+            const currentAttachmentsSection = document.querySelector('#existingAttachments');
+            if (currentAttachmentsSection) {
+                currentAttachmentsSection.replaceWith(newAttachmentsSection);
+            } else {
+                // If no attachments section exists, create it
+                const attachmentForm = document.querySelector('#attachmentForm').closest('.card');
+                attachmentForm.insertAdjacentHTML('afterend', newAttachmentsSection.outerHTML);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error refreshing attachments:', error);
+        // Fallback: reload page
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    });
+}
+
+// Delete attachment function
+function deleteAttachment(attachmentId) {
+    if (!confirm('هل أنت متأكد من حذف هذا المرفق؟')) {
+        return;
+    }
+    
+    fetch(`{{ url('admin/patients') }}/{{ $patient->id }}/attachments/${attachmentId}`, {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'تم حذف المرفق بنجاح', 'success');
+            
+            // Remove row from table
+            const row = document.querySelector(`#attachment-${attachmentId}`);
+            if (row) {
+                row.remove();
+            }
+            
+            // Update attachments count
+            const attachmentsHeader = document.querySelector('#existingAttachments .card-header h6');
+            if (attachmentsHeader) {
+                const currentCount = parseInt(attachmentsHeader.textContent.match(/\d+/)[0]);
+                attachmentsHeader.textContent = `المرفقات الموجودة (${currentCount - 1})`;
+            }
+            
+        } else {
+            showToast(data.message || 'حدث خطأ أثناء حذف المرفق', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('حدث خطأ أثناء حذف المرفق', 'danger');
+    });
+}
+
 // Toast notification function
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
     toast.innerHTML = `
-        <i class="material-icons opacity-10">${type === 'success' ? 'check_circle' : 'error'}</i>
+        <i class="material-icons opacity-10">${type === 'success' ? 'check_circle' : (type === 'warning' ? 'warning' : 'error')}</i>
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     
     document.body.appendChild(toast);
     
-    // Auto-hide after 3 seconds
+    // Auto-hide after 4 seconds
     setTimeout(() => {
         toast.classList.remove('show');
         toast.classList.add('fade');
         setTimeout(() => {
             toast.remove();
         }, 500);
-    }, 3000);
+    }, 4000);
 }
 
-// Visit management functions (same as before)
+// Visit management functions
 function editVisit(visitId) {
     fetch(`{{ url('admin/patients') }}/{{ $patient->id }}/visits/${visitId}/edit`, {
         headers: {
