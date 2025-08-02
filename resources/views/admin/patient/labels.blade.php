@@ -95,7 +95,7 @@
     
     .label-name {
         font-weight: bold;
-        font-size: 17px;
+        font-size: 18px;
     }
     
     .label-medical-id {
@@ -106,7 +106,7 @@
     }
     
     .label-age, .label-dept {
-        font-size: 13px;
+        font-size: 15px;
         margin-top: 1px;
     }
 
@@ -189,6 +189,7 @@
                         <option value="default">نمط افتراضي</option>
                         <option value="name_only">الاسم فقط</option>
                         <option value="id_only">الرقم الطبي فقط</option>
+                        <option value="department_only">القسم فقط</option>
                         <option value="full_info">معلومات كاملة</option>
                         <option value="custom">مخصص</option>
                     </select>
@@ -277,13 +278,13 @@
                         'date' => '',
                         'department' => ''
                     ],
-                    // Template 4: Full info
+                    // Template 4: Full info with Department
                     [
                         'medical_id' => $patient->medical_id,
                         'name' => $patient->full_name,
                         'age' => formatAge($patient->date_of_birth),
                         'date' => '',
-                        'department' => ''
+                        'department' => $lastVisitDepartment
                     ]
                 ];
 
@@ -318,17 +319,24 @@
                                     @if($labelData['name'])
                                         <div class="label-name">{{ $labelData['name'] }}</div>
                                     @endif
-                                    @if($labelData['age'])
-                                        <div class="label-age">العمر: {{ $labelData['age'] }}</div>
+                                    @if($labelData['age'] || ($labelData['department'] && $labelData['department'] !== '-'))
+                                        <div class="label-age">
+                                            @if($labelData['age'])
+                                                العمر: {{ $labelData['age'] }}
+                                            @endif
+                                            @if($labelData['age'] && ($labelData['department'] && $labelData['department'] !== '-'))
+                                                - 
+                                            @endif
+                                            @if($labelData['department'] && $labelData['department'] !== '-')
+                                                {{ $labelData['department'] }}
+                                            @endif
+                                        </div>
                                     @endif
                                     @if($labelData['medical_id'])
                                         <div class="label-medical-id">{{ $labelData['medical_id'] }}</div>
                                     @endif
                                     @if($labelData['date'])
                                         <div style="font-weight:bold;font-size:13px;margin-top:4px;">{{ $labelData['date'] }}</div>
-                                    @endif
-                                    @if($labelData['department'] && $labelData['department'] !== '-')
-                                        <div class="label-dept">{{ $labelData['department'] }}</div>
                                     @endif
                                 </div>
 
@@ -337,8 +345,8 @@
                                     <input type="text" name="name" placeholder="الاسم" value="{{ $labelData['name'] }}">
                                     <input type="text" name="medical_id" placeholder="الرقم الطبي" value="{{ $labelData['medical_id'] }}">
                                     <input type="text" name="age" placeholder="العمر" value="{{ $labelData['age'] }}">
-                                    <input type="text" name="date" placeholder="التاريخ" value="{{ $labelData['date'] }}">
-                                    <input type="text" name="department" placeholder="القسم" value="{{ $labelData['department'] }}">
+                                    <input type="text" name="department" placeholder="القسم" value="{{ $labelData['department'] }}" 
+                                           title="اكتب اسم القسم هنا">
                                 </div>
                             @endif
                         </td>
@@ -357,6 +365,13 @@ let originalData = {};
 let patientData = {};
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Add department template option to select
+    const templateSelect = document.getElementById('templateSelect');
+    const departmentOption = document.createElement('option');
+    departmentOption.value = 'department_only';
+    departmentOption.textContent = 'القسم فقط';
+    templateSelect.appendChild(departmentOption);
+    
     // Load patient data
     const patientDataScript = document.getElementById('patientData');
     if (patientDataScript) {
@@ -381,6 +396,37 @@ document.addEventListener('DOMContentLoaded', function() {
         this.value = value;
         updateTotalLabels(value);
         updateTableContent(value);
+    });
+    
+    // Add double-click edit functionality for individual cells
+    const cells = document.querySelectorAll('.labels-table td[data-index]');
+    cells.forEach(cell => {
+        cell.addEventListener('dblclick', function() {
+            if (!editMode) {
+                // Enter edit mode for individual cell
+                const departmentInput = this.querySelector('input[name="department"]');
+                if (departmentInput) {
+                    this.querySelector('.label-content').style.display = 'none';
+                    this.querySelector('.editable-label').style.display = 'flex';
+                    departmentInput.focus();
+                    departmentInput.select();
+                    
+                    // Save on Enter or blur
+                    const saveCell = () => {
+                        this.querySelector('.label-content').style.display = 'block';
+                        this.querySelector('.editable-label').style.display = 'none';
+                        updateSingleCell(this);
+                    };
+                    
+                    departmentInput.addEventListener('blur', saveCell, { once: true });
+                    departmentInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            saveCell();
+                        }
+                    }, { once: true });
+                }
+            }
+        });
     });
 });
 
@@ -417,7 +463,6 @@ function toggleEditMode() {
 }
 
 function saveChanges() {
-    // Update display content based on edit inputs
     const cells = document.querySelectorAll('.labels-table td[data-index]');
     
     cells.forEach(cell => {
@@ -425,41 +470,46 @@ function saveChanges() {
         const labelContent = cell.querySelector('.label-content');
         
         if (labelContent && inputs.length > 0) {
-            // Get values from inputs
             const values = {};
             inputs.forEach(input => {
                 values[input.name] = input.value.trim();
             });
             
-            // Update display content
             labelContent.innerHTML = '';
             
             if (values.name) {
                 labelContent.innerHTML += `<div class="label-name">${values.name}</div>`;
             }
-            if (values.age) {
-                labelContent.innerHTML += `<div class="label-age">العمر: ${values.age}</div>`;
+            
+            // Handle age and department - both are fully editable
+            if (values.age || values.department) {
+                let ageDepText = '';
+                if (values.age) {
+                    ageDepText += `العمر: ${values.age}`;
+                }
+                if (values.age && values.department) {
+                    ageDepText += ' - ';
+                }
+                if (values.department) {
+                    ageDepText += values.department;
+                }
+                if (ageDepText) {
+                    labelContent.innerHTML += `<div class="label-age">${ageDepText}</div>`;
+                }
             }
+            
             if (values.medical_id) {
                 labelContent.innerHTML += `<div class="label-medical-id">${values.medical_id}</div>`;
             }
             if (values.date) {
                 labelContent.innerHTML += `<div style="font-weight:bold;font-size:13px;margin-top:4px;">${values.date}</div>`;
             }
-            if (values.department && values.department !== '-') {
-                labelContent.innerHTML += `<div class="label-dept">${values.department}</div>`;
-            }
         }
     });
     
-    // Store updated data as original
     storeOriginalData();
-    
-    // Exit edit mode
     toggleEditMode();
-    
-    // Show success message
-    showToast('تم حفظ التغييرات بنجاح', 'success');
+    showToast('تم حفظ التغييرات بنجاح - القسم قابل للتعديل', 'success');
 }
 
 function cancelEdit() {
@@ -515,6 +565,9 @@ function applyTemplate() {
                 if (ageInput) ageInput.value = patientData.age || '';
                 if (departmentInput) departmentInput.value = patientData.department || '';
                 break;
+            case 'department_only':
+                if (departmentInput) departmentInput.value = patientData.department || '';
+                break;
             case 'default':
                 // Apply default template based on index
                 const index = parseInt(cell.dataset.index);
@@ -532,11 +585,14 @@ function applyTemplate() {
                     if (departmentInput) departmentInput.value = patientData.department || '';
                 }
                 break;
+            case 'custom':
+                // Don't fill anything - let user type whatever they want
+                break;
         }
     });
     
     if (editMode) {
-        showToast('تم تطبيق النمط', 'info');
+        showToast('تم تطبيق النمط - يمكنك تعديل القسم يدوياً', 'info');
     }
 }
 
