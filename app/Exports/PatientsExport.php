@@ -335,6 +335,42 @@ class PatientsExport implements FromCollection, WithHeadings, WithMapping, WithS
     }
 
     /**
+     * Calculate age from birth date
+     */
+    private function calculateAge($birthDate)
+    {
+        if (!$birthDate) return '-';
+        
+        $birth = \Carbon\Carbon::parse($birthDate);
+        $now = \Carbon\Carbon::now();
+        
+        $years = $birth->diffInYears($now);
+        
+        if ($years >= 1) {
+            return round($years) . ' سنة';
+        } else {
+            return round($birth->diffInDays($now) / 30.44) . ' شهر';
+        }
+    }
+
+    /**
+     * Translate status to Arabic
+     */
+    private function translateStatus($status)
+    {
+        $translations = [
+            'waiting' => 'في الانتظار',
+            'admitted' => 'تم الدخول',
+            'discharged' => 'تم الخروج',
+            'deceased' => 'متوفى',
+            'active' => 'نشط',
+            'inactive' => 'غير نشط'
+        ];
+
+        return $translations[$status] ?? $status;
+    }
+
+    /**
      * Count visits for the current filter period
      */
     private function countVisitsInPeriod($patient)
