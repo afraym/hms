@@ -220,11 +220,6 @@
                             @enderror
                         </div>
                         
-                        <!-- File Info -->
-                        <div class="alert alert-info" role="alert">
-                            <i class="material-icons opacity-10">info</i>
-                            <strong>ملاحظة:</strong> الحد الأقصى لحجم الملف 10 ميجابايت. الأنواع المسموحة: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF
-                        </div>
                         
                         <!-- Selected Files Preview -->
                         <div id="filePreview" class="mb-3" style="display: none;">
