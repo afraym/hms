@@ -83,7 +83,7 @@
     .label-content {
         width: 100%;
         height: 100%;
-        padding: 2px 2px 0 2px;
+        padding: 20px 2px 0 2px;
         font-size: 16px;
         display: flex;
         flex-direction: column;
@@ -95,12 +95,12 @@
     
     .label-name {
         font-weight: bold;
-        font-size: 18px;
+        font-size: 16px;
     }
     
     .label-medical-id {
         font-weight: bold;
-        font-size: 15px;
+        font-size: 14px;
         margin-top: 2px;
         letter-spacing: 1px;
     }
