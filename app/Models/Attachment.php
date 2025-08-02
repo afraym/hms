@@ -10,9 +10,13 @@ class Attachment extends Model
         'patient_id',
         'file',
         'original_name',
+        'filename',
+        'file_path',
+        'file_size',
+        'mime_type',
         'type',
         'description',
-        'title'
+        'uploaded_by'
     ];
 
     public function patient()

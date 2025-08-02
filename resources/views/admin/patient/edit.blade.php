@@ -185,13 +185,12 @@
         
             <!-- Form to upload attachments -->
     <div class="col-md-12 mt-4">
-        <form id="attachmentForm" enctype="multipart/form-data">
-        {{-- <form action="{{ route('patients.attachments.upload', $patient->id) }}" method="POST" enctype="multipart/form-data" class="mb-3 mt-4" id="attachmentForm">  --}}
-                           @csrf
-                <div class="card">
-                    <div class="card-header">
-                        <h6>رفع مرفقات المريض</h6>
-                    </div>
+        <form action="{{ route('patients.attachments.upload', $patient->id) }}" method="POST" enctype="multipart/form-data" class="mb-3 mt-4" id="attachmentForm">
+            @csrf
+            <div class="card">
+                <div class="card-header">
+                    <h6>رفع مرفقات المريض</h6>
+                </div>
                     <div class="card-body">
                         <!-- File Upload -->
                         <div class="input-group input-group-static mb-4">
@@ -817,7 +816,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         
         // Send request
-        xhr.open('POST', '{{ route("attachments.store") }}');
+        xhr.open('POST', '{{ route("patients.attachments.upload", $patient->id) }}');
         xhr.send(formData);
     });
 

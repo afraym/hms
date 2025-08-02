@@ -34,15 +34,22 @@ class AttachmentController extends Controller
                 'patient_id' => $request->patient_id,
                 'has_files' => $request->hasFile('attachments'),
                 'files_count' => $request->hasFile('attachments') ? count($request->file('attachments')) : 0,
+                'is_ajax' => $request->ajax() || $request->wantsJson(),
                 'request_data' => $request->all()
             ]);
 
             // Check if files exist first
             if (!$request->hasFile('attachments') || empty($request->file('attachments'))) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'يرجى اختيار ملف واحد على الأقل'
-                ], 422);
+                $errorMessage = 'يرجى اختيار ملف واحد على الأقل';
+                
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMessage
+                    ], 422);
+                }
+                
+                return redirect()->back()->withErrors(['attachments' => $errorMessage]);
             }
 
             $messages = [
@@ -112,10 +119,15 @@ class AttachmentController extends Controller
                 if (!empty($errors)) {
                     $errorMessage .= ' الأخطاء: ' . implode(', ', $errors);
                 }
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage
-                ], 500);
+                
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMessage
+                    ], 500);
+                }
+                
+                return redirect()->back()->withErrors(['attachments' => $errorMessage]);
             }
 
             $message = count($uploadedFiles) === 1 
@@ -126,11 +138,18 @@ class AttachmentController extends Controller
                 $message .= '. أخطاء: ' . implode(', ', $errors);
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'uploaded_count' => count($uploadedFiles)
-            ]);
+            // Handle AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'uploaded_count' => count($uploadedFiles),
+                    'attachments' => $uploadedFiles
+                ]);
+            }
+
+            // Handle regular form submissions
+            return redirect()->back()->with('success', $message);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation error in AttachmentController store', [
@@ -138,21 +157,31 @@ class AttachmentController extends Controller
                 'message' => $e->getMessage()
             ]);
             
-            return response()->json([
-                'success' => false,
-                'message' => 'خطأ في التحقق من صحة البيانات',
-                'errors' => $e->errors()
-            ], 422);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'خطأ في التحقق من صحة البيانات',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            return redirect()->back()->withErrors($e->errors())->withInput();
             
         } catch (\Exception $e) {
             \Log::error('Error in AttachmentController store: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return response()->json([
-                'success' => false,
-                'message' => 'حدث خطأ أثناء رفع الملفات: ' . $e->getMessage()
-            ], 500);
+            $errorMessage = 'حدث خطأ أثناء رفع الملفات: ' . $e->getMessage();
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return redirect()->back()->withErrors(['attachments' => $errorMessage]);
         }
     }
 
