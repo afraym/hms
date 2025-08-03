@@ -4,47 +4,241 @@
 @section('content')
 <style>
     @media print {
-        .no-print { display: none; }
+        .no-print { display: none !important; }
         @page {
             size: A4 portrait;
-            margin-right: 6px;
-            margin-left: 6px;
+            margin: 3mm; /* Slightly larger margin for safety */
         }
         html, body {
-            width: 210mm;
-            height: 297mm;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #fff !important;
-            box-sizing: border-box;
-        }
-        .a4-sheet {
             width: 210mm !important;
             height: 297mm !important;
             margin: 0 !important;
             padding: 0 !important;
+            background: #fff !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+        .a4-sheet {
+            width: 204mm !important; /* Reduced from 210mm */
+            height: 280mm !important; /* Significantly reduced from 285mm */
+            margin: 0 auto !important;
+            padding: 0 !important;
             box-shadow: none !important;
             background: #fff !important;
             position: relative;
-            box-sizing: border-box;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            page-break-after: auto !important;
+            page-break-before: avoid !important;
+            page-break-inside: avoid !important;
         }
-        .labels-table {
-            width: 100% !important;
-            height: 100% !important;
-            table-layout: fixed;
-            border-collapse: collapse;
-        }
-        .labels-table td {
-            height: 29.7mm !important;
-            width: 25% !important;
+        .labels-grid {
+            width: 204mm !important; /* Match sheet width */
+            height: 280mm !important; /* Match sheet height */
+            max-height: 280mm !important;
+            display: grid !important;
+            grid-template-columns: repeat(4, 51mm) !important; /* Fixed column width */
+            grid-template-rows: repeat(10, 28mm) !important; /* Fixed row height */
+            gap: 0 !important;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+            margin: 0 !important;
             padding: 0 !important;
-            box-sizing: border-box;
-            overflow: hidden;
+            overflow: hidden !important;
         }
-        .editable-label { display: none !important; }
-        .label-content { display: block !important; }
+        .label-box {
+            height: 28mm !important; /* Reduced from 28.5mm */
+            max-height: 28mm !important;
+            width: 51mm !important; /* Reduced from 52.5mm */
+            max-width: 51mm !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            border: 1px solid #000 !important;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+        }
+        .editable-label { 
+            display: none !important; 
+            visibility: hidden !important;
+        }
+        .label-content { 
+            display: flex !important; 
+            overflow: hidden !important;
+        }
+        
+        /* Text wrapping and sizing for print - further reduced */
+        .label-name {
+            font-size: 12px !important; /* Reduced from 13px */
+            font-weight: bold !important;
+            margin: 0 0 1px 0 !important;
+            line-height: 1.0 !important;
+            word-wrap: break-word !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 100% !important;
+            white-space: normal !important;
+            text-align: center !important;
+            overflow: hidden !important;
+        }
+        
+        .label-medical-id {
+            font-size: 12px !important; /* Reduced from 13px */
+            font-weight: bold !important;
+            margin: 1px 0 0 0 !important;
+            line-height: 1.0 !important;
+            letter-spacing: 0.2px !important; /* Reduced from 0.3px */
+            word-wrap: break-word !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 100% !important;
+            white-space: normal !important;
+            text-align: center !important;
+            overflow: hidden !important;
+        }
+        
+        .label-age, .label-dept {
+            font-size: 9px !important; /* Reduced from 10px */
+            margin: 0.5px 0 !important;
+            line-height: 1.0 !important;
+            word-wrap: break-word !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 100% !important;
+            white-space: normal !important;
+            text-align: center !important;
+            overflow: hidden !important;
+        }
+        
+        .label-content {
+            padding: 1px !important; /* Reduced padding */
+            line-height: 1.0 !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            text-align: center !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            word-wrap: break-word !important;
+        }
+        
+        /* Date labels */
+        .label-content > div[style*="font-weight:bold"] {
+            font-size: 12px !important; /* Reduced from 13px */
+            margin: 1px 0 0 0 !important;
+            word-wrap: break-word !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 100% !important;
+            white-space: normal !important;
+            text-align: center !important;
+            overflow: hidden !important;
+        }
+        
+        /* All content divs should wrap text properly */
+        .label-content div {
+            margin: 0 !important; /* Removed margins completely */
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            text-align: center !important;
+            word-wrap: break-word !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            white-space: normal !important;
+            overflow: hidden !important;
+        }
+        
+        /* Prevent page breaks completely */
+        body, body * {
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+        }
+        
+        /* Force single page with safety margins */
+        html {
+            max-height: 297mm !important;
+            overflow: hidden !important;
+        }
+        
+        body {
+            max-height: 297mm !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        /* Completely hide non-print elements */
+        .no-print,
+        .no-print *,
+        script,
+        style:not([media*="print"]),
+        .edit-controls,
+        .edit-controls *,
+        form,
+        form *,
+        nav,
+        nav *,
+        .navbar,
+        .navbar *,
+        .sidebar,
+        .sidebar *,
+        .footer,
+        .footer * {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            width: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            opacity: 0 !important;
+        }
+        
+        /* Remove any content after grid */
+        .labels-grid ~ *,
+        .a4-sheet > :not(.labels-grid) {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* Force page end */
+        .a4-sheet::after {
+            content: "";
+            display: block;
+            height: 0;
+            clear: both;
+            page-break-after: auto;
+        }
+        
+        /* Ensure grid fits exactly with safety margins */
+        .labels-grid {
+            max-height: 280mm !important; /* 17mm safety margin from 297mm */
+        }
+        
+        /* Additional constraints to prevent overflow */
+        .a4-sheet {
+            max-height: 280mm !important;
+            max-width: 204mm !important;
+        }
     }
     
+    /* Screen styles - keep existing but adjust label box dimensions */
     .a4-sheet {
         width: 210mm;
         height: 297mm;
@@ -56,61 +250,99 @@
         flex-direction: column;
         align-items: stretch;
         justify-content: flex-start;
+        page-break-after: avoid;
+        overflow: hidden;
     }
     
-    .labels-table {
+    .labels-grid {
         width: 100%;
         height: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        gap: 0;
         margin: 0;
         padding: 0;
         direction: rtl;
     }
     
-    .labels-table td {
+    .label-box {
         border: 1px solid #f90;
-        width: 25%;
-        height: 74px;
-        vertical-align: middle;
-        text-align: center;
+        width: 100%;
+        height: 100%;
+        min-height: 28mm; /* Reduced from 28.5mm */
+        display: flex;
+        align-items: center;
+        justify-content: center;
         padding: 0;
         box-sizing: border-box;
         overflow: hidden;
         position: relative;
+        word-wrap: break-word;
+        word-break: break-word;
     }
     
     .label-content {
         width: 100%;
         height: 100%;
-        padding: 20px 2px 0 2px;
-        font-size: 16px;
+        padding: 3px 4px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        line-height: 1.2;
+        line-height: 1.1;
         box-sizing: border-box;
+        text-align: center;
+        overflow: hidden;
+        word-wrap: break-word;
     }
     
     .label-name {
         font-weight: bold;
-        font-size: 16px;
+        font-size: 15px;
+        margin: 0 0 3px 0;
+        line-height: 1.1;
+        text-align: center;
+        width: 100%;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        max-width: 100%;
+        hyphens: auto;
+        -webkit-hyphens: auto;
+        -ms-hyphens: auto;
     }
     
     .label-medical-id {
         font-weight: bold;
-        font-size: 14px;
-        margin-top: 2px;
-        letter-spacing: 1px;
+        font-size: 15px;
+        margin: 3px 0 0 0;
+        line-height: 1.1;
+        letter-spacing: 0.5px;
+        text-align: center;
+        width: 100%;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        max-width: 100%;
     }
     
     .label-age, .label-dept {
-        font-size: 15px;
-        margin-top: 1px;
+        font-size: 12px;
+        margin: 2px 0;
+        line-height: 1.1;
+        text-align: center;
+        width: 100%;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        max-width: 100%;
     }
 
-    /* Editable label styles */
+    /* Keep all existing editable and other styles unchanged */
     .editable-label {
         position: absolute;
         top: 0;
@@ -119,7 +351,7 @@
         bottom: 0;
         background: rgba(255, 255, 255, 0.95);
         display: none;
-        padding: 4px;
+        padding: 3px;
         box-sizing: border-box;
         flex-direction: column;
         gap: 2px;
@@ -133,6 +365,9 @@
         border-radius: 2px;
         text-align: center;
         direction: rtl;
+        height: 18px;
+        margin-bottom: 1px;
+        word-wrap: break-word;
     }
     
     .editable-label input:focus {
@@ -168,6 +403,52 @@
         border-radius: 4px;
         direction: rtl;
     }
+
+    /* Screen-specific styles */
+    @media screen {
+        .label-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+        }
+        .label-name {
+            font-size: 14px;
+            margin: 0 0 2px 0;
+            line-height: 1.1;
+        }
+        .label-medical-id {
+            font-size: 14px;
+            margin: 2px 0 0 0;
+            line-height: 1.1;
+        }
+        .label-age, .label-dept {
+            font-size: 11px;
+            margin: 1px 0;
+            line-height: 1.1;
+        }
+    }
+    
+    /* Force text to wrap within constraints */
+    .label-name,
+    .label-medical-id,
+    .label-age,
+    .label-dept,
+    .label-content div {
+        hyphens: auto !important;
+        -webkit-hyphens: auto !important;
+        -ms-hyphens: auto !important;
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        white-space: normal !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
 </style>
 
 <div class="a4-sheet">
@@ -183,7 +464,7 @@
                            style="width:70px;" class="form-control">
                 </div>
                 
-                <div class="template-selector">
+                <div class="template-selector" style="display:none;">
                     <label>نمط الملصق:</label>
                     <select id="templateSelect" onchange="applyTemplate()">
                         <option value="default">نمط افتراضي</option>
@@ -218,8 +499,7 @@
         </div>
     </div>
 
-    <table class="labels-table" id="labelsTable">
-        <tbody>
+    <div class="labels-grid" id="labelsGrid">
         @foreach($patients as $patient)
             @php
                 function formatAge($birthDate) {
@@ -267,7 +547,6 @@
                         'name' => '',
                         'age' => '',
                         'date' => ($lastVisit ? \Carbon\Carbon::parse($lastVisit)->format('d-m-Y') : ''),
-
                         'department' => ''
                     ],
                     // Template 3: Name only
@@ -303,59 +582,53 @@
 
             <script type="application/json" id="patientData">@json($patientData)</script>
 
-            {{-- Print exactly 40 cells (10 rows × 4 columns) --}}
-            @for($row = 0; $row < 10; $row++)
-                <tr>
-                    @for($col = 0; $col < 4; $col++)
-                        @php 
-                            $idx = $row * 4 + $col;
-                            $showLabel = $idx < count($allLabels);
-                            $labelData = $showLabel ? $allLabels[$idx] : null;
-                        @endphp
-                        <td data-index="{{ $idx }}">
-                            @if($showLabel)
-                                <!-- Display content -->
-                                <div class="label-content">
-                                    @if($labelData['name'])
-                                        <div class="label-name">{{ $labelData['name'] }}</div>
+            {{-- Generate exactly 40 label boxes (10 rows × 4 columns) --}}
+            @for($idx = 0; $idx < 40; $idx++)
+                @php 
+                    $showLabel = $idx < count($allLabels);
+                    $labelData = $showLabel ? $allLabels[$idx] : null;
+                @endphp
+                <div class="label-box" data-index="{{ $idx }}">
+                    @if($showLabel)
+                        <!-- Display content -->
+                        <div class="label-content">
+                            @if($labelData['name'])
+                                <div class="label-name">{{ $labelData['name'] }}</div>
+                            @endif
+                            @if($labelData['age'] || ($labelData['department'] && $labelData['department'] !== '-'))
+                                <div class="label-age">
+                                    @if($labelData['age'])
+                                        العمر: {{ $labelData['age'] }}
                                     @endif
-                                    @if($labelData['age'] || ($labelData['department'] && $labelData['department'] !== '-'))
-                                        <div class="label-age">
-                                            @if($labelData['age'])
-                                                العمر: {{ $labelData['age'] }}
-                                            @endif
-                                            @if($labelData['age'] && ($labelData['department'] && $labelData['department'] !== '-'))
-                                                - 
-                                            @endif
-                                            @if($labelData['department'] && $labelData['department'] !== '-')
-                                                {{ $labelData['department'] }}
-                                            @endif
-                                        </div>
+                                    @if($labelData['age'] && ($labelData['department'] && $labelData['department'] !== '-'))
+                                        - 
                                     @endif
-                                    @if($labelData['medical_id'])
-                                        <div class="label-medical-id">{{ $labelData['medical_id'] }}</div>
+                                    @if($labelData['department'] && $labelData['department'] !== '-')
+                                        {{ $labelData['department'] }}
                                     @endif
-                                    @if($labelData['date'])
-                                        <div style="font-weight:bold;font-size:13px;margin-top:4px;">{{ $labelData['date'] }}</div>
-                                    @endif
-                                </div>
-
-                                <!-- Edit form -->
-                                <div class="editable-label">
-                                    <input type="text" name="name" placeholder="الاسم" value="{{ $labelData['name'] }}">
-                                    <input type="text" name="medical_id" placeholder="الرقم الطبي" value="{{ $labelData['medical_id'] }}">
-                                    <input type="text" name="age" placeholder="العمر" value="{{ $labelData['age'] }}">
-                                    <input type="text" name="department" placeholder="القسم" value="{{ $labelData['department'] }}" 
-                                           title="اكتب اسم القسم هنا">
                                 </div>
                             @endif
-                        </td>
-                    @endfor
-                </tr>
+                            @if($labelData['medical_id'])
+                                <div class="label-medical-id">{{ $labelData['medical_id'] }}</div>
+                            @endif
+                            @if($labelData['date'])
+                                <div style="font-weight:bold;font-size:13px;margin-top:4px;">{{ $labelData['date'] }}</div>
+                            @endif
+                        </div>
+
+                        <!-- Edit form -->
+                        <div class="editable-label">
+                            <input type="text" name="name" placeholder="الاسم" value="{{ $labelData['name'] }}">
+                            <input type="text" name="medical_id" placeholder="الرقم الطبي" value="{{ $labelData['medical_id'] }}">
+                            <input type="text" name="age" placeholder="العمر" value="{{ $labelData['age'] }}">
+                            <input type="text" name="department" placeholder="القسم" value="{{ $labelData['department'] }}" 
+                                   title="اكتب اسم القسم هنا">
+                        </div>
+                    @endif
+                </div>
             @endfor
         @endforeach
-        </tbody>
-    </table>
+    </div>
 </div>
 
 <script>
@@ -387,7 +660,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (savedLabels !== null) {
         labelsInput.value = savedLabels;
         updateTotalLabels(savedLabels);
-        updateTableContent(savedLabels);
+        updateGridContent(savedLabels);
     }
 
     labelsInput.addEventListener('input', function(e) {
@@ -395,15 +668,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (value > 40) value = 40;
         this.value = value;
         updateTotalLabels(value);
-        updateTableContent(value);
+        updateGridContent(value);
     });
     
-    // Add double-click edit functionality for individual cells
-    const cells = document.querySelectorAll('.labels-table td[data-index]');
-    cells.forEach(cell => {
-        cell.addEventListener('dblclick', function() {
+    // Add double-click edit functionality for individual boxes
+    const boxes = document.querySelectorAll('.label-box[data-index]');
+    boxes.forEach(box => {
+        box.addEventListener('dblclick', function() {
             if (!editMode) {
-                // Enter edit mode for individual cell
+                // Enter edit mode for individual box
                 const departmentInput = this.querySelector('input[name="department"]');
                 if (departmentInput) {
                     this.querySelector('.label-content').style.display = 'none';
@@ -412,16 +685,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     departmentInput.select();
                     
                     // Save on Enter or blur
-                    const saveCell = () => {
+                    const saveBox = () => {
                         this.querySelector('.label-content').style.display = 'block';
                         this.querySelector('.editable-label').style.display = 'none';
-                        updateSingleCell(this);
+                        updateSingleBox(this);
                     };
                     
-                    departmentInput.addEventListener('blur', saveCell, { once: true });
+                    departmentInput.addEventListener('blur', saveBox, { once: true });
                     departmentInput.addEventListener('keypress', function(e) {
                         if (e.key === 'Enter') {
-                            saveCell();
+                            saveBox();
                         }
                     }, { once: true });
                 }
@@ -431,10 +704,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function storeOriginalData() {
-    const cells = document.querySelectorAll('.labels-table td[data-index]');
-    cells.forEach(cell => {
-        const index = cell.dataset.index;
-        const inputs = cell.querySelectorAll('.editable-label input');
+    const boxes = document.querySelectorAll('.label-box[data-index]');
+    boxes.forEach(box => {
+        const index = box.dataset.index;
+        const inputs = box.querySelectorAll('.editable-label input');
         originalData[index] = {};
         inputs.forEach(input => {
             originalData[index][input.name] = input.value;
@@ -444,18 +717,18 @@ function storeOriginalData() {
 
 function toggleEditMode() {
     editMode = !editMode;
-    const table = document.getElementById('labelsTable');
+    const grid = document.getElementById('labelsGrid');
     const editBtn = document.getElementById('editBtn');
     const saveBtn = document.getElementById('saveBtn');
     const cancelBtn = document.getElementById('cancelBtn');
 
     if (editMode) {
-        table.classList.add('edit-mode');
+        grid.classList.add('edit-mode');
         editBtn.style.display = 'none';
         saveBtn.style.display = 'inline-block';
         cancelBtn.style.display = 'inline-block';
     } else {
-        table.classList.remove('edit-mode');
+        grid.classList.remove('edit-mode');
         editBtn.style.display = 'inline-block';
         saveBtn.style.display = 'none';
         cancelBtn.style.display = 'none';
@@ -463,11 +736,11 @@ function toggleEditMode() {
 }
 
 function saveChanges() {
-    const cells = document.querySelectorAll('.labels-table td[data-index]');
+    const boxes = document.querySelectorAll('.label-box[data-index]');
     
-    cells.forEach(cell => {
-        const inputs = cell.querySelectorAll('.editable-label input');
-        const labelContent = cell.querySelector('.label-content');
+    boxes.forEach(box => {
+        const inputs = box.querySelectorAll('.editable-label input');
+        const labelContent = box.querySelector('.label-content');
         
         if (labelContent && inputs.length > 0) {
             const values = {};
@@ -514,10 +787,10 @@ function saveChanges() {
 
 function cancelEdit() {
     // Restore original values
-    const cells = document.querySelectorAll('.labels-table td[data-index]');
-    cells.forEach(cell => {
-        const index = cell.dataset.index;
-        const inputs = cell.querySelectorAll('.editable-label input');
+    const boxes = document.querySelectorAll('.label-box[data-index]');
+    boxes.forEach(box => {
+        const index = box.dataset.index;
+        const inputs = box.querySelectorAll('.editable-label input');
         
         if (originalData[index]) {
             inputs.forEach(input => {
@@ -537,17 +810,17 @@ function resetLabels() {
 
 function applyTemplate() {
     const template = document.getElementById('templateSelect').value;
-    const cells = document.querySelectorAll('.labels-table td[data-index]');
+    const boxes = document.querySelectorAll('.label-box[data-index]');
     
-    cells.forEach(cell => {
-        const inputs = cell.querySelectorAll('.editable-label input');
+    boxes.forEach(box => {
+        const inputs = box.querySelectorAll('.editable-label input');
         if (inputs.length === 0) return;
         
-        const nameInput = cell.querySelector('input[name="name"]');
-        const medicalIdInput = cell.querySelector('input[name="medical_id"]');
-        const ageInput = cell.querySelector('input[name="age"]');
-        const dateInput = cell.querySelector('input[name="date"]');
-        const departmentInput = cell.querySelector('input[name="department"]');
+        const nameInput = box.querySelector('input[name="name"]');
+        const medicalIdInput = box.querySelector('input[name="medical_id"]');
+        const ageInput = box.querySelector('input[name="age"]');
+        const dateInput = box.querySelector('input[name="date"]');
+        const departmentInput = box.querySelector('input[name="department"]');
         
         // Clear all first
         inputs.forEach(input => input.value = '');
@@ -570,7 +843,7 @@ function applyTemplate() {
                 break;
             case 'default':
                 // Apply default template based on index
-                const index = parseInt(cell.dataset.index);
+                const index = parseInt(box.dataset.index);
                 if (index === 0) {
                     if (medicalIdInput) medicalIdInput.value = patientData.medical_id || '';
                 } else if (index === 1) {
@@ -601,7 +874,7 @@ function updateTotalLabels(total) {
     document.getElementById('totalLabels').textContent = total;
 }
 
-function updateTableContent(total) {
+function updateGridContent(total) {
     fetch(`${window.location.pathname}?labels=${total}`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
@@ -612,13 +885,54 @@ function updateTableContent(total) {
     .then(html => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        const newTable = doc.querySelector('.labels-table');
-        if (newTable) {
-            document.querySelector('.labels-table').innerHTML = newTable.innerHTML;
+        const newGrid = doc.querySelector('.labels-grid');
+        if (newGrid) {
+            document.querySelector('.labels-grid').innerHTML = newGrid.innerHTML;
             storeOriginalData();
         }
     })
     .catch(error => console.error('Error:', error));
+}
+
+function updateSingleBox(box) {
+    const inputs = box.querySelectorAll('.editable-label input');
+    const labelContent = box.querySelector('.label-content');
+    
+    if (labelContent && inputs.length > 0) {
+        const values = {};
+        inputs.forEach(input => {
+            values[input.name] = input.value.trim();
+        });
+        
+        labelContent.innerHTML = '';
+        
+        if (values.name) {
+            labelContent.innerHTML += `<div class="label-name">${values.name}</div>`;
+        }
+        
+        if (values.age || values.department) {
+            let ageDepText = '';
+            if (values.age) {
+                ageDepText += `العمر: ${values.age}`;
+            }
+            if (values.age && values.department) {
+                ageDepText += ' - ';
+            }
+            if (values.department) {
+                ageDepText += values.department;
+            }
+            if (ageDepText) {
+                labelContent.innerHTML += `<div class="label-age">${ageDepText}</div>`;
+            }
+        }
+        
+        if (values.medical_id) {
+            labelContent.innerHTML += `<div class="label-medical-id">${values.medical_id}</div>`;
+        }
+        if (values.date) {
+            labelContent.innerHTML += `<div style="font-weight:bold;font-size:13px;margin-top:4px;">${values.date}</div>`;
+        }
+    }
 }
 
 function showToast(message, type = 'info') {

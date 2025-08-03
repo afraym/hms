@@ -188,9 +188,9 @@
                                     </td>
                                     <td>
                                         <a href="{{ route('patients.show', $patient->id) }}" class="btn btn-sm bg-gradient-info">عرض</a>
-                                        <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm btn-primary">
+                                        <!-- <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm btn-primary">
                                          الملصقات
-                                        </a>
+                                        </a> -->
                                         <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-sm bg-gradient-warning">تعديل</a>
                                         @if($patient->status !== 'deceased')
                                         <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">

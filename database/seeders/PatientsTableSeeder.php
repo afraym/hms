@@ -16,7 +16,7 @@ class PatientsTableSeeder extends Seeder
      */
     public function run()
     {
-        $csvFile = database_path('seeders/30-06-2025.csv');
+        $csvFile = database_path('seeders/29-07-2025.csv');
         $file = fopen($csvFile, 'r');
 
         // Skip the header row
@@ -442,5 +442,194 @@ class PatientsTableSeeder extends Seeder
         }
 
         return null;
+    }
+
+    public function map($patient): array
+    {
+        $lastVisit = $patient->visits->sortByDesc('visit_at')->first();
+        
+        // Calculate visits for the current filter period
+        $periodVisits = $this->countVisitsInPeriod($patient);
+        
+        // Get current/primary department
+        $currentDepartment = optional($patient->department)->name;
+        
+        // Get treatment type from the most recent visit
+        $treatmentType = $lastVisit ? ($lastVisit->treatment_type ?? '-') : '-';
+        
+        return [
+            floatval($patient->medical_id),
+            $patient->full_name,
+            floatval($patient->national_id),
+            floatval(str_replace('UHI', '', $patient->uhi_number)),
+            $patient->date_of_birth ? \Carbon\Carbon::parse($patient->date_of_birth)->format('Y-m-d') : '',
+            $this->calculateAge($patient->date_of_birth),
+            $patient->gender == 'male' ? 'ذكر' : 'أنثى',
+            $patient->phone,
+            $patient->address,
+            $patient->governorate,
+            $currentDepartment ?: 'غير محدد', // Current department
+            $this->translateStatus($patient->status),
+            $patient->companion_name,
+            $patient->companion_phone,
+            $patient->companion_relation,
+            \Carbon\Carbon::parse($patient->created_at)->format('Y-m-d H:i'),
+            $patient->visits->count(),
+            $lastVisit ? \Carbon\Carbon::parse($lastVisit->visit_at)->format('Y-m-d H:i') : '-',
+            $periodVisits, // Visits in the filtered period
+            $treatmentType, // Treatment type (نوع المعاملة)
+            optional($patient->creator)->name
+        ];
+    }
+
+    public function headings(): array
+    {
+        return [
+            'الرقم الطبي',
+            'الاسم',
+            'الرقم القومي',
+            'رقم التأمين الصحي',
+            'تاريخ الميلاد',
+            'السن',
+            'النوع',
+            'رقم الهاتف',
+            'العنوان',
+            'المحافظة',
+            'القسم الحالي', // Current department
+            'الحالة',
+            'اسم المرافق',
+            'هاتف المرافق',
+            'صلة القرابة',
+            'تاريخ التسجيل',
+            'إجمالي الزيارات',
+            'آخر زيارة',
+            'زيارات الفترة', // Visits in the selected period
+            'نوع المعاملة', // Treatment type
+            'بواسطة'
+        ];
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        return [
+            // Header row styling
+            1 => [
+                'font' => [
+                    'bold' => true,
+                    'size' => 12
+                ],
+                'fill' => [
+                    'fillType' => 'solid',
+                    'color' => ['rgb' => 'CCCCCC']
+                ]
+            ],
+            
+            // Format ID columns as numbers with 0 decimals
+            'A2:A1000' => [
+                'numberFormat' => ['formatCode' => '0'] // Medical ID
+            ],
+            'C2:C1000' => [
+                'numberFormat' => ['formatCode' => '0'] // National ID
+            ],
+            'D2:D1000' => [
+                'numberFormat' => ['formatCode' => '0'] // UHI number
+            ],
+            
+            // Highlight department column (K)
+            'K1' => [
+                'fill' => [
+                    'fillType' => 'solid',
+                    'color' => ['rgb' => 'E8F5E8'] // Light green for department header
+                ]
+            ],
+            
+            // Highlight treatment type column (T)
+            'T1' => [
+                'fill' => [
+                    'fillType' => 'solid',
+                    'color' => ['rgb' => 'FFE8CC'] // Light orange for treatment type header
+                ]
+            ],
+            
+            // Highlight patients with visits in the selected period (column S)
+            'S2:S1000' => [
+                'conditional' => [
+                    [
+                        'type' => 'greaterThan',
+                        'value' => 0,
+                        'fill' => [
+                            'fillType' => 'solid',
+                            'color' => ['rgb' => 'E8F5E8'] // Light green
+                        ]
+                    ]
+                ]
+            ],
+            
+            // Highlight patients with no total visits (column Q)
+            'Q2:Q1000' => [
+                'conditional' => [
+                    [
+                        'type' => 'equal',
+                        'value' => 0,
+                        'fill' => [
+                            'fillType' => 'solid',
+                            'color' => ['rgb' => 'FFE6E6'] // Light red
+                        ]
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function(AfterSheet $event) {
+                // Set right-to-left for Arabic text
+                $event->sheet->getDelegate()->setRightToLeft(true);
+                
+                // Auto-fit columns for better readability
+                foreach(range('A','U') as $col) {
+                    $event->sheet->getDelegate()->getColumnDimension($col)->setAutoSize(true);
+                }
+                
+                // Make specific columns wider
+                $event->sheet->getDelegate()->getColumnDimension('K')->setWidth(20); // Current department
+                $event->sheet->getDelegate()->getColumnDimension('T')->setWidth(25); // Treatment type
+                
+                // Add borders to all cells with data
+                $lastRow = $event->sheet->getDelegate()->getHighestRow();
+                $event->sheet->getDelegate()->getStyle('A1:U' . $lastRow)->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => ['rgb' => '000000']
+                        ]
+                    ]
+                ]);
+                
+                // Add explanatory notes at the bottom
+                $noteRow = $lastRow + 2;
+                $event->sheet->getDelegate()->setCellValue('A' . $noteRow, 
+                    'ملاحظات:');
+                $event->sheet->getDelegate()->setCellValue('A' . ($noteRow + 1), 
+                    '• القسم الحالي: القسم المسجل عليه المريض حالياً');
+                $event->sheet->getDelegate()->setCellValue('A' . ($noteRow + 2), 
+                    '• نوع المعاملة: نوع العلاج أو الخدمة المقدمة للمريض');
+                $event->sheet->getDelegate()->setCellValue('A' . ($noteRow + 3), 
+                    '• المرضى الذين لديهم 0 زيارات إجمالية مميزون بخلفية حمراء فاتحة');
+                $event->sheet->getDelegate()->setCellValue('A' . ($noteRow + 4), 
+                    '• المرضى الذين لديهم زيارات في الفترة المحددة مميزون بخلفية خضراء فاتحة');
+                
+                // Style the notes
+                $event->sheet->getDelegate()->getStyle('A' . $noteRow . ':A' . ($noteRow + 4))->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 10,
+                        'color' => ['rgb' => '666666']
+                    ]
+                ]);
+            },
+        ];
     }
 }

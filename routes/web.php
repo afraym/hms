@@ -35,10 +35,10 @@ Route::view('profile', 'profile')
             Route::get('patient-visits/{visit}', [PatientController::class, 'getVisit'])->name('patient-visits.show');
 
             // Route to print a single patient label
-            Route::get('patients/{patient}/label', [PatientController::class, 'printLabels'])->name('patients.print.label');
+            // Route::get('patients/{patient}/label', [PatientController::class, 'printLabels'])->name('patients.print.label');
 
-            // Route to print multiple patient labels
-            Route::get('patients/print/labels', [PatientController::class, 'printLabels'])->name('patients.print.labels');
+            // // Route to print multiple patient labels
+            // Route::get('patients/print/labels', [PatientController::class, 'printLabels'])->name('patients.print.labels');
         });
 
         Route::get('/proxy/national-id', [ProxyController::class, 'fetchNationalIdInfo']);
