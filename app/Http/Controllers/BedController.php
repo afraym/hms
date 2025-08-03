@@ -65,7 +65,8 @@ class BedController extends Controller
      */
     public function edit(Bed $bed)
     {
-        return view('beds.edit', compact('bed'));
+        $departments = \App\Models\Department::all();
+        return view('admin.beds.edit', compact('bed', 'departments'));
     }
 
     /**

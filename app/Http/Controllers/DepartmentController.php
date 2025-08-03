@@ -54,6 +54,7 @@ class DepartmentController extends Controller
      */
     public function edit(Department $department)
     {
+        $department->loadCount(['beds', 'patientVisits as patients_count']);
         return view('admin.department.edit', compact('department'));
     }
 
