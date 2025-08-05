@@ -188,7 +188,7 @@
                                     </td>
                                     <td>
                                         <a href="{{ route('patients.show', $patient->id) }}" class="btn btn-sm bg-gradient-info">عرض</a>
-                                        <!-- <a href="{{ route('patients.print.label', $patient->id) }}" class="btn btn-sm btn-primary">
+                                        <!-- <a href="#" class="btn btn-sm btn-primary">
                                          الملصقات
                                         </a> -->
                                         <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-sm bg-gradient-warning">تعديل</a>

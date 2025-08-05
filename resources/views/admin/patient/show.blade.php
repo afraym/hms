@@ -208,7 +208,7 @@
                 <a href="{{ route('patients.edit', $patient->id) }}" class="btn bg-gradient-warning">
                     <i class="material-icons">edit</i> تعديل البيانات
                 </a>
-                <!-- <a href="{{ route('patients.print.label', $patient->id) }}" class="btn bg-gradient-secondary">
+                <!-- <a href="#" class="btn bg-gradient-secondary">
                     <i class="material-icons">print</i> طباعة الملصقات
                 </a> -->
                 {{-- <a href="{{ route('patients.visits.create', $patient->id) }}" class="btn bg-gradient-info">
