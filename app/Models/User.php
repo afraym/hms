@@ -49,41 +49,34 @@ class User extends Authenticatable
     }
 
     /**
-     * Validation rules for registration
+     * Get role display name
      */
-    public static function registrationRules()
+    public function getRoleDisplayAttribute()
     {
-        return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:15|unique:users|regex:/^[0-9+\-\s()]+$/',
-            'password' => 'required|string|min:8|confirmed',
-        ];
+        return ucfirst($this->role);
     }
 
     /**
-     * Validation messages in Arabic
+     * Check if user is admin
      */
-    public static function validationMessages()
+    public function isAdmin()
     {
-        return [
-            'name.required' => 'الاسم مطلوب',
-            'name.string' => 'الاسم يجب أن يكون نص',
-            'name.max' => 'الاسم يجب ألا يتجاوز 255 حرف',
-            
-            'email.required' => 'البريد الإلكتروني مطلوب',
-            'email.email' => 'البريد الإلكتروني غير صحيح',
-            'email.unique' => 'البريد الإلكتروني مستخدم من قبل',
-            'email.max' => 'البريد الإلكتروني يجب ألا يتجاوز 255 حرف',
-            
-            'phone.required' => 'رقم الهاتف مطلوب',
-            'phone.unique' => 'رقم الهاتف مستخدم من قبل',
-            'phone.max' => 'رقم الهاتف يجب ألا يتجاوز 15 رقم',
-            'phone.regex' => 'رقم الهاتف غير صحيح',
-            
-            'password.required' => 'كلمة المرور مطلوبة',
-            'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
-            'password.confirmed' => 'تأكيد كلمة المرور غير متطابق',
-        ];
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user is manager
+     */
+    public function isManager()
+    {
+        return $this->role === 'manager';
+    }
+
+    /**
+     * Check if user is reception
+     */
+    public function isReception()
+    {
+        return $this->role === 'reception';
     }
 }

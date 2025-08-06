@@ -8,6 +8,7 @@ use App\Http\Controllers\ProxyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\AttachmentController; 
+use App\Http\Controllers\UserController; // Add this import at the top
 
 Route::redirect('/', '/admin/patients/create');
 
@@ -25,6 +26,13 @@ Route::view('profile', 'profile')
             Route::resource('patients', PatientController::class);
             Route::resource('departments', DepartmentController::class);
             Route::resource('patient-visits', PatientVisitController::class)->names('patient_visits');
+
+            // Add user management routes (admin only)
+            Route::middleware('role:admin')->group(function () {
+                Route::resource('users', UserController::class);
+                Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+                Route::get('/users/ajax-search', [UserController::class, 'ajaxSearch'])->name('users.ajaxSearch');
+            });
 
             // Patient visit routes
             Route::get('patients/{patient}/visits/create', [PatientController::class, 'createVisit'])->name('patients.visits.create');

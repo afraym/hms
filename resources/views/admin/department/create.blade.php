@@ -1,4 +1,3 @@
-{{-- filepath: c:\laragon\www\hms\resources\views\admin\department\create.blade.php --}}
 @extends('layouts.admin')
 
 @section('content')

@@ -12,12 +12,13 @@
         <li class="nav-item">
           <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active bg-gradient-info' : '' }}" href="{{ route('admin.dashboard') }}">
             <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
-          <i class="material-icons-round opacity-10">dashboard</i>
+              <i class="material-icons-round opacity-10">dashboard</i>
             </div>
             <span class="nav-link-text me-1">لوحة التحكم</span>
           </a>
         </li>
       {{-- @endcanany --}}
+      
       <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('patients.index') ? 'active bg-gradient-info' : '' }}" href="{{ route('patients.index') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
@@ -34,6 +35,7 @@
           <span class="nav-link-text me-1">إدخال مريض</span>
         </a>
       </li>
+      
       <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('beds.index') ? 'active bg-gradient-info' : '' }}" href="{{ route('beds.index') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
@@ -50,6 +52,7 @@
           <span class="nav-link-text me-1">إضافة سرير</span>
         </a>
       </li>
+      
       <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('departments.index') ? 'active bg-gradient-info' : '' }}" href="{{ route('departments.index') }}">
           <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
@@ -66,11 +69,43 @@
           <span class="nav-link-text me-1">إضافة قسم</span>
         </a>
       </li>
+
+      {{-- User Management Section - Admin Only --}}
+      @if(auth()->user() && auth()->user()->role === 'admin')
+        <li class="nav-item">
+          <a class="nav-link {{ request()->routeIs('users.index') ? 'active bg-gradient-info' : '' }}" href="{{ route('users.index') }}">
+            <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
+              <i class="material-icons-round opacity-10">people</i>
+            </div>
+            <span class="nav-link-text me-1">قائمة المستخدمين</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ request()->routeIs('users.create') ? 'active bg-gradient-info' : '' }}" href="{{ route('users.create') }}">
+            <div class="text-white text-center ms-2 d-flex align-items-center justify-content-center">
+              <i class="material-icons-round opacity-10">person_add</i>
+            </div>
+            <span class="nav-link-text me-1">إضافة مستخدم</span>
+          </a>
+        </li>
+      @endif
     </ul>
   </div>
   <div class="sidenav-footer position-absolute w-100 bottom-0">
+
+    <!-- Support Button -->
     <div class="mx-3">
-      <a class="btn bg-gradient-primary w-100" href="https://aman.it.com" type="button" target="_blank">الاتصال بالدعم</a>
+      <a class="btn bg-gradient-primary w-100" href="https://crm.aman.it.com" type="button" target="_blank">الاتصال بالدعم</a>
+      <!-- Version Info -->
+    <div class="mx-3 mb-2">
+      <div class="text-center">
+        <small class="text-white opacity-8">
+          <i class="material-icons-round opacity-10" style="font-size: 14px;">info</i>
+          الإصدار {{ config('app.version', '1.0.0') }}
+        </small>
+      </div>
     </div>
+    </div>
+      
   </div>
 </aside>
