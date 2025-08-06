@@ -27,7 +27,7 @@ class PatientController extends Controller
         
         $query = Patient::with(['visits' => function($query) {
             $query->latest('visit_at');
-        }]);
+        }, 'created_by_user']); // Add created_by_user relationship
         
         switch ($sortBy) {
             case 'latest_visit':
@@ -743,8 +743,8 @@ class PatientController extends Controller
     {
         $query = $request->input('query');
 
-        // Search patients by first name, second name, phone, or national ID
-        $patients = Patient::where('full_name', 'LIKE', "%{$query}%")
+        $patients = Patient::with(['created_by_user', 'visits']) // Add visits relationship
+        ->where('full_name', 'LIKE', "%{$query}%")
             ->orWhere('phone', 'LIKE', "%{$query}%")
             ->orWhere('national_id', 'LIKE', "%{$query}%")
             ->orWhere('medical_id', 'LIKE', "%{$query}%")

@@ -60,4 +60,10 @@ class Patient extends Model
         $date = $this->created_at ?? now();
         return "attachments/{$date->format('Y/m/d')}/{$this->medical_id}";
     }
+
+    // Add this relationship if it doesn't exist
+    public function created_by_user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

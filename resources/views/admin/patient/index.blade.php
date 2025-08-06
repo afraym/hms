@@ -125,56 +125,50 @@
                         @endswitch
                     </div>
 
-                    <div class="table-responsive p-0">
-                        <table class="table align-items-center mb-0 text-end" id="patientsTable">
-                            <thead>
+                    <!-- Fixed Horizontal Scrollbar at Top -->
+                    <div class="px-3 mb-2">
+                        <div id="topScrollbar" class="bg-light border rounded" style="overflow-x: auto; overflow-y: hidden; height: 20px;">
+                            <div id="topScrollbarContent" style="height: 1px; min-width: 1500px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Table Container with Scrolling -->
+                    <div id="tableContainer" style="height: 600px; overflow: auto; width: 100%;" class="px-3">
+                        <table class="table align-items-center mb-0 text-end" id="patientsTable" style="min-width: 1500px;">
+                            <thead class="sticky-top bg-white">
                                 <tr>
-                                    <th>الصورة</th>
-                                    <th>الاسم</th>
-                                    <th>رقم الملف</th>
-                                    <th>الرقم القومي</th>
-                                    <th>الجنس</th>
-                                    <th>الحالة</th>
-                                    <th>الإجراءات</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 80px;">الصورة</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 150px;">الاسم</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 100px;">رقم الملف</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 120px;">الرقم القومي</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 80px;">الجنس</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 120px;">الحالة</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 120px;">أضيف بواسطة</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 130px;">تاريخ الإضافة</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="min-width: 130px;">آخر زيارة</th>
+                                    <th class="text-secondary opacity-7" style="min-width: 350px;">الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="patientsTableBody">
                                 @forelse($patients as $patient)
                                 <tr>
-                                    <td>
+                                    <td style="min-width: 80px;">
                                         <img src="{{ asset($patient->gender == 'male' ? 'assets/img/male.png' : ($patient->gender == 'female' ? 'assets/img/female.png' : 'assets/img/default.png')) }}" 
                                              alt="Avatar" 
                                              class="avatar" 
                                              style="width: 50px; height: 50px; border-radius: 50%;">
                                     </td>
-                                    <td>{{ $patient->full_name }}</td>
-                                    <td>
-                                        {{ $patient->medical_id }}
-                                    </td>
-                                    <td>{{ $patient->national_id }}</td>
-                                    <td>{{ $patient->gender == 'male' ? 'ذكر' : ($patient->gender == 'female' ? 'أنثى' : 'غير محدد') }}</td>
-                                    {{-- <td>
-                                        @if($patient->latest_visit_date)
-                                            <div>
-                                                <small class="text-muted">
-                                                    {{ \Carbon\Carbon::parse($patient->latest_visit_date)->format('Y-m-d H:i') }}
-                                                </small>
-                                                <br>
-                                                <span class="badge {{ $patient->latest_visit_type == 'in' ? 'bg-gradient-info' : 'bg-gradient-success' }}">
-                                                    {{ $patient->latest_visit_type == 'in' ? 'دخول' : 'خروج' }}
-                                                </span>
-                                            </div>
-                                        @else
-                                            <span class="text-muted">لا يوجد </span>
-                                        @endif
-                                    </td> --}}
-                                    <td>
+                                    <td style="min-width: 150px;">{{ $patient->full_name }}</td>
+                                    <td style="min-width: 100px;">{{ $patient->medical_id }}</td>
+                                    <td style="min-width: 120px;">{{ $patient->national_id }}</td>
+                                    <td style="min-width: 80px;">{{ $patient->gender == 'male' ? 'ذكر' : ($patient->gender == 'female' ? 'أنثى' : 'غير محدد') }}</td>
+                                    <td style="min-width: 120px;">
                                         @switch($patient->status)
                                             @case('admitted')
                                                 <span class="badge bg-info">محجوز في سرير</span>
                                                 @break
                                             @case('waiting')
-                                                <span class="badge bg-warning"> انتظار</span>
+                                                <span class="badge bg-warning">انتظار</span>
                                                 @break
                                             @case('discharged')
                                                 <span class="badge bg-success">خرج</span>
@@ -186,42 +180,161 @@
                                                 <span class="badge bg-light text-dark">غير محدد</span>
                                         @endswitch
                                     </td>
-                                    <td>
-                                        <a href="{{ route('patients.show', $patient->id) }}" class="btn btn-sm bg-gradient-info">عرض</a>
-                                        <!-- <a href="#" class="btn btn-sm btn-primary">
-                                         الملصقات
-                                        </a> -->
-                                        <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-sm bg-gradient-warning">تعديل</a>
-                                        @if($patient->status !== 'deceased')
-                                        <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn btn-sm bg-gradient-success" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
-                                        </form>
-                                        <form action="{{ route('patients.deceased', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟ لا يمكن التراجع عن هذا الإجراء.');">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة">تسجيل وفاة</button>
-                                        </form>
+                                    <td style="min-width: 120px;">
+                                        @if($patient->created_by_user)
+                                            <span class="text-sm">{{ $patient->created_by_user->name }}</span>
+                                        @else
+                                            <span class="text-muted">غير محدد</span>
                                         @endif
-                                        <form action="{{ route('patients.destroy', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
-                                        </form>
-                                        
+                                    </td>
+                                    <td style="min-width: 130px;">
+                                        <div class="d-flex flex-column">
+                                            <span class="text-sm">{{ $patient->created_at->format('Y-m-d') }}</span>
+                                            <small class="text-muted">{{ $patient->created_at->format('H:i') }}</small>
+                                        </div>
+                                    </td>
+                                    <td style="min-width: 130px;">
+                                        @php
+                                            $latestVisit = $patient->visits->sortByDesc('visit_at')->first();
+                                        @endphp
+                                        @if($latestVisit)
+                                            <div class="d-flex flex-column">
+                                                <span class="text-sm">{{ \Carbon\Carbon::parse($latestVisit->visit_at)->format('Y-m-d') }}</span>
+                                                <small class="text-muted">{{ \Carbon\Carbon::parse($latestVisit->visit_at)->format('H:i') }}</small>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">لا توجد زيارات</span>
+                                        @endif
+                                    </td>
+                                    <td style="min-width: 350px;">
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <a href="{{ route('patients.show', $patient->id) }}" class="btn btn-sm bg-gradient-info">عرض</a>
+                                            <a href="{{ route('patients.edit', $patient->id) }}" class="btn btn-sm bg-gradient-warning">تعديل</a>
+                                            @if($patient->status !== 'deceased')
+                                            <form action="{{ route('patients.discharge', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-sm bg-gradient-success" aria-label="تسجيل خروج" title="تسجيل خروج">خروج</button>
+                                            </form>
+                                            <form action="{{ route('patients.deceased', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟ لا يمكن التراجع عن هذا الإجراء.');">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة">وفاة</button>
+                                            </form>
+                                            @endif
+                                            <form action="{{ route('patients.destroy', $patient->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">لا يوجد مرضى</td>
+                                    <td colspan="10" class="text-center">لا يوجد مرضى</td>
                                 </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Custom Styles -->
+                    <style>
+                    /* Top scrollbar styling */
+                    #topScrollbar {
+                        position: sticky;
+                        top: 0;
+                        z-index: 11;
+                        margin-bottom: 10px;
+                    }
+
+                    #topScrollbar::-webkit-scrollbar {
+                        height: 12px;
+                    }
+
+                    #topScrollbar::-webkit-scrollbar-track {
+                        background: #f1f3f4;
+                        border-radius: 6px;
+                    }
+
+                    #topScrollbar::-webkit-scrollbar-thumb {
+                        background: #6c757d;
+                        border-radius: 6px;
+                    }
+
+                    #topScrollbar::-webkit-scrollbar-thumb:hover {
+                        background: #495057;
+                    }
+
+                    /* Table container scrollbar styling */
+                    #tableContainer {
+                        scrollbar-width: thin;
+                        scrollbar-color: #6c757d #f8f9fa;
+                    }
+
+                    #tableContainer::-webkit-scrollbar:vertical {
+                        width: 8px;
+                    }
+
+                    #tableContainer::-webkit-scrollbar:horizontal {
+                        height: 8px;
+                    }
+
+                    #tableContainer::-webkit-scrollbar-track {
+                        background: #f8f9fa;
+                        border-radius: 4px;
+                    }
+
+                    #tableContainer::-webkit-scrollbar-thumb {
+                        background: #6c757d;
+                        border-radius: 4px;
+                    }
+
+                    #tableContainer::-webkit-scrollbar-thumb:hover {
+                        background: #495057;
+                    }
+
+                    #tableContainer::-webkit-scrollbar-corner {
+                        background: #f8f9fa;
+                    }
+
+                    /* Sticky header styling */
+                    .table thead th {
+                        position: sticky;
+                        top: 0;
+                        z-index: 10;
+                        background-color: white !important;
+                        border-bottom: 2px solid #dee2e6;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+
+                    /* Table cells styling */
+                    .table td, .table th {
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                        padding: 0.75rem 0.5rem;
+                    }
+
+                    .table td:last-child {
+                        white-space: normal;
+                    }
+
+                    /* Responsive design */
+                    @media (max-width: 768px) {
+                        .table td, .table th {
+                            font-size: 0.875rem;
+                        }
+                        
+                        .btn-sm {
+                            font-size: 0.75rem;
+                            padding: 0.25rem 0.5rem;
+                        }
+                    }
+                    </style>
+
                     {{-- Pagination links --}}
-                    <div class="d-flex justify-content-center">
+                    <div class="d-flex justify-content-center mt-3">
                         {{ $patients->appends(['sort_by' => $sortBy])->links('pagination::bootstrap-5') }}
                     </div>
                 </div>
@@ -277,13 +390,47 @@
 document.addEventListener('DOMContentLoaded', function () {
     const searchQueryInput = document.getElementById('searchQuery');
     const patientsTableBody = document.getElementById('patientsTableBody');
+    const topScrollbar = document.getElementById('topScrollbar');
+    const tableContainer = document.getElementById('tableContainer');
+    const topScrollbarContent = document.getElementById('topScrollbarContent');
+    const table = document.getElementById('patientsTable');
+
+    // Sync top scrollbar with table horizontal scroll
+    function syncScrollbars() {
+        if (table && topScrollbarContent) {
+            const tableWidth = table.scrollWidth;
+            const containerWidth = tableContainer.clientWidth;
+            
+            if (tableWidth > containerWidth) {
+                topScrollbarContent.style.width = tableWidth + 'px';
+                topScrollbar.style.display = 'block';
+            } else {
+                topScrollbar.style.display = 'none';
+            }
+        }
+    }
+
+    // Sync scrolling between top scrollbar and table
+    topScrollbar.addEventListener('scroll', function() {
+        tableContainer.scrollLeft = topScrollbar.scrollLeft;
+    });
+
+    tableContainer.addEventListener('scroll', function() {
+        topScrollbar.scrollLeft = tableContainer.scrollLeft;
+    });
+
+    // Initialize scrollbar sync
+    syncScrollbars();
+
+    // Re-sync when window is resized
+    window.addEventListener('resize', syncScrollbars);
 
     if (searchQueryInput) {
         searchQueryInput.addEventListener('input', function () {
             const query = this.value;
 
             // Show loading spinner
-            patientsTableBody.innerHTML = '<tr><td colspan="8" class="text-center">جاري البحث...</td></tr>';
+            patientsTableBody.innerHTML = '<tr><td colspan="10" class="text-center">جاري البحث...</td></tr>';
 
             // Send AJAX request to search patients
             fetch(`/patients/ajax-search?query=${query}`)
@@ -298,72 +445,87 @@ document.addEventListener('DOMContentLoaded', function () {
                             const gender = patient.gender === 'male' ? 'ذكر' : (patient.gender === 'female' ? 'أنثى' : 'غير محدد');
                             const avatar = patient.gender === 'male' ? '/assets/img/male.png' : (patient.gender === 'female' ? '/assets/img/female.png' : '/assets/img/default.png');
 
+                            // Format created by user info
+                            let createdByHtml = '<span class="text-muted">غير محدد</span>';
+                            if (patient.created_by_user) {
+                                createdByHtml = `<span class="text-sm">${patient.created_by_user.name}</span>`;
+                            }
+
+                            // Format created at date
+                            const createdAt = new Date(patient.created_at);
+                            const createdAtHtml = `
+                                <div class="d-flex flex-column">
+                                    <span class="text-sm">${createdAt.toLocaleDateString('en-CA')}</span>
+                                    <small class="text-muted">${createdAt.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}</small>
+                                </div>
+                            `;
+
+                            // Format last visit
+                            let lastVisitHtml = '<span class="text-muted">لا توجد زيارات</span>';
+                            if (patient.visits && patient.visits.length > 0) {
+                                const latestVisit = patient.visits.reduce((latest, visit) => {
+                                    return new Date(visit.visit_at) > new Date(latest.visit_at) ? visit : latest;
+                                });
+                                const visitDate = new Date(latestVisit.visit_at);
+                                const visitType = latestVisit.type === 'emergency' ? 'طوارئ' : 
+                                                 latestVisit.type === 'regular' ? 'عادية' : 'متابعة';
+                                
+                                lastVisitHtml = `
+                                    <div class="d-flex flex-column">
+                                        <span class="text-sm">${visitDate.toLocaleDateString('en-CA')}</span>
+                                        <small class="text-muted">${visitDate.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}</small>
+                                        <small class="badge badge-sm bg-gradient-info mt-1">${visitType}</small>
+                                    </div>
+                                `;
+                            }
+
                             const row = `
                                 <tr>
-                                    <td>
+                                    <td style="min-width: 80px;">
                                         <img src="${avatar}" alt="Avatar" class="avatar" style="width: 50px; height: 50px; border-radius: 50%;">
                                     </td>
-                                    <td>${patient.full_name}</td>
-                                    <td>${patient.medical_id}</td>
-
-                                    <td>${patient.national_id || 'غير محدد'}</td>
-                                    <td>${gender}</td>
-                                    <td>
-                                        ${patient.latest_visit_date ? `
-                                            <div>
-                                                <small class="text-muted">
-                                                    ${new Date(patient.latest_visit_date).toLocaleString('ar-EG', {
-                                                        year: 'numeric',
-                                                        month: '2-digit',
-                                                        day: '2-digit',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
-                                                </small>
-                                                <br>
-                                                <span class="badge ${patient.latest_visit_type === 'in' ? 'bg-gradient-success' : 'bg-gradient-info'}">
-                                                    ${patient.latest_visit_type === 'in' ? 'دخول' : 'خروج'}
-                                                </span>
-                                            </div>
-                                        ` : '<span class="text-muted">لا يوجد</span>'}
-                                    </td>
-                                    <td>
+                                    <td style="min-width: 150px;">${patient.full_name}</td>
+                                    <td style="min-width: 100px;">${patient.medical_id}</td>
+                                    <td style="min-width: 120px;">${patient.national_id || 'غير محدد'}</td>
+                                    <td style="min-width: 80px;">${gender}</td>
+                                    <td style="min-width: 120px;">
                                         ${
                                             patient.status === 'admitted'
                                                 ? '<span class="badge bg-info">محجوز في سرير</span>'
                                                 : patient.status === 'waiting'
-                                                    ? '<span class="badge bg-warning">في انتظار سرير</span>'
+                                                    ? '<span class="badge bg-warning">انتظار</span>'
                                                     : patient.status === 'discharged'
                                                         ? '<span class="badge bg-success">خرج</span>'
                                                         : patient.status === 'deceased'
-                                                            ? '<span class="badge bg-dark">متوفى</span>'
+                                                            ? '<span class="badge bg-dark">وفاة</span>'
                                                             : '<span class="badge bg-light text-dark">غير محدد</span>'
                                         }
                                     </td>
-                                    <td>
-                                        <a href="/admin/patients/${patient.id}" class="btn btn-sm bg-gradient-info">عرض</a>
-                                        <a href="/admin/patients/${patient.id}/label" class="btn btn-sm btn-primary">
-                                         الملصقات
-                                        </a>
-                                        <a href="/admin/patients/${patient.id}/edit" class="btn btn-sm bg-gradient-warning">تعديل</a>
-                                        ${patient.status !== 'deceased' ? `
-                                        <form action="/admin/patients/${patient.id}/discharge" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
-                                            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-                                            <input type="hidden" name="_method" value="PATCH">
-                                            <button type="submit" class="btn btn-sm bg-gradient-success" aria-label="تسجيل خروج" title="تسجيل خروج">تسجيل خروج</button>
-                                        </form>
-                                        <form action="/admin/patients/${patient.id}/deceased" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟ لا يمكن التراجع عن هذا الإجراء.');">
-                                            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-                                            <input type="hidden" name="_method" value="PATCH">
-                                            <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة">تسجيل وفاة</button>
-                                        </form>
-                                        ` : ''}
-                                        <form action="/admin/patients/${patient.id}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
-                                            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-                                            <input type="hidden" name="_method" value="DELETE">
-                                            <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
-                                        </form>
-                                        
+                                    <td style="min-width: 120px;">${createdByHtml}</td>
+                                    <td style="min-width: 130px;">${createdAtHtml}</td>
+                                    <td style="min-width: 130px;">${lastVisitHtml}</td>
+                                    <td style="min-width: 350px;">
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <a href="/admin/patients/${patient.id}" class="btn btn-sm bg-gradient-info">عرض</a>
+                                            <a href="/admin/patients/${patient.id}/edit" class="btn btn-sm bg-gradient-warning">تعديل</a>
+                                            ${patient.status !== 'deceased' ? `
+                                            <form action="/admin/patients/${patient.id}/discharge" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد تسجيل خروج هذا المريض؟');">
+                                                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+                                                <input type="hidden" name="_method" value="PATCH">
+                                                <button type="submit" class="btn btn-sm bg-gradient-success" aria-label="تسجيل خروج" title="تسجيل خروج">خروج</button>
+                                            </form>
+                                            <form action="/admin/patients/${patient.id}/deceased" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من تسجيل وفاة هذا المريض؟ لا يمكن التراجع عن هذا الإجراء.');">
+                                                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+                                                <input type="hidden" name="_method" value="PATCH">
+                                                <button type="submit" class="btn btn-sm bg-gradient-dark" aria-label="تسجيل وفاة" title="تسجيل وفاة">وفاة</button>
+                                            </form>
+                                            ` : ''}
+                                            <form action="/admin/patients/${patient.id}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد أنك تريد حذف هذا المريض؟');">
+                                                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <button type="submit" class="btn btn-sm bg-gradient-danger" aria-label="حذف المريض" title="حذف المريض">حذف</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             `;
@@ -372,16 +534,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         patientsTableBody.innerHTML = `
                             <tr>
-                                <td colspan="8" class="text-center">لا توجد نتائج مطابقة.</td>
+                                <td colspan="10" class="text-center">لا توجد نتائج مطابقة.</td>
                             </tr>
                         `;
                     }
+
+                    // Re-sync scrollbars after updating content
+                    setTimeout(syncScrollbars, 100);
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     patientsTableBody.innerHTML = `
                         <tr>
-                            <td colspan="8" class="text-center text-danger">حدث خطأ أثناء البحث.</td>
+                            <td colspan="10" class="text-center text-danger">حدث خطأ أثناء البحث.</td>
                         </tr>
                     `;
                 });

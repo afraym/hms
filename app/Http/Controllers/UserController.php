@@ -43,6 +43,7 @@ class UserController extends Controller
         
         $users = User::where('name', 'LIKE', "%{$query}%")
                      ->orWhere('email', 'LIKE', "%{$query}%")
+                     ->orWhere('phone', 'LIKE', "%{$query}%")
                      ->get();
         
         return response()->json($users);
@@ -58,7 +59,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:admin,manager,reception',
         ], [
@@ -66,6 +67,7 @@ class UserController extends Controller
             'email.required' => 'البريد الإلكتروني مطلوب',
             'email.email' => 'البريد الإلكتروني غير صحيح',
             'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً',
+            'phone.unique' => 'رقم الهاتف مستخدم مسبقاً',
             'password.required' => 'كلمة المرور مطلوبة',
             'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
             'password.confirmed' => 'تأكيد كلمة المرور غير متطابق',
@@ -99,12 +101,22 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
             'role' => 'required|in:admin,manager,reception',
+        ], [
+            'name.required' => 'الاسم مطلوب',
+            'email.required' => 'البريد الإلكتروني مطلوب',
+            'email.email' => 'البريد الإلكتروني غير صحيح',
+            'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً',
+            'phone.unique' => 'رقم الهاتف مستخدم مسبقاً',
+            'role.required' => 'الدور الوظيفي مطلوب',
+            'role.in' => 'الدور الوظيفي غير صحيح',
         ]);
 
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
             'role' => $request->role,
         ]);
 
